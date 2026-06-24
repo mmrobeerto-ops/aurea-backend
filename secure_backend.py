@@ -42,7 +42,7 @@ blocked_ips: Dict[str, float] = {}
 
 def check_rate_limiting(client_ip: str):
     # Bypass rate limiting for local development requests
-    if client_ip in ("127.0.0.1", "localhost", "::1"):
+    if client_ip in ("127.0.0.1", "localhost", "::1", "testclient"):
         return
 
     current_time = time.time()
@@ -123,9 +123,22 @@ ALLOWED_MIME_TYPES = [
 ]
 
 @app.post("/api/v1/upload-csv", status_code=status.HTTP_200_OK)
-async def upload_telemetry_csv(request: Request, file: UploadFile = File(...)):
+async def upload_telemetry_csv(
+    request: Request,
+    file: UploadFile = File(...),
+    x_sfa_key: Optional[str] = Header(None, alias="X-SFA-Key")
+):
     client_ip = request.client.host if request.client else "127.0.0.1"
     check_rate_limiting(client_ip)
+    
+    is_local = client_ip in ["127.0.0.1", "::1"]
+    if not is_local:
+        is_valid_member = x_sfa_key and x_sfa_key.startswith("SFA-MEM-") and get_license_plan_limit(x_sfa_key) > 0
+        if not x_sfa_key or (x_sfa_key != TELEMETRY_API_KEY and not is_valid_member):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="[ACCESO DENEGADO] Llave de API SFA inválida o no provista."
+            )
 
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(
@@ -219,6 +232,11 @@ async def upload_telemetry_csv(request: Request, file: UploadFile = File(...)):
         except Exception:
             malformed_rows += 1
             continue
+
+    if x_sfa_key and x_sfa_key.startswith("SFA-MEM-"):
+        if validated_records:
+            sensor_id = validated_records[0].sensor_id
+            validate_device_limit(x_sfa_key, sensor_id)
 
     return {
         "status": "PROCESADO_Y_SANITIZADO",
@@ -318,6 +336,97 @@ async def clear_feedback(token: Optional[str] = None):
     return {"status": "ELIMINADO"}
 
 REGISTROS_FILE = "registros.json"
+DEVICES_FILE = "devices.json"
+
+def load_devices() -> dict:
+    if os.path.exists(DEVICES_FILE):
+        try:
+            with open(DEVICES_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+        except Exception:
+            pass
+    return {}
+
+def save_devices(data: dict):
+    try:
+        with open(DEVICES_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"[ERROR] No se pudo guardar devices.json: {e}")
+
+def get_license_plan_limit(license_key: str) -> int:
+    if license_key == TELEMETRY_API_KEY:
+        return 9999
+        
+    registros = []
+    if os.path.exists(REGISTROS_FILE):
+        try:
+            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
+                registros = json.load(f)
+                if not isinstance(registros, list):
+                    registros = []
+        except Exception:
+            pass
+            
+    record = next((r for r in registros if r.get("license_key") == license_key), None)
+    if not record:
+        return 0
+        
+    plan = record.get("plan", "")
+    plan_lower = plan.lower()
+    if "junior" in plan_lower or "técnico" in plan_lower:
+        return 3
+    elif "consultor" in plan_lower or "senior" in plan_lower:
+        return 20
+    elif "club de pioneros" in plan_lower:
+        return 3
+    elif "gerente" in plan_lower or "planta" in plan_lower:
+        return 9999
+        
+def extract_sensor_id_from_csv(csv_text: str) -> str:
+    try:
+        f = io.StringIO(csv_text.strip())
+        reader = csv.DictReader(f)
+        if reader.fieldnames:
+            fieldnames = [h.strip().lower() for h in reader.fieldnames if h.strip()]
+            reader.fieldnames = fieldnames
+            for row in reader:
+                for alias in ["sensor_id", "id_sensor", "sensor", "id"]:
+                    val = row.get(alias)
+                    if val is not None and val.strip():
+                        # Sanitizar ID de sensor
+                        value = val.strip().replace(" ", "").replace(";", "").replace("--", "")
+                        value = html.escape(value)
+                        return value
+    except Exception:
+        pass
+    return "sensor-01"
+
+def validate_device_limit(license_key: str, sensor_id: str):
+    if license_key == TELEMETRY_API_KEY:
+        return
+        
+    limit = get_license_plan_limit(license_key)
+    if limit == 0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="[ACCESO DENEGADO] Llave de licencia inválida o expirada."
+        )
+        
+    devices = load_devices()
+    linked = devices.get(license_key, [])
+    
+    if sensor_id not in linked:
+        if len(linked) >= limit:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"LÍMITE_MÁQUINAS_EXCEDIDO: Has alcanzado el límite de {limit} máquinas asociadas a tu plan actual."
+            )
+        linked.append(sensor_id)
+        devices[license_key] = linked
+        save_devices(devices)
 
 class RegistrationRecord(BaseModel):
     name: str = Field(..., description="Nombre completo del miembro")
@@ -1068,7 +1177,8 @@ async def procesar_sfa_endpoint(
     is_local = client_ip in ["127.0.0.1", "::1"]
     
     if not is_local:
-        if not x_sfa_key or x_sfa_key != TELEMETRY_API_KEY:
+        is_valid_member = x_sfa_key and x_sfa_key.startswith("SFA-MEM-") and get_license_plan_limit(x_sfa_key) > 0
+        if not x_sfa_key or (x_sfa_key != TELEMETRY_API_KEY and not is_valid_member):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="[ACCESO DENEGADO] Llave de API SFA inválida o no provista."
@@ -1092,6 +1202,10 @@ async def procesar_sfa_endpoint(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Error al leer el archivo subido: {str(e)}"
             )
+            
+        if x_sfa_key and x_sfa_key.startswith("SFA-MEM-"):
+            sensor_id = extract_sensor_id_from_csv(csv_text)
+            validate_device_limit(x_sfa_key, sensor_id)
             
         try:
             res = procesar_bloque_armonico(
@@ -1131,6 +1245,10 @@ async def procesar_sfa_endpoint(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Cuerpo JSON o parámetros inválidos: {str(e)}"
             )
+            
+        if x_sfa_key and x_sfa_key.startswith("SFA-MEM-"):
+            sensor_id = extract_sensor_id_from_csv(req_data.csv_text)
+            validate_device_limit(x_sfa_key, sensor_id)
             
         try:
             res = procesar_bloque_armonico(
