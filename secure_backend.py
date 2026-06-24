@@ -1,11 +1,11 @@
 import os
-import time 
+import time
 import re
 import html
 import csv
 import io
 from typing import Dict, List, Optional
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response, status, Header
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response, status, Header, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from dotenv import load_dotenv
@@ -314,6 +314,155 @@ async def clear_feedback(token: Optional[str] = None):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"No se pudo eliminar el archivo de retroalimentación: {str(e)}"
+        )
+    return {"status": "ELIMINADO"}
+
+REGISTROS_FILE = "registros.json"
+
+class RegistrationRecord(BaseModel):
+    name: str = Field(..., description="Nombre completo del miembro")
+    email: str = Field(..., description="Correo electrónico")
+    company: str = Field("", description="Empresa u Organización")
+    plan: str = Field(..., description="Plan seleccionado")
+    access_key: Optional[str] = Field(None, description="Clave de acceso de pionero")
+
+def generate_license_key() -> str:
+    import uuid
+    part1 = uuid.uuid4().hex[:4].upper()
+    part2 = uuid.uuid4().hex[4:8].upper()
+    return f"SFA-MEM-{part1}-{part2}"
+
+def send_registration_email_bg(record: dict):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_host = os.getenv("SMTP_HOST", "")
+    smtp_port = os.getenv("SMTP_PORT", "")
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_password = os.getenv("SMTP_PASSWORD", "")
+    notification_email = os.getenv("NOTIFICATION_EMAIL", "mmrobeerto@gmail.com")
+
+    if not smtp_host:
+        print("[WARNING] SMTP_HOST no configurado. Se omite el envío del correo de notificación.")
+        return
+
+    try:
+        port = int(smtp_port) if smtp_port else 587
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = notification_email
+        msg['Subject'] = f"[Aurea Systems] Nuevo Registro de Membresía - {record.get('plan')}"
+        
+        body = f"""Se ha registrado un nuevo usuario en Aurea Systems.
+
+Detalles del Registro:
+----------------------
+Nombre: {record.get('name')}
+Correo: {record.get('email')}
+Empresa: {record.get('company')}
+Plan: {record.get('plan')}
+Clave de Licencia: {record.get('license_key')}
+Fecha/Hora: {record.get('timestamp')}
+
+-- 
+Sistema de Notificaciones Aurea Systems
+"""
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        server = smtplib.SMTP(smtp_host, port, timeout=10)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_user, notification_email, msg.as_string())
+        server.quit()
+        print(f"[SMTP] Correo de notificación enviado exitosamente a {notification_email}")
+    except Exception as e:
+        print(f"[ERROR SMTP] Error al enviar correo de notificación: {e}")
+
+@app.post("/api/registros")
+async def create_registro(record: RegistrationRecord, background_tasks: BackgroundTasks):
+    import datetime
+    
+    # Validar clave de invitación para el Club de Pioneros 33
+    if record.plan == "Club de Pioneros 33":
+        expected_key = os.getenv("PIONEROS_ACCESS_KEY", "aurea33")
+        clean_provided = (record.access_key or "").replace(" ", "").upper()
+        clean_expected = expected_key.replace(" ", "").upper()
+        if clean_provided != clean_expected:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Clave de invitación incorrecta. Solicítela por correo a mmrobeerto@gmail.com."
+            )
+            
+    license_key = generate_license_key()
+    timestamp = datetime.datetime.now().isoformat()
+    
+    new_record = {
+        "name": record.name,
+        "email": record.email,
+        "company": record.company,
+        "plan": record.plan,
+        "license_key": license_key,
+        "timestamp": timestamp
+    }
+    
+    registros = []
+    if os.path.exists(REGISTROS_FILE):
+        try:
+            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
+                registros = json.load(f)
+                if not isinstance(registros, list):
+                    registros = []
+        except Exception:
+            registros = []
+            
+    registros.append(new_record)
+    
+    try:
+        with open(REGISTROS_FILE, "w", encoding="utf-8") as f:
+            json.dump(registros, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"No se pudo guardar el registro en el servidor: {str(e)}"
+        )
+        
+    background_tasks.add_task(send_registration_email_bg, new_record)
+    
+    return new_record
+
+@app.get("/api/registros")
+async def get_registros(token: Optional[str] = None):
+    if token != ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autorizado. Token inválido."
+        )
+        
+    registros = []
+    if os.path.exists(REGISTROS_FILE):
+        try:
+            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
+                registros = json.load(f)
+        except Exception:
+            registros = []
+    return registros
+
+@app.delete("/api/registros")
+async def clear_registros(token: Optional[str] = None):
+    if token != ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autorizado. Token inválido."
+        )
+        
+    try:
+        if os.path.exists(REGISTROS_FILE):
+            os.remove(REGISTROS_FILE)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"No se pudo eliminar el archivo de registros: {str(e)}"
         )
     return {"status": "ELIMINADO"}
 
