@@ -448,6 +448,21 @@ async def get_registros(token: Optional[str] = None):
             registros = []
     return registros
 
+@app.get("/api/registros/public-count")
+async def get_registros_count():
+    registros = []
+    if os.path.exists(REGISTROS_FILE):
+        try:
+            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
+                registros = json.load(f)
+                if not isinstance(registros, list):
+                    registros = []
+        except Exception:
+            registros = []
+    pioneros_count = sum(1 for r in registros if r.get("plan") == "Club de Pioneros 33")
+    remaining_spots = max(0, 33 - pioneros_count)
+    return {"registered": pioneros_count, "remaining": remaining_spots}
+
 @app.delete("/api/registros")
 async def clear_registros(token: Optional[str] = None):
     if token != ADMIN_TOKEN:
