@@ -975,13 +975,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         sum_residuos += abs(residuo)
     indice_caos_global = sum_residuos / n_scada
 
-    # 1. Sub-índice de Vibración (H_vib) - Límites industriales estándar para motores
-    if rms <= 0.2:
+    # 1. Sub-índice de Vibración (H_vib) - Límites industriales estándar bajo ISO 10816 (mm/s RMS)
+    if rms <= 4.5:
         h_vib = 100.0
-    elif 0.2 < rms <= 1.2:
-        h_vib = 100.0 - 75.0 * (rms - 0.2)
+    elif 4.5 < rms <= 7.1:
+        h_vib = 100.0 - 25.0 * (rms - 4.5)
     else:
-        h_vib = max(10.0, 25.0 - 10.0 * (rms - 1.2))
+        h_vib = max(5.0, 35.0 - 1.5 * (rms - 7.1))
 
     # 2. Sub-índice de Temperatura (H_temp) - Operación real de estator
     if avg_temp <= 65.0:
@@ -1002,13 +1002,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         # Alerta por caída o sobrepresión extrema, manteniendo piso a 0.0 si cae de 0.5 bar
         h_pres = 0.0 if avg_pres < 0.5 else 20.0
 
-    # 4. Sub-índice de Corriente (H_curr) - Línea base 12A, Crítico 25A
-    if avg_current_raw <= 12.0:
+    # 4. Sub-índice de Corriente (H_curr) - Línea base 35A (nominal), sobreesfuerzo hasta 118A
+    if avg_current_raw <= 35.0:
         h_curr = 100.0
-    elif 12.0 < avg_current_raw <= 16.0:
-        h_curr = 100.0 - 6.25 * (avg_current_raw - 12.0)
+    elif 35.0 < avg_current_raw <= 50.0:
+        h_curr = 100.0 - 4.0 * (avg_current_raw - 35.0)
     else:
-        h_curr = max(5.0, 75.0 - 7.7 * (avg_current_raw - 16.0))
+        h_curr = max(5.0, 40.0 - 0.5 * (avg_current_raw - 50.0))
 
     # 5. Combinación ponderada con sesgo al mínimo
     h_min = min(h_vib, h_temp, h_pres, h_curr)
@@ -1024,17 +1024,15 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     diagnosticos_list = []
     recommendations = []
-
-    # Evaluación de Vibración
-    if rms > 1.0:
-        diagnosticos_list.append(f"⚠️ RUIDO ELEVADO CRÍTICO (RMS = {rms:.2f} G). El análisis espectral SFA registra inestabilidad geométrica severa en el flujo.")
+    if rms > 7.1:
+        diagnosticos_list.append(f"⚠️ RUIDO ELEVADO CRÍTICO (RMS = {rms:.2f} mm/s). El análisis espectral SFA registra inestabilidad geométrica severa en el flujo.")
         recommendations.extend([
             "¡ACCIÓN INMEDIATA! Planificar parada de seguridad para inspeccionar el acoplamiento mecánico.",
             "Verificar parámetros de succión en la bomba para descartar cavitación destructiva.",
             "Calibrar y revisar el blindaje a tierra del transductor de vibración."
         ])
-    elif rms > 0.1:
-        diagnosticos_list.append(f"⚠️ OPERACIÓN NOMINAL CON VIBRACIÓN MODERADA (RMS = {rms:.2f} G). Se detecta una micro-oscilación periódica cíclica bajo control.")
+    elif rms > 4.5:
+        diagnosticos_list.append(f"⚠️ OPERACIÓN NOMINAL CON VIBRACIÓN MODERADA (RMS = {rms:.2f} mm/s). Se detecta una micro-oscilación periódica cíclica bajo control.")
         recommendations.extend([
             "Programar inspección de holguras mecánicas y reapriete de pernos en el próximo paro programado.",
             "Lubricar cojinetes/rodamientos según el plan de mantenimiento preventivo."
@@ -1074,12 +1072,12 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         recommendations.append("Monitorear el regulador de presión y la resistencia hidráulica de la línea.")
 
     # Evaluación de Corriente
-    if avg_current_raw > 20.0:
+    if avg_current_raw > 50.0:
         diagnosticos_list.append(f"⚠️ SOBRECORRIENTE CRÍTICA ({avg_current_raw:.1f} A). El consumo supera ampliamente la capacidad segura del estator.")
         if not any("DESCONECTAR" in r for r in recommendations):
             recommendations.insert(0, "DESCONECTAR EL MOTOR INMEDIATAMENTE para evitar cortocircuitos o fusión de bobinas.")
         recommendations.append("Realizar pruebas de aislamiento eléctrico de devanados.")
-    elif avg_current_raw > 12.0:
+    elif avg_current_raw > 35.0:
         diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({avg_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
         recommendations.append("Revisar balance de fases eléctricas y carga mecánica acoplada.")
 
@@ -1089,7 +1087,7 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         if diagnosticos_list:
             diagnostico = " | ".join(diagnosticos_list)
         else:
-            diagnostico = f"✅ OPERACIÓN NORMAL (RMS = {rms:.2f} G). El sistema opera en óptimas condiciones de diseño."
+            diagnostico = f"✅ OPERACIÓN NORMAL (RMS = {rms:.2f} mm/s). El sistema opera en óptimas condiciones de diseño."
             recommendations.extend([
                 "Programar la siguiente auditoría de telemetría SFA preventiva en 90 días.",
                 "Continuar operando dentro del rango de potencia nominal."
