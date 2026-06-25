@@ -16,12 +16,65 @@ PORT = int(os.getenv("PORT", 8000))
 HOST = os.getenv("HOST", "127.0.0.1")
 SFA_BASE_FREQUENCY = float(os.getenv("SFA_BASE_FREQUENCY", 7.25))
 TELEMETRY_API_KEY = os.getenv("TELEMETRY_API_KEY", "sfa_key_dev_725_1618_active_precision")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db_connection():
+    if not DATABASE_URL:
+        return None
+    import psycopg2
+    url = DATABASE_URL
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return psycopg2.connect(url)
 
 app = FastAPI(
     title="Áurea Systems Secure Telemetry API",
     description="Backend seguro de telemetría industrial de alta velocidad con el motor espectral SFA.",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+def startup_event():
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS registros (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255),
+                        email VARCHAR(255),
+                        company VARCHAR(255),
+                        plan VARCHAR(255),
+                        license_key VARCHAR(255) UNIQUE,
+                        timestamp VARCHAR(255)
+                    );
+                """)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS customer_devices (
+                        id SERIAL PRIMARY KEY,
+                        license_key VARCHAR(255),
+                        sensor_id VARCHAR(255),
+                        UNIQUE (license_key, sensor_id)
+                    );
+                """)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS feedback (
+                        id SERIAL PRIMARY KEY,
+                        accuracy VARCHAR(50),
+                        rating INTEGER,
+                        comment TEXT,
+                        timestamp VARCHAR(255)
+                    );
+                """)
+                conn.commit()
+                cursor.close()
+                conn.close()
+                print("[DATABASE] Tablas de PostgreSQL verificadas/creadas exitosamente.")
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al inicializar tablas en PostgreSQL: {e}")
+
 
 # Enable CORS for frontend clients (including Netlify static deployments)
 app.add_middleware(
@@ -267,6 +320,8 @@ from typing import Optional
 import json
 
 FEEDBACK_FILE = "feedback.json"
+REGISTROS_FILE = "registros.json"
+DEVICES_FILE = "devices.json"
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "aurea2026")
 
 class FeedbackRecord(BaseModel):
@@ -275,70 +330,118 @@ class FeedbackRecord(BaseModel):
     comment: str = Field("", max_length=1000, description="Comentarios adicionales")
     timestamp: str = Field(..., description="ISO Timestamp del envío")
 
-@app.post("/api/feedback")
-async def submit_feedback(record: FeedbackRecord):
-    feedbacks = []
-    if os.path.exists(FEEDBACK_FILE):
+def db_load_registros() -> list:
+    if DATABASE_URL:
         try:
-            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                feedbacks = json.load(f)
-                if not isinstance(feedbacks, list):
-                    feedbacks = []
-        except Exception:
-            feedbacks = []
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT name, email, company, plan, license_key, timestamp FROM registros")
+                rows = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                return [
+                    {
+                        "name": row[0],
+                        "email": row[1],
+                        "company": row[2],
+                        "plan": row[3],
+                        "license_key": row[4],
+                        "timestamp": row[5]
+                    }
+                    for row in rows
+                ]
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al cargar registros de PostgreSQL: {e}")
             
-    feedbacks.append(record.model_dump())
-    
-    try:
-        with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
-            json.dump(feedbacks, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"No se pudo guardar la retroalimentación en el servidor: {str(e)}"
-        )
-        
-    return {"status": "GUARDADO", "total_records": len(feedbacks)}
-
-@app.get("/api/feedback")
-async def get_feedback(token: Optional[str] = None):
-    if token != ADMIN_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No autorizado. Token inválido."
-        )
-        
-    feedbacks = []
-    if os.path.exists(FEEDBACK_FILE):
+    if os.path.exists(REGISTROS_FILE):
         try:
-            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
-                feedbacks = json.load(f)
+            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
         except Exception:
-            feedbacks = []
-    return feedbacks
+            pass
+    return []
 
-@app.delete("/api/feedback")
-async def clear_feedback(token: Optional[str] = None):
-    if token != ADMIN_TOKEN:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No autorizado. Token inválido."
-        )
-        
+def db_save_registro(record: dict):
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO registros (name, email, company, plan, license_key, timestamp)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (license_key) DO NOTHING
+                    """,
+                    (
+                        record["name"],
+                        record["email"],
+                        record["company"],
+                        record["plan"],
+                        record["license_key"],
+                        record["timestamp"]
+                    )
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al guardar registro en PostgreSQL: {e}")
+            
+    registros = db_load_registros()
+    if not any(r.get("license_key") == record["license_key"] for r in registros):
+        registros.append(record)
     try:
-        if os.path.exists(FEEDBACK_FILE):
-            os.remove(FEEDBACK_FILE)
+        with open(REGISTROS_FILE, "w", encoding="utf-8") as f:
+            json.dump(registros, f, indent=4, ensure_ascii=False)
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"No se pudo eliminar el archivo de retroalimentación: {str(e)}"
-        )
-    return {"status": "ELIMINADO"}
+        print(f"[ERROR] No se pudo guardar registros.json: {e}")
 
-REGISTROS_FILE = "registros.json"
-DEVICES_FILE = "devices.json"
+def db_clear_registros():
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("TRUNCATE TABLE registros")
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al limpiar registros en PostgreSQL: {e}")
+            
+    if os.path.exists(REGISTROS_FILE):
+        try:
+            os.remove(REGISTROS_FILE)
+        except Exception:
+            pass
 
 def load_devices() -> dict:
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT license_key, sensor_id FROM customer_devices")
+                rows = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                
+                devices = {}
+                for row in rows:
+                    lk, sid = row[0], row[1]
+                    if lk not in devices:
+                        devices[lk] = []
+                    devices[lk].append(sid)
+                return devices
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al cargar dispositivos de PostgreSQL: {e}")
+            
     if os.path.exists(DEVICES_FILE):
         try:
             with open(DEVICES_FILE, "r", encoding="utf-8") as f:
@@ -350,40 +453,197 @@ def load_devices() -> dict:
     return {}
 
 def save_devices(data: dict):
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                for lk, sids in data.items():
+                    for sid in sids:
+                        cursor.execute(
+                            """
+                            INSERT INTO customer_devices (license_key, sensor_id)
+                            VALUES (%s, %s)
+                            ON CONFLICT (license_key, sensor_id) DO NOTHING
+                            """,
+                            (lk, sid)
+                        )
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al guardar dispositivos en PostgreSQL: {e}")
+            
     try:
         with open(DEVICES_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
     except Exception as e:
         print(f"[ERROR] No se pudo guardar devices.json: {e}")
 
+def db_load_feedback() -> list:
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT accuracy, rating, comment, timestamp FROM feedback")
+                rows = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                return [
+                    {
+                        "accuracy": row[0],
+                        "rating": row[1],
+                        "comment": row[2],
+                        "timestamp": row[3]
+                    }
+                    for row in rows
+                ]
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al cargar feedback de PostgreSQL: {e}")
+            
+    if os.path.exists(FEEDBACK_FILE):
+        try:
+            with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+    return []
+
+def db_save_feedback(record: dict):
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO feedback (accuracy, rating, comment, timestamp)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (
+                        record["accuracy"],
+                        record["rating"],
+                        record["comment"],
+                        record["timestamp"]
+                    )
+                )
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al guardar feedback en PostgreSQL: {e}")
+            
+    feedbacks = db_load_feedback()
+    feedbacks.append(record)
+    try:
+        with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+            json.dump(feedbacks, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"[ERROR] No se pudo guardar feedback.json: {e}")
+
+def db_clear_feedback():
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("TRUNCATE TABLE feedback")
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al limpiar feedback en PostgreSQL: {e}")
+            
+    if os.path.exists(FEEDBACK_FILE):
+        try:
+            os.remove(FEEDBACK_FILE)
+        except Exception:
+            pass
+
+@app.post("/api/feedback")
+async def submit_feedback(record: FeedbackRecord):
+    try:
+        db_save_feedback(record.model_dump())
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"No se pudo guardar la retroalimentación en el servidor: {str(e)}"
+        )
+    return {"status": "GUARDADO"}
+
+@app.get("/api/feedback")
+async def get_feedback(token: Optional[str] = None):
+    if token != ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autorizado. Token inválido."
+        )
+    return db_load_feedback()
+
+@app.delete("/api/feedback")
+async def clear_feedback(token: Optional[str] = None):
+    if token != ADMIN_TOKEN:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autorizado. Token inválido."
+        )
+    try:
+        db_clear_feedback()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"No se pudo eliminar la retroalimentación: {str(e)}"
+        )
+    return {"status": "ELIMINADO"}
+
+
 def get_license_plan_limit(license_key: str) -> int:
     if license_key == TELEMETRY_API_KEY:
         return 9999
         
-    registros = []
-    if os.path.exists(REGISTROS_FILE):
-        try:
-            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
-                registros = json.load(f)
-                if not isinstance(registros, list):
-                    registros = []
-        except Exception:
-            pass
-            
-    record = next((r for r in registros if r.get("license_key") == license_key), None)
-    if not record:
+    if not license_key or not license_key.startswith("SFA-MEM-"):
         return 0
         
-    plan = record.get("plan", "")
-    plan_lower = plan.lower()
-    if "junior" in plan_lower or "técnico" in plan_lower:
+    parts = license_key.split("-")
+    
+    # Nuevo formato autónomo: SFA-MEM-[PLAN]-XXXX-XXXX (5 partes)
+    if len(parts) >= 5:
+        prefix = parts[2].upper()
+        if prefix == "JUN" or prefix == "PIO":
+            return 3
+        elif prefix == "CON":
+            return 20
+        elif prefix == "GER":
+            return 9999
+            
+    # Formato antiguo o fallback de base de datos registros.json (4 partes)
+    registros = db_load_registros()
+            
+    record = next((r for r in registros if r.get("license_key") == license_key), None)
+    if record:
+        plan = record.get("plan", "")
+        plan_lower = plan.lower()
+        if "junior" in plan_lower or "técnico" in plan_lower:
+            return 3
+        elif "consultor" in plan_lower or "senior" in plan_lower:
+            return 20
+        elif "club de pioneros" in plan_lower:
+            return 3
+        elif "gerente" in plan_lower or "planta" in plan_lower:
+            return 9999
+            
+    # Si la llave es válida pero no existe en registros.json (ej. tras un reinicio de Render),
+    # devolvemos un límite por defecto de 3 (Junior) para evitar bloquear al usuario.
+    if len(parts) == 4:
         return 3
-    elif "consultor" in plan_lower or "senior" in plan_lower:
-        return 20
-    elif "club de pioneros" in plan_lower:
-        return 3
-    elif "gerente" in plan_lower or "planta" in plan_lower:
-        return 9999
+        
+    return 0
         
 def extract_sensor_id_from_csv(csv_text: str) -> str:
     try:
@@ -435,11 +695,23 @@ class RegistrationRecord(BaseModel):
     plan: str = Field(..., description="Plan seleccionado")
     access_key: Optional[str] = Field(None, description="Clave de acceso de pionero")
 
-def generate_license_key() -> str:
+def generate_license_key(plan: str) -> str:
     import uuid
+    plan_lower = plan.lower()
+    if "junior" in plan_lower or "técnico" in plan_lower:
+        prefix = "JUN"
+    elif "consultor" in plan_lower or "senior" in plan_lower:
+        prefix = "CON"
+    elif "club de pioneros" in plan_lower:
+        prefix = "PIO"
+    elif "gerente" in plan_lower or "planta" in plan_lower:
+        prefix = "GER"
+    else:
+        prefix = "USR"
+        
     part1 = uuid.uuid4().hex[:4].upper()
     part2 = uuid.uuid4().hex[4:8].upper()
-    return f"SFA-MEM-{part1}-{part2}"
+    return f"SFA-MEM-{prefix}-{part1}-{part2}"
 
 def send_registration_email_bg(record: dict):
     import smtplib
@@ -503,7 +775,7 @@ async def create_registro(record: RegistrationRecord, background_tasks: Backgrou
                 detail="Clave de invitación incorrecta. Solicítela por correo a mmrobeerto@gmail.com."
             )
             
-    license_key = generate_license_key()
+    license_key = generate_license_key(record.plan)
     timestamp = datetime.datetime.now().isoformat()
     
     new_record = {
@@ -515,21 +787,8 @@ async def create_registro(record: RegistrationRecord, background_tasks: Backgrou
         "timestamp": timestamp
     }
     
-    registros = []
-    if os.path.exists(REGISTROS_FILE):
-        try:
-            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
-                registros = json.load(f)
-                if not isinstance(registros, list):
-                    registros = []
-        except Exception:
-            registros = []
-            
-    registros.append(new_record)
-    
     try:
-        with open(REGISTROS_FILE, "w", encoding="utf-8") as f:
-            json.dump(registros, f, indent=4, ensure_ascii=False)
+        db_save_registro(new_record)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -547,27 +806,11 @@ async def get_registros(token: Optional[str] = None):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No autorizado. Token inválido."
         )
-        
-    registros = []
-    if os.path.exists(REGISTROS_FILE):
-        try:
-            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
-                registros = json.load(f)
-        except Exception:
-            registros = []
-    return registros
+    return db_load_registros()
 
 @app.get("/api/registros/public-count")
 async def get_registros_count():
-    registros = []
-    if os.path.exists(REGISTROS_FILE):
-        try:
-            with open(REGISTROS_FILE, "r", encoding="utf-8") as f:
-                registros = json.load(f)
-                if not isinstance(registros, list):
-                    registros = []
-        except Exception:
-            registros = []
+    registros = db_load_registros()
     pioneros_count = sum(1 for r in registros if r.get("plan") == "Club de Pioneros 33")
     remaining_spots = max(0, 33 - pioneros_count)
     return {"registered": pioneros_count, "remaining": remaining_spots}
@@ -581,12 +824,11 @@ async def clear_registros(token: Optional[str] = None):
         )
         
     try:
-        if os.path.exists(REGISTROS_FILE):
-            os.remove(REGISTROS_FILE)
+        db_clear_registros()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"No se pudo eliminar el archivo de registros: {str(e)}"
+            detail=f"No se pudo eliminar los registros: {str(e)}"
         )
     return {"status": "ELIMINADO"}
 

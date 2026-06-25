@@ -1,3 +1,5 @@
+import os
+os.environ.pop("DATABASE_URL", None)
 import unittest
 import time
 from secure_backend import TelemetryRecord, check_rate_limiting, blocked_ips, request_history
