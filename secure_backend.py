@@ -909,10 +909,14 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         return default_aliases
         
     time_idx = find_column_index(headers, get_mapping('time', ['time', 'tiempo', 'timestamp', 'seg', 'sec']), ['t', 'x', 'time', 'tiempo'])
-    vib_idx = find_column_index(headers, get_mapping('vibration', ['vib', 'acel', 'aceleracion', 'acceleration', 'g-sensor', 'motor_speed', 'speed']), ['y', 'g', 'vib'])
-    temp_idx = find_column_index(headers, get_mapping('temperature', ['temp', 'temperatura', 'temperature', 'term', 'stator_winding', 'coolant']), ['c', 'f'])
-    pres_idx = find_column_index(headers, get_mapping('pressure', ['pres', 'pressure', 'presion', 'bar', 'psi', 'torque', 'i_d']), ['p'])
-    current_idx = find_column_index(headers, get_mapping('current', ['corriente', 'current', 'amperes', 'amperios', 'amp', 'i_q']), ['i_q'])
+    vib_idx = find_column_index(headers, get_mapping('vibration', ['vibrat', 'vib', 'acel', 'aceleracion', 'acceleration', 'g-sensor', 'vibe', 'rms']), ['y', 'g', 'vib'])
+    temp_idx = find_column_index(headers, get_mapping('temperature', ['temp', 'temperatura', 'temperature', 'term', 'stator', 'winding', 'coolant']), ['c', 'f'])
+    pres_idx = find_column_index(headers, get_mapping('pressure', ['pres', 'pressure', 'presion', 'bar', 'psi']), ['p'])
+    current_idx = find_column_index(headers, get_mapping('current', ['corriente', 'current', 'amperes', 'amperios', 'amp', 'amperage']), ['i_q'])
+    
+    # Speed and torque columns specifically for estimation/Kaggle files
+    rpm_idx = find_column_index(headers, ['rpm', 'speed', 'rotation', 'rotational', 'velocity', 'velocidad', 'spindle'])
+    torque_idx = find_column_index(headers, ['torque', 'torsion', 'load', 'tension', 'esfuerzo', 'trq', 'torq'])
 
     sensor_cols = []
     for idx, h in enumerate(headers):
@@ -955,6 +959,35 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     if vib_idx == -1 and pres_idx != -1:
         vib_idx = pres_idx
+
+    # Determine if native vibration sensor is present
+    has_native_vibration = any(
+        any(k in h.lower() for k in ['vibrat', 'vib', 'acel', 'acceleration', 'g-sensor', 'vibe', 'rms', 'sensor'])
+        for h in headers
+    )
+
+    # Determine if there is a pressure sensor in the headers (for UI displaying)
+    has_pressure = any(
+        any(k in h.lower() for k in ['pres', 'pressure', 'presion', 'bar', 'psi'])
+        for h in headers
+    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+
+    # Pre-parse temperatures to calculate the average for Kelvin detection
+    temp_vals = []
+    for i in range(1, len(lines)):
+        raw_cols = [c.strip() for c in lines[i].split(delimiter)]
+        if not raw_cols or all(c == "" for c in raw_cols):
+            continue
+        if len(raw_cols) < len(headers):
+            continue
+        if temp_idx != -1 and temp_idx < len(raw_cols) and raw_cols[temp_idx]:
+            try:
+                temp_vals.append(float(raw_cols[temp_idx]))
+            except ValueError:
+                pass
+    
+    avg_temp_raw = sum(temp_vals) / len(temp_vals) if temp_vals else 0.0
+    is_kelvin = avg_temp_raw > 200.0
 
     parsed_data = []
     t_val = 0.0
@@ -1002,11 +1035,32 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
                     t_val_parsed = float(raw_time)
                 except ValueError:
                     t_val_parsed = t_val
-                    
-        try:
-            raw_vib = float(raw_cols[vib_idx]) if (vib_idx != -1 and vib_idx < len(raw_cols) and raw_cols[vib_idx]) else 0.0
-        except ValueError:
-            raw_vib = 0.0
+
+        # Get RPM and Torque for estimations if needed
+        rpm_val = 1500.0
+        if rpm_idx != -1 and rpm_idx < len(raw_cols) and raw_cols[rpm_idx]:
+            try:
+                rpm_val = float(raw_cols[rpm_idx])
+            except ValueError:
+                pass
+
+        torque_val = 40.0
+        if torque_idx != -1 and torque_idx < len(raw_cols) and raw_cols[torque_idx]:
+            try:
+                torque_val = float(raw_cols[torque_idx])
+            except ValueError:
+                pass
+                     
+        if not has_native_vibration:
+            # Estimate vibration from rpm and torque
+            f_rot = rpm_val / 60.0
+            amp_est = (rpm_val / 2500.0) * (6.0 + (torque_val / 30.0) * 1.89)
+            raw_vib = amp_est * math.sin(2.0 * math.pi * f_rot * t_val_parsed) + random.uniform(-0.01, 0.01)
+        else:
+            try:
+                raw_vib = float(raw_cols[vib_idx]) if (vib_idx != -1 and vib_idx < len(raw_cols) and raw_cols[vib_idx]) else 0.0
+            except ValueError:
+                raw_vib = 0.0
             
         try:
             raw_temp = float(raw_cols[temp_idx]) if (temp_idx != -1 and temp_idx < len(raw_cols) and raw_cols[temp_idx]) else 45.0
@@ -1034,27 +1088,36 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
                 standardized_pres = raw_pres * 10.0
 
         standardized_temp = raw_temp
-        if temp_idx != -1 and temp_idx < len(headers):
-            header = headers[temp_idx].lower()
-            if 'f' in header:
-                standardized_temp = (raw_temp - 32.0) * 5.0 / 9.0
-            elif 'kelvin' in header or 'k' in header or raw_temp > 200.0:
-                # Evitar falso positivo si el header contiene 'c' como 'temp_station_c'
-                if not ('_c' in header or 'cel' in header) or raw_temp > 200.0:
+        if is_kelvin:
+            standardized_temp = raw_temp - 273.15
+            raw_temp = standardized_temp
+        else:
+            if temp_idx != -1 and temp_idx < len(headers):
+                header = headers[temp_idx].lower()
+                if 'f' in header:
+                    standardized_temp = (raw_temp - 32.0) * 5.0 / 9.0
+                elif 'kelvin' in header or 'k' in header:
                     standardized_temp = raw_temp - 273.15
+                    raw_temp = standardized_temp
 
         standardized_current = raw_current
         if math.isnan(raw_current):
-            raw_current = 12.0 + abs(raw_vib) * 3.5 + abs(standardized_pres) * 1.2
-            raw_current += (random.random() - 0.5) * 0.4
-            if raw_current < 0.5:
-                raw_current = 0.5
+            if rpm_idx != -1 or torque_idx != -1:
+                # Estimate current from torque and RPM
+                raw_current = 2.5 + (torque_val * 0.8) + (rpm_val / 1000.0) * 1.5
+                raw_current += (random.random() - 0.5) * 0.1
+            else:
+                raw_current = 12.0 + abs(raw_vib) * 3.5 + abs(standardized_pres) * 1.2
+                raw_current += (random.random() - 0.5) * 0.4
+                if raw_current < 0.5:
+                    raw_current = 0.5
             standardized_current = raw_current
         else:
             if current_idx != -1 and current_idx < len(headers):
                 header = headers[current_idx].lower()
                 if 'torque' in header or 'trq' in header or raw_current > 200.0:
                     standardized_current = raw_current / 10.0
+                    raw_current = standardized_current
 
         row = {
             "time": t_val_parsed,
@@ -1387,7 +1450,7 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             "minCurrentRaw": min_current_raw,
             "avgCurrentRaw": avg_current_raw
         },
-        "hasPressure": (pres_idx != -1),
+        "hasPressure": has_pressure,
         "healthScore": health_score,
         "severityClass": severity_class,
         "diagnosis": diagnostico,
