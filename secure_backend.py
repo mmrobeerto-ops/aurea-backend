@@ -938,6 +938,27 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             s05 = next((c for c in sensor_cols if c["name"].lower() == 'sensor_05'), None)
             current_idx = s05["index"] if s05 else (sensor_cols[3]["index"] if len(sensor_cols) > 3 else -1)
 
+    # Determine presence of sensors in headers first to decide on fallback
+    has_temp_header = any(
+        any(k in h.lower() for k in ['temp', 'temperatura', 'temperature', 'term', 'stator', 'winding', 'coolant', 'sensor'])
+        for h in headers
+    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+
+    has_pres_header = any(
+        any(k in h.lower() for k in ['pres', 'pressure', 'presion', 'bar', 'psi', 'sensor'])
+        for h in headers
+    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+
+    has_current_header = any(
+        any(k in h.lower() for k in ['corriente', 'current', 'amperes', 'amperios', 'amp', 'amperage', 'sensor'])
+        for h in headers
+    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+
+    has_vibration_header = any(
+        any(k in h.lower() for k in ['vibrat', 'vib', 'acel', 'acceleration', 'g-sensor', 'vibe', 'rms', 'sensor'])
+        for h in headers
+    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+
     # Detect the actual number of columns in the data rows to handle mismatched headers
     num_data_cols = len(headers)
     if len(lines) > 1:
@@ -947,30 +968,27 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         except Exception:
             pass
 
-    # Positional fallback if mapping is still unresolved
-    if vib_idx == -1 and num_data_cols > 1:
+    # Positional fallback if mapping is still unresolved AND the header matches generally or contains sensor tag
+    if vib_idx == -1 and num_data_cols > 1 and has_vibration_header:
         vib_idx = 1
-    if temp_idx == -1 and num_data_cols > 2:
+    if temp_idx == -1 and num_data_cols > 2 and has_temp_header:
         temp_idx = 2
-    if pres_idx == -1 and num_data_cols > 3:
+    if pres_idx == -1 and num_data_cols > 3 and has_pres_header:
         pres_idx = 3
-    if current_idx == -1 and num_data_cols > 4:
+    if current_idx == -1 and num_data_cols > 4 and has_current_header:
         current_idx = 4
 
     if vib_idx == -1 and pres_idx != -1:
+        # Fallback to pressure if vibration is missing
         vib_idx = pres_idx
+        has_vibration_header = has_pres_header
 
-    # Determine if native vibration sensor is present
-    has_native_vibration = any(
-        any(k in h.lower() for k in ['vibrat', 'vib', 'acel', 'acceleration', 'g-sensor', 'vibe', 'rms', 'sensor'])
-        for h in headers
-    )
-
-    # Determine if there is a pressure sensor in the headers (for UI displaying)
-    has_pressure = any(
-        any(k in h.lower() for k in ['pres', 'pressure', 'presion', 'bar', 'psi'])
-        for h in headers
-    ) or active_profile_key in ['siemens', 'allen_bradley', 'generic_scada']
+    # Final presence states
+    has_vibration = has_vibration_header or (rpm_idx != -1 and torque_idx != -1)
+    has_native_vibration = has_vibration_header
+    has_temperature = has_temp_header
+    has_pressure = has_pres_header
+    has_current = has_current_header or (rpm_idx != -1 and torque_idx != -1)
 
     # Pre-parse temperatures to calculate the average for Kelvin detection
     temp_vals = []
@@ -1205,70 +1223,38 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         purified_val = amp * math.cos(2.0 * math.pi * target_freq * t - phase)
         purified_signal.append(purified_val)
 
-    max_temp = -1e9
-    min_temp = 1e9
-    sum_temp = 0.0
+    def safe_stats(values: List[float]):
+        valid_vals = [v for v in values if v is not None and not math.isnan(v)]
+        if not valid_vals:
+            return 0.0, 0.0, 0.0
+        return max(valid_vals), min(valid_vals), sum(valid_vals) / len(valid_vals)
+
+    temp_vals = [r["temperature"] for r in parsed_data]
+    max_temp, min_temp, avg_temp = safe_stats(temp_vals)
     
-    max_pres = -1e9
-    min_pres = 1e9
-    sum_pres = 0.0
+    temp_raw_vals = [r["temperature_raw"] for r in parsed_data]
+    max_temp_raw, min_temp_raw, avg_temp_raw = safe_stats(temp_raw_vals)
+
+    pres_vals = [r["pressure"] for r in parsed_data]
+    max_pres, min_pres, avg_pres = safe_stats(pres_vals)
     
-    max_current = -1e9
-    min_current = 1e9
-    sum_current = 0.0
+    pres_raw_vals = [r["pressure_raw"] for r in parsed_data]
+    max_pres_raw, min_pres_raw, avg_pres_raw = safe_stats(pres_raw_vals)
 
-    max_temp_raw = -1e9
-    min_temp_raw = 1e9
-    sum_temp_raw = 0.0
+    current_vals = [r["current"] for r in parsed_data]
+    max_current, min_current, avg_current = safe_stats(current_vals)
     
-    max_pres_raw = -1e9
-    min_pres_raw = 1e9
-    sum_pres_raw = 0.0
-    
-    max_current_raw = -1e9
-    min_current_raw = 1e9
-    sum_current_raw = 0.0
+    current_raw_vals = [r["current_raw"] for r in parsed_data]
+    max_current_raw, min_current_raw, avg_current_raw = safe_stats(current_raw_vals)
 
-    for r in parsed_data:
-        t_val = r["temperature"]
-        if t_val > max_temp: max_temp = t_val
-        if t_val < min_temp: min_temp = t_val
-        sum_temp += t_val
-        
-        t_raw = r.get("temperature_raw", t_val)
-        if t_raw > max_temp_raw: max_temp_raw = t_raw
-        if t_raw < min_temp_raw: min_temp_raw = t_raw
-        sum_temp_raw += t_raw
-
-        p_val = r["pressure"]
-        if p_val > max_pres: max_pres = p_val
-        if p_val < min_pres: min_pres = p_val
-        sum_pres += p_val
-        
-        p_raw = r.get("pressure_raw", p_val)
-        if p_raw > max_pres_raw: max_pres_raw = p_raw
-        if p_raw < min_pres_raw: min_pres_raw = p_raw
-        sum_pres_raw += p_raw
-
-        c_val = r["current"]
-        if c_val > max_current: max_current = c_val
-        if c_val < min_current: min_current = c_val
-        sum_current += c_val
-        
-        c_raw = r.get("current_raw", c_val)
-        if c_raw > max_current_raw: max_current_raw = c_raw
-        if c_raw < min_current_raw: min_current_raw = c_raw
-        sum_current_raw += c_raw
-
-    avg_temp = sum_temp / n
-    avg_pres = sum_pres / n
-    avg_current = sum_current / n
-
-    avg_temp_raw = sum_temp_raw / n
-    avg_pres_raw = sum_pres_raw / n
-    avg_current_raw = sum_current_raw / n
-
-    lecturas_vibracion = [max(0.0001, (r.get("vibration_filtered", r["vibration"])) - offset_val) for r in parsed_data]
+    # Filter vibration readings safely ignoring NaN values
+    lecturas_vibracion = [
+        max(0.0001, (r.get("vibration_filtered", r["vibration"])) - offset_val) 
+        for r in parsed_data 
+        if not math.isnan(r.get("vibration_filtered", r["vibration"]))
+    ]
+    if not lecturas_vibracion:
+        lecturas_vibracion = [0.0001]
     
     n_scada = len(lecturas_vibracion)
     promedio = sum(lecturas_vibracion) / n_scada
@@ -1292,39 +1278,51 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     indice_caos_global = sum_residuos / n_scada
 
     # 1. Sub-índice de Vibración (H_vib) - Límites industriales estándar bajo ISO 10816 (mm/s RMS)
-    if rms <= 4.5:
-        h_vib = 100.0
-    elif 4.5 < rms <= 7.1:
-        h_vib = 100.0 - 25.0 * (rms - 4.5)
+    if has_vibration:
+        if rms <= 4.5:
+            h_vib = 100.0
+        elif 4.5 < rms <= 7.1:
+            h_vib = 100.0 - 25.0 * (rms - 4.5)
+        else:
+            h_vib = max(5.0, 35.0 - 1.5 * (rms - 7.1))
     else:
-        h_vib = max(5.0, 35.0 - 1.5 * (rms - 7.1))
+        h_vib = 100.0
 
     # 2. Sub-índice de Temperatura (H_temp) - Operación real de estator
-    if avg_temp <= 65.0:
-        h_temp = 100.0
-    elif 65.0 < avg_temp <= 95.0:
-        h_temp = 100.0 - 1.33 * (avg_temp - 65.0)
+    if has_temperature:
+        if avg_temp <= 65.0:
+            h_temp = 100.0
+        elif 65.0 < avg_temp <= 95.0:
+            h_temp = 100.0 - 1.33 * (avg_temp - 65.0)
+        else:
+            h_temp = max(10.0, 60.0 - 2.0 * (avg_temp - 95.0))
     else:
-        h_temp = max(10.0, 60.0 - 2.0 * (avg_temp - 95.0))
+        h_temp = 100.0
 
     # 3. Sub-índice de Presión (H_pres)
-    if 4.5 <= avg_pres <= 7.0:
-        h_pres = 100.0
-    elif 3.0 <= avg_pres < 4.5:
-        h_pres = 70.0 + 20.0 * (avg_pres - 3.0)
-    elif 7.0 < avg_pres <= 9.0:
-        h_pres = 100.0 - 15.0 * (avg_pres - 7.0)
+    if has_pressure:
+        if 4.5 <= avg_pres <= 7.0:
+            h_pres = 100.0
+        elif 3.0 <= avg_pres < 4.5:
+            h_pres = 70.0 + 20.0 * (avg_pres - 3.0)
+        elif 7.0 < avg_pres <= 9.0:
+            h_pres = 100.0 - 15.0 * (avg_pres - 7.0)
+        else:
+            # Alerta por caída o sobrepresión extrema, manteniendo piso a 0.0 si cae de 0.5 bar
+            h_pres = 0.0 if avg_pres < 0.5 else 20.0
     else:
-        # Alerta por caída o sobrepresión extrema, manteniendo piso a 0.0 si cae de 0.5 bar
-        h_pres = 0.0 if avg_pres < 0.5 else 20.0
+        h_pres = 100.0
 
     # 4. Sub-índice de Corriente (H_curr) - Línea base 35A (nominal), sobreesfuerzo hasta 118A
-    if avg_current_raw <= 35.0:
-        h_curr = 100.0
-    elif 35.0 < avg_current_raw <= 50.0:
-        h_curr = 100.0 - 4.0 * (avg_current_raw - 35.0)
+    if has_current:
+        if avg_current_raw <= 35.0:
+            h_curr = 100.0
+        elif 35.0 < avg_current_raw <= 50.0:
+            h_curr = 100.0 - 4.0 * (avg_current_raw - 35.0)
+        else:
+            h_curr = max(5.0, 40.0 - 0.5 * (avg_current_raw - 50.0))
     else:
-        h_curr = max(5.0, 40.0 - 0.5 * (avg_current_raw - 50.0))
+        h_curr = 100.0
 
     # 5. Combinación ponderada con sesgo al mínimo
     h_min = min(h_vib, h_temp, h_pres, h_curr)
@@ -1340,62 +1338,68 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     diagnosticos_list = []
     recommendations = []
-    if rms > 7.1:
-        diagnosticos_list.append(f"⚠️ RUIDO ELEVADO CRÍTICO (RMS = {rms:.2f} mm/s). El análisis espectral SFA registra inestabilidad geométrica severa en el flujo.")
-        recommendations.extend([
-            "¡ACCIÓN INMEDIATA! Planificar parada de seguridad para inspeccionar el acoplamiento mecánico.",
-            "Verificar parámetros de succión en la bomba para descartar cavitación destructiva.",
-            "Calibrar y revisar el blindaje a tierra del transductor de vibración."
-        ])
-    elif rms > 4.5:
-        diagnosticos_list.append(f"⚠️ OPERACIÓN NOMINAL CON VIBRACIÓN MODERADA (RMS = {rms:.2f} mm/s). Se detecta una micro-oscilación periódica cíclica bajo control.")
-        recommendations.extend([
-            "Programar inspección de holguras mecánicas y reapriete de pernos en el próximo paro programado.",
-            "Lubricar cojinetes/rodamientos según el plan de mantenimiento preventivo."
-        ])
-    else:
-        recommendations.append("Mantener plan de lubricación estándar según la ficha técnica del fabricante.")
+    
+    # Evaluación de Vibración
+    if has_vibration:
+        if rms > 7.1:
+            diagnosticos_list.append(f"⚠️ RUIDO ELEVADO CRÍTICO (RMS = {rms:.2f} mm/s). El análisis espectral SFA registra inestabilidad geométrica severa en el flujo.")
+            recommendations.extend([
+                "¡ACCIÓN INMEDIATA! Planificar parada de seguridad para inspeccionar el acoplamiento mecánico.",
+                "Verificar parámetros de succión en la bomba para descartar cavitación destructiva.",
+                "Calibrar y revisar el blindaje a tierra del transductor de vibración."
+            ])
+        elif rms > 4.5:
+            diagnosticos_list.append(f"⚠️ OPERACIÓN NOMINAL CON VIBRACIÓN MODERADA (RMS = {rms:.2f} mm/s). Se detecta una micro-oscilación periódica cíclica bajo control.")
+            recommendations.extend([
+                "Programar inspección de holguras mecánicas y reapriete de pernos en el próximo paro programado.",
+                "Lubricar cojinetes/rodamientos según el plan de mantenimiento preventivo."
+            ])
+        else:
+            recommendations.append("Mantener plan de lubricación estándar según la ficha técnica del fabricante.")
 
     # Evaluación de Temperatura
-    if avg_temp > 105.0:
-        diagnosticos_list.append(f"⚠️ EXCESO CRÍTICO DE TEMPERATURA EN EL ESTATOR ({avg_temp:.1f} °C). Riesgo de degradación térmica catastrófica de los devanados.")
-        recommendations.extend([
-            "Verificar sistema de enfriamiento del motor (ventilador, ductos obstruidos, etc.).",
-            "Monitorear la carga eléctrica para descartar sobreesfuerzo prolongado."
-        ])
-    elif avg_temp > 75.0:
-        diagnosticos_list.append(f"⚠️ TEMPERATURA DE ESTATOR ELEVADA ({avg_temp:.1f} °C). Operando por encima de la zona óptima de diseño.")
-        recommendations.append("Revisar la ventilación externa del motor y monitorear la tendencia de temperatura.")
+    if has_temperature:
+        if avg_temp > 105.0:
+            diagnosticos_list.append(f"⚠️ EXCESO CRÍTICO DE TEMPERATURA EN EL ESTATOR ({avg_temp:.1f} °C). Riesgo de degradación térmica catastrófica de los devanados.")
+            recommendations.extend([
+                "Verificar sistema de enfriamiento del motor (ventilador, ductos obstruidos, etc.).",
+                "Monitorear la carga eléctrica para descartar sobreesfuerzo prolongado."
+            ])
+        elif avg_temp > 75.0:
+            diagnosticos_list.append(f"⚠️ TEMPERATURA DE ESTATOR ELEVADA ({avg_temp:.1f} °C). Operando por encima de la zona óptima de diseño.")
+            recommendations.append("Revisar la ventilación externa del motor y monitorear la tendencia de temperatura.")
 
     # Evaluación de Presión
-    if avg_pres < 3.0:
-        diagnosticos_list.append(f"⚠️ BAJA PRESIÓN CRÍTICA ({avg_pres:.1f} bar). Riesgo extremo de cavitación en la bomba o rotura de línea de descarga.")
-        recommendations.extend([
-            "Verificar que la línea de succión no esté bloqueada y comprobar que no haya fugas mayores.",
-            "Descartar cavitación de bomba."
-        ])
-    elif avg_pres < 4.5:
-        diagnosticos_list.append(f"⚠️ BAJA PRESIÓN DETECTADA ({avg_pres:.1f} bar). Fluctuación por debajo del rango de trabajo estándar.")
-        recommendations.append("Revisar estado de válvulas y sellos de presión.")
-    elif avg_pres > 9.0:
-        diagnosticos_list.append(f"⚠️ SOBREPRESIÓN CRÍTICA ({avg_pres:.1f} bar). Peligro de daño estructural en sellos o tuberías por obstrucción o sobreesfuerzo.")
-        recommendations.extend([
-            "Verificar apertura de válvulas de alivio y estado de la línea de descarga.",
-            "Detener sistema si la presión sigue subiendo."
-        ])
-    elif avg_pres > 7.0:
-        diagnosticos_list.append(f"⚠️ PRESIÓN DE SALIDA ELEVADA ({avg_pres:.1f} bar). Operando cerca del límite superior seguro.")
-        recommendations.append("Monitorear el regulador de presión y la resistencia hidráulica de la línea.")
+    if has_pressure:
+        if avg_pres < 3.0:
+            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN CRÍTICA ({avg_pres:.1f} bar). Riesgo extremo de cavitación en la bomba o rotura de línea de descarga.")
+            recommendations.extend([
+                "Verificar que la línea de succión no esté bloqueada y comprobar que no haya fugas mayores.",
+                "Descartar cavitación de bomba."
+            ])
+        elif avg_pres < 4.5:
+            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN DETECTADA ({avg_pres:.1f} bar). Fluctuación por debajo del rango de trabajo estándar.")
+            recommendations.append("Revisar estado de válvulas y sellos de presión.")
+        elif avg_pres > 9.0:
+            diagnosticos_list.append(f"⚠️ SOBREPRESIÓN CRÍTICA ({avg_pres:.1f} bar). Peligro de daño estructural en sellos o tuberías por obstrucción o sobreesfuerzo.")
+            recommendations.extend([
+                "Verificar apertura de válvulas de alivio y estado de la línea de descarga.",
+                "Detener sistema si la presión sigue subiendo."
+            ])
+        elif avg_pres > 7.0:
+            diagnosticos_list.append(f"⚠️ PRESIÓN DE SALIDA ELEVADA ({avg_pres:.1f} bar). Operando cerca del límite superior seguro.")
+            recommendations.append("Monitorear el regulador de presión y la resistencia hidráulica de la línea.")
 
     # Evaluación de Corriente
-    if avg_current_raw > 50.0:
-        diagnosticos_list.append(f"⚠️ SOBRECORRIENTE CRÍTICA ({avg_current_raw:.1f} A). El consumo supera ampliamente la capacidad segura del estator.")
-        if not any("DESCONECTAR" in r for r in recommendations):
-            recommendations.insert(0, "DESCONECTAR EL MOTOR INMEDIATAMENTE para evitar cortocircuitos o fusión de bobinas.")
-        recommendations.append("Realizar pruebas de aislamiento eléctrico de devanados.")
-    elif avg_current_raw > 35.0:
-        diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({avg_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
-        recommendations.append("Revisar balance de fases eléctricas y carga mecánica acoplada.")
+    if has_current:
+        if avg_current_raw > 50.0:
+            diagnosticos_list.append(f"⚠️ SOBRECORRIENTE CRÍTICA ({avg_current_raw:.1f} A). El consumo supera ampliamente la capacidad segura del estator.")
+            if not any("DESCONECTAR" in r for r in recommendations):
+                recommendations.insert(0, "DESCONECTAR EL MOTOR INMEDIATAMENTE para evitar cortocircuitos o fusión de bobinas.")
+            recommendations.append("Realizar pruebas de aislamiento eléctrico de devanados.")
+        elif avg_current_raw > 35.0:
+            diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({avg_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
+            recommendations.append("Revisar balance de fases eléctricas y carga mecánica acoplada.")
 
     # Definir clase de severidad global y diagnóstico unificado
     if health_score >= 85:
