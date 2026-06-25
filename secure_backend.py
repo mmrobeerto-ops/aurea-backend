@@ -1038,23 +1038,34 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             header = headers[temp_idx].lower()
             if 'f' in header:
                 standardized_temp = (raw_temp - 32.0) * 5.0 / 9.0
+            elif 'kelvin' in header or 'k' in header or raw_temp > 200.0:
+                # Evitar falso positivo si el header contiene 'c' como 'temp_station_c'
+                if not ('_c' in header or 'cel' in header) or raw_temp > 200.0:
+                    standardized_temp = raw_temp - 273.15
 
+        standardized_current = raw_current
         if math.isnan(raw_current):
             raw_current = 12.0 + abs(raw_vib) * 3.5 + abs(standardized_pres) * 1.2
             raw_current += (random.random() - 0.5) * 0.4
             if raw_current < 0.5:
                 raw_current = 0.5
+            standardized_current = raw_current
+        else:
+            if current_idx != -1 and current_idx < len(headers):
+                header = headers[current_idx].lower()
+                if 'torque' in header or 'trq' in header or raw_current > 200.0:
+                    standardized_current = raw_current / 10.0
 
         row = {
             "time": t_val_parsed,
             "vibration": raw_vib,
             "temperature": standardized_temp,
             "pressure": standardized_pres,
-            "current": raw_current,
+            "current": standardized_current,
             "vibration_raw": raw_vib,
             "temperature_raw": raw_temp,
             "pressure_raw": raw_pres,
-            "current_raw": raw_current
+            "current_raw": standardized_current
         }
         parsed_data.append(row)
         t_val += 0.01
