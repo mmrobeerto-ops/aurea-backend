@@ -2416,11 +2416,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.SFA.downloadReport();
             });
         }
-        if (btnPrint) {
-            btnPrint.addEventListener('click', (e) => {
-                window.print();
-            });
-        }
+
 
         const reportFormatSelect = document.getElementById('sfa-report-format-select');
         if (reportFormatSelect) {
@@ -3380,45 +3376,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 resetWorkspace();
             });
         }
-
-        const btnPdfAction = document.getElementById('btn-pdf-action');
-        if (btnPdfAction) {
-            btnPdfAction.addEventListener('click', (e) => {
-                // Add print-action-only to body for compact output
-                document.body.classList.add('print-action-only');
-                
-                // Trigger print dialog
-                window.print();
-                
-                // Remove print-action-only class after dialog closes
-                setTimeout(() => {
-                    document.body.classList.remove('print-action-only');
-                }, 1000);
-            });
-        }
-        // Print lifecycle listeners to redraw canvas in print-friendly colors
-        window.addEventListener('beforeprint', () => {
-            window.SFA.isPrinting = true;
-            if (resultsPanel && resultsPanel.style.display === 'block') {
-                if (canvas && canvas.style.display !== 'none') {
-                    window.SFA.drawChart(canvas);
-                }
-                if (degradationCanvas && degradationCanvas.style.display !== 'none') {
-                    window.SFA.drawDegradationChart(degradationCanvas);
-                }
-            }
-        });
-
-        window.addEventListener('afterprint', () => {
-            window.SFA.isPrinting = false;
-            if (resultsPanel && resultsPanel.style.display === 'block') {
-                if (canvas && canvas.style.display !== 'none') {
-                    window.SFA.drawChart(canvas);
-                }
-                if (degradationCanvas && degradationCanvas.style.display !== 'none') {
-                    window.SFA.drawDegradationChart(degradationCanvas);
-                }
-            }
-        });
     }
 });
