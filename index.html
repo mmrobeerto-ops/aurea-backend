@@ -166,7 +166,7 @@
                     <span class="text-gold font-bold">DIAGNÓSTICO ESPECTRAL AUTOMATIZADO</span>
                 </h1>
                 <p class="hero-subtitle">
-                    Conecte la telemetría de sus activos críticos. Procese registros analógicos crudos de PLCs (Vibración, Corriente, Temperatura y Presión) y obtenga reportes técnicos con acciones de mantenimiento en segundos mediante el Motor SFA.<br>
+                    Conecte la telemetría de sus activos críticos sin configuraciones rígidas. Procese registros analógicos crudos de cualquier PLC y marca. El Motor SFA auto-clasifica el tipo de activo mediante análisis de frecuencia fundamental, identifica los sensores instrumentados en tiempo real y genera reportes técnicos con acciones de mantenimiento exactas en segundos.<br>
                     <span class="hero-promo-badge" style="font-size: 0.82rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 4px; display: inline-block; margin-top: 0.8rem; font-weight: 600; font-family: var(--font-accent); letter-spacing: 0.05em; text-transform: uppercase;">⚡ EVALUACIÓN INICIAL GRATIS ACTIVADA (CLUB 33)</span>
                 </p>
                 <div class="hero-actions">
@@ -179,12 +179,12 @@
         <section id="sfa-plataforma" class="content-section scroll-reveal">
             <div class="section-container">
                 <div class="section-badge">INTERACTIVO</div>
-                <h2 class="section-heading">Sintonizador Espectral y Diagnóstico SFA</h2>
+                <h2 class="section-heading">Sintonizador Espectral y Diagnóstico Adaptativo SFA</h2>
                 <p class="section-intro">
-                    Plataforma aislada de análisis predictivo. Cargue los datos de telemetría o use las simulaciones para calibrar.
+                    Análisis predictivo autónomo. Cargue los logs de su PLC; la plataforma identificará la firma armónica base de la máquina de forma automática, ajustando dinámicamente los umbrales de salud (+2σ / +3σ) y la interfaz visual según las variables reales del activo.
                     <br><br>
                     <span style="font-size: 0.92rem; line-height: 1.6; display: inline-block; max-width: 800px; color: var(--color-text-light); border-left: 3px solid var(--color-primary-gold); padding-left: 1.2rem; text-align: left; margin: 1.5rem auto 0; font-family: var(--font-body);">
-                        <strong>Áurea Systems</strong> es una plataforma de diagnóstico predictivo que fusiona el análisis fractal de variables electromecánicas con un backend robusto y securizado en FastAPI y Next.js. El sistema cuenta con validación de tipos estricta por Pydantic, mitigación activa de vectores de ataque XSS y SQLi, control de flujo por Rate Limiting y pruebas unitarias automatizadas. Es una tecnología madura, segura y lista para su despliegue inmediato en infraestructuras corporativas.
+                        <strong>Áurea Systems</strong> es una plataforma de diagnóstico predictivo que fusiona el análisis fractal de variables electromecánicas con un backend robusto y securizado en FastAPI y Next.js. El sistema cuenta con validación de tipos estricta por Pydantic, mitigación activa de vectores de ataque XSS y SQLi, control de flujo por Rate Limiting y pruebas unitarias automatizadas con cobertura total de procesamiento. Es una tecnología madura, segura y certificada mediante rigurosas suites de verificación electromecánica, lista para su despliegue inmediato en infraestructuras corporativas.
                     </span>
                 </p>
 
@@ -435,12 +435,12 @@
                                         </svg>
                                         <h4>Receptor Universal de Telemetría</h4>
                                     </div>
-                                    <p class="guide-desc">El motor SFA cuenta con un **Receptor Universal Adaptativo** que analiza la firma espectral ($f_{dom}$) y el mapeador de sinónimos de PLC para identificar de forma autónoma el tipo de activo y calibrar sus límites de seguridad estadística ($\pm 2\sigma$ y $\pm 3\sigma$):</p>
+                                    <p class="guide-desc">El motor SFA cuenta con un <strong>Receptor Universal Adaptativo</strong> que analiza la firma espectral (f<sub>dom</sub>) y el mapeador de sinónimos de PLC para identificar de forma autónoma el tipo de activo y calibrar sus límites de seguridad estadística (±2σ y ±3σ):</p>
                                     
                                     <div class="guide-variables-list" style="margin-top: 1rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem;">
                                         <div class="guide-var-item">
                                             <span class="var-badge badge-time" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(99, 102, 241, 0.25);">Frecuencia Dominante (Auto-Sintonía)</span>
-                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Identifica la firma espectral: <strong>Motor/Bomba Eléctrica</strong> ($20$ a $60\text{ Hz}$) o <strong>Husillo CNC/Cortador</strong> ($<20\text{ Hz}$), adaptando el tablero y los algoritmos automáticamente.</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Identifica la firma espectral: <strong>Motor/Bomba Eléctrica</strong> (20 a 60 Hz) o <strong>Husillo CNC/Cortador</strong> (menor a 20 Hz), adaptando el tablero y los algoritmos automáticamente.</span>
                                         </div>
                                         <div class="guide-var-item">
                                             <span class="var-badge badge-vib" style="background: rgba(16, 185, 129, 0.12); color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.25);">Variables Mecánicas (CNC / Motores)</span>

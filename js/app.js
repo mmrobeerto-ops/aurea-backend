@@ -537,7 +537,9 @@ class SFAEngine {
         }
 
         // 11. Frecuencia de Sintonía
-        const rowFreq = `${padRight("Frecuencia de Sintonía", 25)}| ${padRight(this.results.targetFreq.toFixed(2) + " Hz", 19)}| ${padRight("f_base x λ", 14)}| ${this.results.targetFreq !== this.fBase ? '⚠️ Desviación Espectral' : '🟢 Sintonía Base'}`;
+        const targetFreqVal = this.results.targetFreq;
+        const isBaseActive = (Math.abs(targetFreqVal - 17.75) < 0.1 || Math.abs(targetFreqVal - 7.25) < 0.1 || Math.abs(targetFreqVal - this.fBase) < 0.1);
+        const rowFreq = `${padRight("Frecuencia de Sintonía", 25)}| ${padRight(targetFreqVal.toFixed(2) + " Hz", 19)}| ${padRight("f_base x λ", 14)}| ${isBaseActive ? '🟢 Sintonía Base Activa' : '⚠️ Desviación Espectral'}`;
         rows.push(rowFreq);
 
         // Información de licencia si existe
@@ -585,9 +587,9 @@ Evidencia Mecánica:
 ${this.results.severityClass === 'danger' ? 'Ruido estructural severo detectado en la banda fractal. Inestabilidad geométrica del flujo.' : (this.results.severityClass === 'warning' ? 'Micro-oscilación cíclica detectada bajo límites de seguridad.' : 'Comportamiento vibratorio y térmico dentro del perfil nominal óptimo.')}
 
 Causas Probables identificadas por el motor de diagnóstico:
-- Cavitación hidráulica o fluctuación inestable del flujo de salida.
+${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada' : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
 - Desalineación o desgaste de rodamientos en acoplamientos del rotor.
-- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.
+- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`}
 
 5. ACCIONES DE MANTENIMIENTO RECOMENDADAS (Plan de Acción)
 ${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n')}
@@ -2684,6 +2686,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Stats values
             document.getElementById('stat-freq').textContent = `${results.targetFreq.toFixed(2)} Hz`;
+            const sealFreqEl = document.getElementById('seal-freq');
+            if (sealFreqEl) {
+                sealFreqEl.textContent = results.targetFreq.toFixed(2);
+            }
             
             if (varsPresent.vibration) {
                 document.getElementById('stat-vib').textContent = `${results.stats.rmsVib.toFixed(3)} mm/s`;

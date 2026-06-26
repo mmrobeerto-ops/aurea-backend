@@ -1568,13 +1568,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     # 4. Sub-índice de Corriente (H_curr)
     if has_current:
-        if avg_current_raw <= scoring_warning_curr:
+        if max_current_raw <= scoring_warning_curr:
             h_curr = 100.0
-        elif scoring_warning_curr < avg_current_raw <= scoring_danger_curr:
+        elif scoring_warning_curr < max_current_raw <= scoring_danger_curr:
             range_curr = max(0.001, scoring_danger_curr - scoring_warning_curr)
-            h_curr = 100.0 - 60.0 * (avg_current_raw - scoring_warning_curr) / range_curr
+            h_curr = 100.0 - 60.0 * (max_current_raw - scoring_warning_curr) / range_curr
         else:
-            h_curr = max(5.0, 40.0 - 0.5 * (avg_current_raw - scoring_danger_curr))
+            h_curr = max(5.0, 40.0 - 0.5 * (max_current_raw - scoring_danger_curr))
     else:
         h_curr = 100.0
 
@@ -1646,13 +1646,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     # Evaluación de Corriente
     if has_current:
-        if avg_current_raw > scoring_danger_curr:
-            diagnosticos_list.append(f"⚠️ SOBRECORRIENTE CRÍTICA ({avg_current_raw:.1f} A). El consumo supera ampliamente la capacidad segura del estator.")
+        if max_current_raw > scoring_danger_curr:
+            diagnosticos_list.append(f"⚠️ SOBRECORRIENTE CRÍTICA ({max_current_raw:.1f} A). El consumo supera ampliamente la capacidad segura del estator.")
             if not any("DESCONECTAR" in r for r in recommendations):
                 recommendations.insert(0, "DESCONECTAR EL MOTOR INMEDIATAMENTE para evitar cortocircuitos o fusión de bobinas.")
             recommendations.append("Realizar pruebas de aislamiento eléctrico de devanados.")
-        elif avg_current_raw > scoring_warning_curr:
-            diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({avg_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
+        elif max_current_raw > scoring_warning_curr:
+            diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({max_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
             recommendations.append("Revisar balance de fases eléctricas y carga mecánica acoplada.")
 
     # Definir clase de severidad global y diagnóstico unificado
