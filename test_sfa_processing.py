@@ -191,5 +191,28 @@ class TestSfaProcessing(unittest.TestCase):
         self.assertEqual(results["stats"]["maxPres"], 5.1)
         self.assertAlmostEqual(results["stats"]["avgCurrent"], 23.166666666666668)
 
+    def test_dynamic_thresholds(self):
+        """Test that dynamic thresholds (+2σ and +3σ) are calculated and returned in results"""
+        csv_text = (
+            "time,vibration,temperature,pressure,current\n"
+            "0.0,0.1,80.0,5.0,20.0\n"
+            "1.0,0.2,85.0,5.0,22.0\n"
+            "2.0,0.15,75.0,5.0,18.0\n"
+        )
+        result = procesar_bloque_armonico(csv_text=csv_text, lambda_val=1.0, offset_val=0.0)
+        self.assertIn("limits", result["results"])
+        limits = result["results"]["limits"]
+        self.assertIn("warningVib", limits)
+        self.assertIn("dangerVib", limits)
+        self.assertIn("warningTemp", limits)
+        self.assertIn("dangerTemp", limits)
+        self.assertIn("warningCurrent", limits)
+        self.assertIn("dangerCurrent", limits)
+        
+        # Verify that warning limits are at least the baseline values
+        self.assertGreaterEqual(limits["warningVib"], 4.5)
+        self.assertGreaterEqual(limits["warningTemp"], 75.0)
+        self.assertGreaterEqual(limits["warningCurrent"], 35.0)
+
 if __name__ == "__main__":
     unittest.main()
