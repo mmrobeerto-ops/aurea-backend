@@ -2843,6 +2843,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('print-meta-plan').textContent = `${licensePlan.toUpperCase()} (${formattedPrice})`;
             document.getElementById('print-meta-txid').textContent = txIdToShow;
             document.getElementById('print-meta-date').textContent = dateStr;
+            document.getElementById('print-meta-severity').textContent = severityTextDisplay;
+            document.getElementById('print-meta-tolerance').textContent = `${results.green_count} / ${results.total_evaluated}`;
 
             // Sync attributes of resultsPanel for CSS print styles
             if (resultsPanel) {

@@ -2599,6 +2599,9 @@ footer {
     .sfa-divider,
     .sfa-report-actions,
     footer,
+    #inicio,
+    #caso-practico,
+    #compatibilidad,
     #genesis,
     #mision,
     #vision,
@@ -2645,6 +2648,9 @@ footer {
         margin: 0 !important;
         padding: 0 !important;
         color: #000000 !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     
     /* Disable old pseudo-element header */
