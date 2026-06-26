@@ -452,7 +452,7 @@ class SFAEngine {
             if (varKey === 'vibration') {
                 if (isOptimal) desc = `Salud mecánica del 100%. Sin riesgos para la continuidad de la producción. Desgaste mínimo que proyecta extender la vida útil del activo en un 15% frente a la media.`;
                 else if (isWarning) desc = `Vibración de ${valStr} excede el límite de ${limitStr}. Acelera el desgaste de rodamientos. Riesgo moderado de paro imprevisto de producción. Se aconseja intervenir en el próximo mantenimiento programado.`;
-                else desc = `Vibración destructiva de ${valStr}. Riesgo inminente de rotura física con pérdidas por paro estimadas en $12,000 USD/hora. Requiere intervención inmediata del equipo de guardia.`;
+                else desc = `Vibración destructiva de ${valStr}. Riesgo inminente de rotura física con pérdidas por paro no especificadas. Requiere intervención inmediata del equipo de guardia.`;
             } else if (varKey === 'temperature') {
                 if (isOptimal) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil del lubricante de rodamientos.`;
                 else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación térmica del lubricante y el aislamiento del motor. Se requiere revisión preventiva de refrigeración para evitar daños mayores.`;
@@ -461,7 +461,7 @@ class SFAEngine {
                 else desc = `Presión inestable con oscilación de ${valStr} (máx 1.5 bar). Afecta la calidad de la pieza de trabajo y daña sellos hidráulicos, incrementando el riesgo de fugas de aceite.`;
             } else if (varKey === 'current') {
                 if (isOptimal) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica y el consumo de energía en parámetros nominales de diseño.`;
-                else if (isWarning) desc = `Corriente elevada de ${valStr} incrementa costos de energía en 8.5% y sugiere sobreesfuerzo mecánico ligero en la transmisión.`;
+                else if (isWarning) desc = `Corriente elevada de ${valStr} incrementa costos de energía y sugiere sobreesfuerzo mecánico ligero en la transmisión.`;
                 else desc = `Corriente de ${valStr} en sobrecarga crítica. Pérdida masiva de eficiencia energética y riesgo extremo de quemar bobinados, provocando paros prolongados de 3 a 5 días para reemplazo.`;
             } else if (varKey === 'rpm') {
                 if (isOptimal) desc = `Velocidad de ${valStr} estable y alineada con la cadencia productiva óptima de la planta.`;
@@ -682,7 +682,7 @@ INFORMACIÓN DE LICENCIA Y AUDITORÍA COMERCIAL:
         if (isGerente) {
             const riskRating = this.results.severityClass === 'healthy' ? 'BAJO' : (this.results.severityClass === 'warning' ? 'MODERADO' : 'ALTO');
             const riskColor = this.results.severityClass === 'healthy' ? '🟢' : (this.results.severityClass === 'warning' ? '🟡' : '🔴');
-            const avgDowntimeLoss = this.results.severityClass === 'healthy' ? '$0 USD' : (this.results.severityClass === 'warning' ? '$3,500 USD' : '$12,000 USD/hora');
+            const avgDowntimeLoss = this.results.severityClass === 'healthy' ? '$0 USD' : 'No especificado (Se requiere ingresar costo real de paro por hora en la configuración del activo)';
             
             return `📄 AUDITORÍA EJECUTIVA DE SALUD DE ACTIVOS Y CONTINUIDAD DE NEGOCIO — ÁUREA SYSTEMS
 SISTEMA DE PREVENCIÓN DE PÉRDIDAS SFA (NIVEL GERENCIAL)
@@ -706,8 +706,8 @@ Variable                | Valor Máx    | Límite    | Racional e Impacto Financ
 ${rows.join('\n')}
 
 3. IMPACTO FINANCIERO Y PRONÓSTICO DE VIDA ÚTIL
-- Tasa de Degradación Mecánica: El motor de diagnóstico proyecta que la vida útil remanente del rodamiento principal/husillo se encuentra en óptimas condiciones. ${this.results.severityClass !== 'healthy' ? 'Se proyecta aceleración de desgaste por fatiga de un 25% si no se realiza intervención preventora.' : 'Cero paros imprevistos estimados en las siguientes 100 horas de ciclo continuo.'}
-- Pérdida de Eficiencia Energética: ${this.results.severityClass === 'danger' ? 'El sobreesfuerzo eléctrico actual genera una fuga térmica y pérdidas de eficiencia equivalentes al 9.3% del costo operativo.' : 'Parámetros de potencia en zona óptima, garantizando la máxima eficiencia por KW consumido.'}
+- Tasa de Degradación Mecánica: El motor de diagnóstico proyecta que la vida útil remanente del rodamiento principal/husillo se encuentra en óptimas condiciones. ${this.results.severityClass !== 'healthy' ? 'Se proyecta aceleración de desgaste por fatiga si no se realiza intervención preventora.' : 'Cero paros imprevistos estimados en las siguientes 100 horas de ciclo continuo.'}
+- Pérdida de Eficiencia Energética: ${this.results.severityClass === 'danger' ? 'El sobreesfuerzo eléctrico actual genera una fuga térmica y pérdidas de eficiencia electromecánica. Requiere calibración del consumo nominal del activo.' : 'Parámetros de potencia en zona óptima, garantizando la máxima eficiencia por KW consumido.'}
 
 4. PLAN ESTRATÉGICO DE INTERVENCIÓN (Recomendado)
 ${this.results.recommendations.map((rec, i) => `${i + 1}. [Prioridad ${this.results.severityClass === 'danger' ? 'ALTA' : 'MEDIA'}] ${rec}`).join('\n')}
