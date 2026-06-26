@@ -2838,13 +2838,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const currency = (licensePlan.includes("Junior") || licensePlan.includes("Consultor") || licensePlan.includes("Gerente") || licensePrice > 1000) ? 'MXN' : 'USD';
             const formattedPrice = `$${licensePrice.toLocaleString()} ${currency}`;
 
-            // Populate print-only traceability metadata
-            document.getElementById('print-meta-asset').textContent = sourceName;
-            document.getElementById('print-meta-plan').textContent = `${licensePlan.toUpperCase()} (${formattedPrice})`;
-            document.getElementById('print-meta-txid').textContent = txIdToShow;
-            document.getElementById('print-meta-date').textContent = dateStr;
-            document.getElementById('print-meta-severity').textContent = severityTextDisplay;
-            document.getElementById('print-meta-tolerance').textContent = `${results.green_count} / ${results.total_evaluated}`;
+            // Populate print-only traceability metadata safely
+            const printAssetEl = document.getElementById('print-meta-asset');
+            if (printAssetEl) printAssetEl.textContent = sourceName;
+            
+            const printPlanEl = document.getElementById('print-meta-plan');
+            if (printPlanEl) printPlanEl.textContent = `${licensePlan.toUpperCase()} (${formattedPrice})`;
+            
+            const printTxidEl = document.getElementById('print-meta-txid');
+            if (printTxidEl) printTxidEl.textContent = txIdToShow;
+            
+            const printDateEl = document.getElementById('print-meta-date');
+            if (printDateEl) printDateEl.textContent = dateStr;
+            
+            const printSeverityEl = document.getElementById('print-meta-severity');
+            if (printSeverityEl) printSeverityEl.textContent = severityTextDisplay;
+            
+            const printToleranceEl = document.getElementById('print-meta-tolerance');
+            if (printToleranceEl) printToleranceEl.textContent = `${results.green_count} / ${results.total_evaluated}`;
 
             // Sync attributes of resultsPanel for CSS print styles
             if (resultsPanel) {
