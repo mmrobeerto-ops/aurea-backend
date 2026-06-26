@@ -1553,29 +1553,39 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     # 2. Sub-índice de Temperatura (H_temp)
     if has_temperature:
-        temp_start_degrade = scoring_warning_temp - 10.0
-        temp_end_warn = scoring_warning_temp + 20.0
-        if avg_temp <= temp_start_degrade:
+        temp_val = max_temp if max_temp > 0 else avg_temp
+        if temp_val <= scoring_warning_temp:
             h_temp = 100.0
-        elif temp_start_degrade < avg_temp <= temp_end_warn:
-            range_temp = max(0.001, temp_end_warn - temp_start_degrade)
-            h_temp = 100.0 - 40.0 * (avg_temp - temp_start_degrade) / range_temp
+        elif scoring_warning_temp < temp_val <= scoring_danger_temp:
+            range_temp = max(0.001, scoring_danger_temp - scoring_warning_temp)
+            h_temp = 100.0 - 60.0 * (temp_val - scoring_warning_temp) / range_temp
         else:
-            h_temp = max(10.0, 60.0 - 2.0 * (avg_temp - temp_end_warn))
+            h_temp = max(5.0, 40.0 - 0.5 * (temp_val - scoring_danger_temp))
     else:
         h_temp = 100.0
 
     # 3. Sub-índice de Presión (H_pres)
     if has_pressure:
+        # Presión Absoluta
         if 4.5 <= avg_pres <= 7.0:
-            h_pres = 100.0
+            h_pres_abs = 100.0
         elif 3.0 <= avg_pres < 4.5:
-            h_pres = 70.0 + 20.0 * (avg_pres - 3.0)
+            h_pres_abs = 70.0 + 20.0 * (avg_pres - 3.0)
         elif 7.0 < avg_pres <= 9.0:
-            h_pres = 100.0 - 15.0 * (avg_pres - 7.0)
+            h_pres_abs = 100.0 - 15.0 * (avg_pres - 7.0)
         else:
-            # Alerta por caída o sobrepresión extrema, manteniendo piso a 0.0 si cae de 0.5 bar
-            h_pres = 0.0 if avg_pres < 0.5 else 20.0
+            h_pres_abs = 0.0 if avg_pres < 0.5 else 20.0
+            
+        # Fluctuación de Presión
+        pres_diff = max_pres - min_pres
+        if pres_diff <= 1.5:
+            h_pres_flux = 100.0
+        elif 1.5 < pres_diff <= 2.5:
+            h_pres_flux = 100.0 - 60.0 * (pres_diff - 1.5) / 1.0
+        else:
+            h_pres_flux = max(5.0, 40.0 - 10.0 * (pres_diff - 2.5))
+            
+        h_pres = min(h_pres_abs, h_pres_flux)
     else:
         h_pres = 100.0
 
@@ -1658,26 +1668,41 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     else:
         h_voltage = 100.0
 
-    # 5. Combinación ponderada con sesgo al mínimo
-    h_min = min(h_vib, h_temp, h_pres, h_curr, h_rpm, h_torque, h_wear, h_flow, h_level, h_voltage)
+    # 5. Combinación ponderada universal de variables activas
+    weights = {
+        "vibration": 0.40,
+        "temperature": 0.25,
+        "pressure": 0.15,
+        "current": 0.20,
+        "rpm": 0.20,
+        "torque": 0.20,
+        "tool_wear": 0.20,
+        "flow": 0.15,
+        "level": 0.15,
+        "voltage": 0.15
+    }
     
-    # Backward compatible core variables average
-    h_core_avg = 0.40 * h_vib + 0.25 * h_temp + 0.15 * h_pres + 0.20 * h_curr
+    active_vars = []
+    if has_vibration: active_vars.append(("vibration", h_vib))
+    if has_temperature: active_vars.append(("temperature", h_temp))
+    if has_pressure: active_vars.append(("pressure", h_pres))
+    if has_current: active_vars.append(("current", h_curr))
+    if has_rpm: active_vars.append(("rpm", h_rpm))
+    if has_torque: active_vars.append(("torque", h_torque))
+    if has_wear: active_vars.append(("tool_wear", h_wear))
+    if has_flow: active_vars.append(("flow", h_flow))
+    if has_level: active_vars.append(("level", h_level))
+    if has_voltage: active_vars.append(("voltage", h_voltage))
     
-    new_vars_healths = []
-    if has_rpm: new_vars_healths.append(h_rpm)
-    if has_torque: new_vars_healths.append(h_torque)
-    if has_wear: new_vars_healths.append(h_wear)
-    if has_flow: new_vars_healths.append(h_flow)
-    if has_level: new_vars_healths.append(h_level)
-    if has_voltage: new_vars_healths.append(h_voltage)
-    
-    if new_vars_healths:
-        h_new_avg = sum(new_vars_healths) / len(new_vars_healths)
-        h_avg = 0.60 * h_core_avg + 0.40 * h_new_avg
+    if active_vars:
+        h_min = min(val for name, val in active_vars)
+        total_weight = sum(weights[name] for name, val in active_vars)
+        weighted_sum = sum(val * weights[name] for name, val in active_vars)
+        h_avg = weighted_sum / total_weight if total_weight > 0 else 100.0
     else:
-        h_avg = h_core_avg
-    
+        h_min = 100.0
+        h_avg = 100.0
+        
     health_score = round(0.60 * h_min + 0.40 * h_avg)
     health_score = max(5, min(100, health_score))
 
@@ -1709,14 +1734,15 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     # Evaluación de Temperatura
     if has_temperature:
-        if avg_temp > scoring_danger_temp:
-            diagnosticos_list.append(f"⚠️ EXCESO CRÍTICO DE TEMPERATURA EN EL ESTATOR ({avg_temp:.1f} °C). Riesgo de degradación térmica catastrófica de los devanados.")
+        temp_val = max_temp if max_temp > 0 else avg_temp
+        if temp_val > scoring_danger_temp:
+            diagnosticos_list.append(f"⚠️ EXCESO CRÍTICO DE TEMPERATURA EN EL ESTATOR ({temp_val:.1f} °C). Riesgo de degradación térmica catastrófica de los devanados.")
             recommendations.extend([
                 "Verificar sistema de enfriamiento del motor (ventilador, ductos obstruidos, etc.).",
                 "Monitorear la carga eléctrica para descartar sobreesfuerzo prolongado."
             ])
-        elif avg_temp > scoring_warning_temp:
-            diagnosticos_list.append(f"⚠️ TEMPERATURA DE ESTATOR ELEVADA ({avg_temp:.1f} °C). Operando por encima de la zona óptima de diseño.")
+        elif temp_val > scoring_warning_temp:
+            diagnosticos_list.append(f"⚠️ TEMPERATURA DE ESTATOR ELEVADA ({temp_val:.1f} °C). Operando por encima de la zona óptima de diseño.")
             recommendations.append("Revisar la ventilación externa del motor y monitorear la tendencia de temperatura.")
 
     # Evaluación de Presión
@@ -1739,6 +1765,18 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         elif avg_pres > 7.0:
             diagnosticos_list.append(f"⚠️ PRESIÓN DE SALIDA ELEVADA ({avg_pres:.1f} bar). Operando cerca del límite superior seguro.")
             recommendations.append("Monitorear el regulador de presión y la resistencia hidráulica de la línea.")
+            
+        # Fluctuation diagnostic
+        pres_diff = max_pres - min_pres
+        if pres_diff > 2.5:
+            diagnosticos_list.append(f"⚠️ FLUCTUACIÓN DE PRESIÓN CRÍTICA ({pres_diff:.1f} bar). Alta inestabilidad hidráulica o pulsación severa.")
+            recommendations.extend([
+                "Inspeccionar amortiguador de pulsaciones y verificar la válvula reguladora de presión.",
+                "Revisar posibles transitorios rápidos de caudal o cavitación de aire en la línea."
+            ])
+        elif pres_diff > 1.5:
+            diagnosticos_list.append(f"⚠️ FLUCTUACIÓN DE PRESIÓN MODERADA ({pres_diff:.1f} bar). Inestabilidad hidráulica detectada.")
+            recommendations.append("Revisar amortiguador de pulsaciones o posibles bolsas de aire.")
 
     # Evaluación de Corriente
     if has_current:
