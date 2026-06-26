@@ -5344,107 +5344,44 @@ footer {
     z-index: -1; /* Place below all content */
     overflow: hidden;
     pointer-events: none;
-    background-color: #02060f; /* Base very dark background */
+    background: radial-gradient(circle at center, rgba(3, 9, 20, 0.72) 0%, rgba(2, 6, 12, 0.88) 100%);
 }
 
-/* 1. Fluid Aurora Blobs */
-.sfa-glow-blob {
+.sfa-dynamic-bg-container::before {
+    content: '';
     position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.15;
-    mix-blend-mode: screen;
-    animation: floatBlobs 25s infinite alternate ease-in-out;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background-image: url('../img/bg_gold_particles.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: slowZoomPan 45s infinite alternate ease-in-out;
+    z-index: -2;
 }
 
-.blob-teal {
-    top: -10%;
-    left: 10%;
-    width: 45vw;
-    height: 45vw;
-    background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, rgba(0,0,0,0) 70%);
-    animation-delay: 0s;
-}
-
-.blob-indigo {
-    bottom: -10%;
-    right: 10%;
-    width: 50vw;
-    height: 50vw;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(0,0,0,0) 70%);
-    animation-delay: -5s;
-}
-
-.blob-gold {
-    top: 40%;
-    left: 60%;
-    width: 35vw;
-    height: 35vw;
-    background: radial-gradient(circle, rgba(226, 193, 149, 0.25) 0%, rgba(0,0,0,0) 70%);
-    animation-delay: -10s;
-}
-
-@keyframes floatBlobs {
+@keyframes slowZoomPan {
     0% {
-        transform: translate(0, 0) scale(1);
+        transform: scale(1) translate(0, 0);
     }
     50% {
-        transform: translate(5vw, -5vw) scale(1.15);
+        transform: scale(1.06) translate(1%, -1%);
     }
     100% {
-        transform: translate(-3vw, 3vw) scale(0.9);
+        transform: scale(1) translate(0, 0);
     }
 }
 
-/* 2. SFA Spectral Waveforms */
-.sfa-bg-waves {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.04;
-}
-
-.sfa-wave-path {
-    fill: none;
-    stroke: var(--color-primary-gold);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: flowWave 30s linear infinite;
-}
-
-.wave-1 {
-    animation-duration: 25s;
-}
-
-.wave-2 {
-    animation-duration: 35s;
-    animation-delay: -10s;
-    stroke: var(--color-blue-accent);
-}
-
-.wave-3 {
-    animation-duration: 45s;
-    animation-delay: -20s;
-    stroke: #818cf8;
-}
-
-@keyframes flowWave {
-    to {
-        stroke-dashoffset: -1000;
-    }
-}
-
-/* 3. Floating Spark Particles */
+/* Floating Spark Particles */
 .sfa-bg-particles {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: -1;
 }
 
 .sfa-particle {
@@ -5453,7 +5390,7 @@ footer {
     height: 2px;
     background-color: var(--color-primary-gold);
     border-radius: 50%;
-    opacity: 0.3;
+    opacity: 0.25;
     box-shadow: 0 0 4px var(--color-primary-gold);
     animation: floatParticle 15s infinite linear;
 }
@@ -5464,10 +5401,10 @@ footer {
         opacity: 0;
     }
     10% {
-        opacity: 0.5;
+        opacity: 0.4;
     }
     90% {
-        opacity: 0.5;
+        opacity: 0.4;
     }
     100% {
         transform: translateY(-5vh) translateX(20px) scale(1);
