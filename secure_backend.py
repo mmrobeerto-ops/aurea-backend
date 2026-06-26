@@ -1748,22 +1748,22 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     # Evaluación de Presión
     if has_pressure:
         if avg_pres < 3.0:
-            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN CRÍTICA ({avg_pres:.1f} bar). Riesgo extremo de cavitación en la bomba o rotura de línea de descarga.")
+            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN CRÍTICA ({min_pres:.1f} bar). Riesgo extremo de cavitación en la bomba o rotura de línea de descarga.")
             recommendations.extend([
                 "Verificar que la línea de succión no esté bloqueada y comprobar que no haya fugas mayores.",
                 "Descartar cavitación de bomba."
             ])
         elif avg_pres < 4.5:
-            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN DETECTADA ({avg_pres:.1f} bar). Fluctuación por debajo del rango de trabajo estándar.")
+            diagnosticos_list.append(f"⚠️ BAJA PRESIÓN DETECTADA ({min_pres:.1f} bar). Fluctuación por debajo del rango de trabajo estándar.")
             recommendations.append("Revisar estado de válvulas y sellos de presión.")
         elif avg_pres > 9.0:
-            diagnosticos_list.append(f"⚠️ SOBREPRESIÓN CRÍTICA ({avg_pres:.1f} bar). Peligro de daño estructural en sellos o tuberías por obstrucción o sobreesfuerzo.")
+            diagnosticos_list.append(f"⚠️ SOBREPRESIÓN CRÍTICA ({max_pres:.1f} bar). Peligro de daño estructural en sellos o tuberías por obstrucción o sobreesfuerzo.")
             recommendations.extend([
                 "Verificar apertura de válvulas de alivio y estado de la línea de descarga.",
                 "Detener sistema si la presión sigue subiendo."
             ])
         elif avg_pres > 7.0:
-            diagnosticos_list.append(f"⚠️ PRESIÓN DE SALIDA ELEVADA ({avg_pres:.1f} bar). Operando cerca del límite superior seguro.")
+            diagnosticos_list.append(f"⚠️ PRESIÓN DE SALIDA ELEVADA ({max_pres:.1f} bar). Operando cerca del límite superior seguro.")
             recommendations.append("Monitorear el regulador de presión y la resistencia hidráulica de la línea.")
             
         # Fluctuation diagnostic
@@ -1789,9 +1789,123 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             diagnosticos_list.append(f"⚠️ CONSUMO DE CORRIENTE ELEVADO ({max_current_raw:.1f} A). Degradación por sobreesfuerzo o desbalance eléctrico.")
             recommendations.append("Revisar balance de fases eléctricas y carga mecánica acoplada.")
 
-    # Definir clase de severidad global y diagnóstico unificado
-    if health_score >= 85:
+    # 6. Estatus de Severidad Basado en Variables del CSV (Eslabón más débil)
+    var_statuses = {}
+    
+    if has_vibration:
+        if rms <= scoring_warning_vib:
+            var_statuses["vibration"] = "green"
+        elif rms <= scoring_danger_vib:
+            var_statuses["vibration"] = "yellow"
+        else:
+            var_statuses["vibration"] = "red"
+            
+    if has_temperature:
+        temp_val = max_temp if max_temp > 0 else avg_temp
+        if temp_val <= scoring_warning_temp:
+            var_statuses["temperature"] = "green"
+        elif temp_val <= scoring_danger_temp:
+            var_statuses["temperature"] = "yellow"
+        else:
+            var_statuses["temperature"] = "red"
+            
+    if has_pressure:
+        # Abs
+        if 4.5 <= avg_pres <= 7.0:
+            status_abs = "green"
+        elif 3.0 <= avg_pres <= 9.0:
+            status_abs = "yellow"
+        else:
+            status_abs = "red"
+        # Flux
+        pres_diff = max_pres - min_pres
+        if pres_diff <= 1.5:
+            status_flux = "green"
+        elif pres_diff <= 2.5:
+            status_flux = "yellow"
+        else:
+            status_flux = "red"
+            
+        if "red" in (status_abs, status_flux):
+            var_statuses["pressure"] = "red"
+        elif "yellow" in (status_abs, status_flux):
+            var_statuses["pressure"] = "yellow"
+        else:
+            var_statuses["pressure"] = "green"
+            
+    if has_current:
+        if max_current_raw <= scoring_warning_curr:
+            var_statuses["current"] = "green"
+        elif max_current_raw <= scoring_danger_curr:
+            var_statuses["current"] = "yellow"
+        else:
+            var_statuses["current"] = "red"
+
+    if has_rpm:
+        if max_rpm <= scoring_warning_rpm:
+            var_statuses["rpm"] = "green"
+        elif max_rpm <= scoring_danger_rpm:
+            var_statuses["rpm"] = "yellow"
+        else:
+            var_statuses["rpm"] = "red"
+
+    if has_torque:
+        if max_torque <= scoring_warning_torque:
+            var_statuses["torque"] = "green"
+        elif max_torque <= scoring_danger_torque:
+            var_statuses["torque"] = "yellow"
+        else:
+            var_statuses["torque"] = "red"
+
+    if has_wear:
+        if max_wear <= scoring_warning_wear:
+            var_statuses["tool_wear"] = "green"
+        elif max_wear <= scoring_danger_wear:
+            var_statuses["tool_wear"] = "yellow"
+        else:
+            var_statuses["tool_wear"] = "red"
+
+    if has_flow:
+        if max_flow <= scoring_warning_flow:
+            var_statuses["flow"] = "green"
+        elif max_flow <= scoring_danger_flow:
+            var_statuses["flow"] = "yellow"
+        else:
+            var_statuses["flow"] = "red"
+
+    if has_level:
+        if max_level <= scoring_warning_level:
+            var_statuses["level"] = "green"
+        elif max_level <= scoring_danger_level:
+            var_statuses["level"] = "yellow"
+        else:
+            var_statuses["level"] = "red"
+
+    if has_voltage:
+        if max_voltage <= scoring_warning_voltage:
+            var_statuses["voltage"] = "green"
+        elif max_voltage <= scoring_danger_voltage:
+            var_statuses["voltage"] = "yellow"
+        else:
+            var_statuses["voltage"] = "red"
+
+    green_count = sum(1 for status in var_statuses.values() if status == "green")
+    yellow_count = sum(1 for status in var_statuses.values() if status == "yellow")
+    red_count = sum(1 for status in var_statuses.values() if status == "red")
+    total_evaluated = len(var_statuses)
+
+    if red_count > 0:
+        severity_class = "danger"
+        severity_text = "🔴 CRÍTICO (Riesgo de Falla Inminente)"
+    elif yellow_count > 0:
+        severity_class = "warning"
+        severity_text = "🟡 ADVERTENCIA (Requiere Intervención Preventiva)"
+    else:
         severity_class = "healthy"
+        severity_text = "🟢 ÓPTIMO (Operación Nominal Seguro)"
+
+    # Definir diagnóstico unificado
+    if severity_class == "healthy":
         if diagnosticos_list:
             diagnostico = " | ".join(diagnosticos_list)
         else:
@@ -1800,14 +1914,25 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
                 "Programar la siguiente auditoría de telemetría SFA preventiva en 90 días.",
                 "Continuar operando dentro del rango de potencia nominal."
             ])
-    elif health_score >= 60:
-        severity_class = "warning"
+    elif severity_class == "warning":
         diagnostico = " | ".join(diagnosticos_list) if diagnosticos_list else "⚠️ ADVERTENCIA: Se detecta una leve degradación de parámetros operativos."
     else:
-        severity_class = "danger"
         diagnostico = " | ".join(diagnosticos_list) if diagnosticos_list else "🚨 CRÍTICO: Múltiples variables fuera del rango tolerable."
+
+    # Recomendación de emergencia del plan estratégico (Punto 1)
+    if severity_class == "danger":
+        if "Mantener plan de lubricación estándar según la ficha técnica del fabricante." in recommendations:
+            recommendations.remove("Mantener plan de lubricación estándar según la ficha técnica del fabricante.")
         
-    if detected_mode == "CNC_MOTOR" and health_score < 80:
+        emergency_recs = []
+        if has_temperature and (max_temp if max_temp > 0 else avg_temp) > scoring_danger_temp:
+            emergency_recs.append("[Prioridad ALTA] Inspeccionar de inmediato el sistema de enfriamiento y la línea de retorno hidráulico para mitigar el estrés térmico.")
+        if has_pressure and (max_pres - min_pres > 2.5 or avg_pres < 3.0 or avg_pres > 9.0):
+            emergency_recs.append("[Prioridad ALTA] Verificar la apertura de las válvulas de alivio y obstrucciones en las líneas de descarga.")
+            
+        recommendations = emergency_recs + recommendations
+
+    if detected_mode == "CNC_MOTOR" and severity_class == "danger":
         recommendations.extend([
             "Revisar desgaste de herramienta.",
             "Reducir avance.",
@@ -1906,6 +2031,11 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         "hasPressure": has_pressure,
         "healthScore": health_score,
         "severityClass": severity_class,
+        "green_count": green_count,
+        "yellow_count": yellow_count,
+        "red_count": red_count,
+        "total_evaluated": total_evaluated,
+        "severity_text": severity_text,
         "diagnosis": diagnostico,
         "recommendations": recommendations,
         "pressureUnit": pressure_unit,

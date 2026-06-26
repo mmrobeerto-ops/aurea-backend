@@ -575,16 +575,17 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                                 <div class="dashboard-title-group">
                                     <h3>Panel de Diagnóstico Espectral SFA</h3>
                                     <p class="text-gray" id="sfa-analysis-meta">Archivo analizado el: --/--/----</p>
+                                    <p class="text-gray" id="sfa-variables-tolerance" style="margin-top: 0.25rem; font-size: 0.85rem; display: none;">Variables evaluadas en Tolerancia: -- / --</p>
                                 </div>
                                 <!-- Health Badge -->
                                 <div class="sfa-health-badge-wrapper" id="sfa-health-badge-container">
-                                    <span class="health-label">ÍNDICE DE SALUD SFA <span class="tooltip-trigger" data-tooltip-text="Porcentaje de salud electromecánica derivado del filtrado digital de vibraciones. Un valor mayor a 90% indica funcionamiento óptimo; entre 80-90% requiere mantenimiento preventivo; menor a 80% requiere intervención inmediata.">?</span>:</span>
-                                    <span class="health-percentage" id="sfa-health-display">95%</span>
+                                    <span class="health-label">ESTATUS DE SEVERIDAD <span class="tooltip-trigger" data-tooltip-text="Estatus global de severidad electromecánica basado en la peor variable detectada (eslabón más débil).">?</span>:</span>
+                                    <span class="health-percentage" id="sfa-health-display">🟢 ÓPTIMO</span>
                                 </div>
                                 
                                 <!-- Tablero de Planificación de Mantenimiento -->
                                 <div class="sfa-maintenance-bar-wrapper" id="sfa-maintenance-bar-container" data-tooltip-text="Nivel de severidad: Óptimo. Tiempo estimado de intervención: No requiere.">
-                                    <div class="sfa-maintenance-bar-fill" id="sfa-maintenance-fill" style="width: 95%;"></div>
+                                    <div class="sfa-maintenance-bar-fill" id="sfa-maintenance-fill" style="width: 100%;"></div>
                                 </div>
                             </div>
 

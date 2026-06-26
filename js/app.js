@@ -676,10 +676,13 @@ INFORMACIÓN DE LICENCIA Y AUDITORÍA COMERCIAL:
 --------------------------------------------------------------------------`;
         }
 
+        const severityText = this.results.severity_text || (this.results.severityClass === 'danger' ? '🔴 CRÍTICO (Riesgo de Falla Inminente)' : (this.results.severityClass === 'warning' ? '🟡 ADVERTENCIA (Requiere Intervención Preventiva)' : '🟢 ÓPTIMO (Operación Nominal Seguro)'));
+        const toleranceText = (this.results.green_count !== undefined && this.results.total_evaluated !== undefined) ? `${this.results.green_count} / ${this.results.total_evaluated}` : '-- / --';
+
         if (isGerente) {
-            const riskRating = this.results.healthScore >= 90 ? 'BAJO' : (this.results.healthScore >= 80 ? 'MODERADO' : 'ALTO');
-            const riskColor = this.results.healthScore >= 90 ? '🟢' : (this.results.healthScore >= 80 ? '🟡' : '🔴');
-            const avgDowntimeLoss = this.results.healthScore >= 90 ? '$0 USD' : (this.results.healthScore >= 80 ? '$3,500 USD' : '$12,000 USD/hora');
+            const riskRating = this.results.severityClass === 'healthy' ? 'BAJO' : (this.results.severityClass === 'warning' ? 'MODERADO' : 'ALTO');
+            const riskColor = this.results.severityClass === 'healthy' ? '🟢' : (this.results.severityClass === 'warning' ? '🟡' : '🔴');
+            const avgDowntimeLoss = this.results.severityClass === 'healthy' ? '$0 USD' : (this.results.severityClass === 'warning' ? '$3,500 USD' : '$12,000 USD/hora');
             
             return `📄 AUDITORÍA EJECUTIVA DE SALUD DE ACTIVOS Y CONTINUIDAD DE NEGOCIO — ÁUREA SYSTEMS
 SISTEMA DE PREVENCIÓN DE PÉRDIDAS SFA (NIVEL GERENCIAL)
@@ -688,7 +691,8 @@ Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${hora
 
 1. DICTAMEN EJECUTIVO Y ANÁLISIS DE RIESGO OPERATIVO
 Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
-Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Estatus Global          : ${severityText}
+Variables en Tolerancia : ${toleranceText}
 Nivel de Riesgo de Paro : ${riskColor} ${riskRating}
 Pérdida Estimada por Hora: ${avgDowntimeLoss}
 Estado de la Licencia   : CALIBRADO PLANTA COMPLETA (ILIMITADO)
@@ -702,11 +706,11 @@ Variable                | Valor Máx    | Límite    | Racional e Impacto Financ
 ${rows.join('\n')}
 
 3. IMPACTO FINANCIERO Y PRONÓSTICO DE VIDA ÚTIL
-- Tasa de Degradación Mecánica: El motor de diagnóstico proyecta que la vida útil remanente del rodamiento principal/husillo se encuentra en óptimas condiciones. ${this.results.healthScore < 90 ? 'Se proyecta aceleración de desgaste por fatiga de un 25% si no se realiza intervención preventora.' : 'Cero paros imprevistos estimados en las siguientes 100 horas de ciclo continuo.'}
-- Pérdida de Eficiencia Energética: ${this.results.healthScore < 80 ? 'El sobreesfuerzo eléctrico actual genera una fuga térmica y pérdidas de eficiencia equivalentes al 9.3% del costo operativo.' : 'Parámetros de potencia en zona óptima, garantizando la máxima eficiencia por KW consumido.'}
+- Tasa de Degradación Mecánica: El motor de diagnóstico proyecta que la vida útil remanente del rodamiento principal/husillo se encuentra en óptimas condiciones. ${this.results.severityClass !== 'healthy' ? 'Se proyecta aceleración de desgaste por fatiga de un 25% si no se realiza intervención preventora.' : 'Cero paros imprevistos estimados en las siguientes 100 horas de ciclo continuo.'}
+- Pérdida de Eficiencia Energética: ${this.results.severityClass === 'danger' ? 'El sobreesfuerzo eléctrico actual genera una fuga térmica y pérdidas de eficiencia equivalentes al 9.3% del costo operativo.' : 'Parámetros de potencia en zona óptima, garantizando la máxima eficiencia por KW consumido.'}
 
 4. PLAN ESTRATÉGICO DE INTERVENCIÓN (Recomendado)
-${this.results.recommendations.map((rec, i) => `${i + 1}. [Prioridad ${this.results.healthScore < 80 ? 'ALTA' : 'MEDIA'}] ${rec}`).join('\n')}
+${this.results.recommendations.map((rec, i) => `${i + 1}. [Prioridad ${this.results.severityClass === 'danger' ? 'ALTA' : 'MEDIA'}] ${rec}`).join('\n')}
 ${licenseSection}
 
 FIRMAS DE VALIDACIÓN DE PLANTA
@@ -722,7 +726,8 @@ Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${hora
 1. RESUMEN DE INTEGRIDAD Y FIRMA ARMÓNICA
 Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
 Calibración del Filtro  : Sintonía Espectral SFA (λ = ${this.lambda.toFixed(3)})
-Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Estatus Global          : ${severityText}
+Variables en Tolerancia : ${toleranceText}
 Frecuencia Fundamental  : ${this.results.targetFreq.toFixed(2)} Hz
 
 Dictamen Técnico de Ingeniería:
@@ -737,11 +742,11 @@ ${rows.join('\n')}
 - Ecuación de Purificación SFA:
   Ψ_SFA(t) = ∫ S(t) • e^(-i • (f_base • λ) • t) dt
   Donde el integrador fractal atenuó el ruido eléctrico circundante, aislando la firma de vibración pura.
-- Eficacia del Filtro: La amplitud del armónico objetivo se situó en ${this.results.amp.toFixed(4)} mm/s con una fase angular de ${this.results.phase.toFixed(4)} rad, lo que confirma ${this.results.healthScore >= 90 ? 'ausencia de modulación por holgura o desalineamiento.' : 'desviaciones espectrales que superan los límites de interferencia nominal.'}
+- Eficacia del Filtro: La amplitud del armónico objetivo se situó en ${this.results.amp.toFixed(4)} mm/s con una fase angular de ${this.results.phase.toFixed(4)} rad, lo que confirma ${this.results.severityClass === 'healthy' ? 'ausencia de modulación por holgura o desalineamiento.' : 'desviaciones espectrales que superan los límites de interferencia nominal.'}
 
 4. DICTAMEN DE FALLAS MECÁNICAS E INTEGRIDAD
 Causas Probables identificadas por el motor de diagnóstico espectral:
-${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada. Operación segura.' : (this.results.detectedMode === 'CNC_MOTOR' ? `- Desalineación o desgaste de rodamientos en acoplamientos del husillo.
+${this.results.severityClass === 'healthy' ? '- Ninguna anomalía detectada. Operación segura.' : (this.results.detectedMode === 'CNC_MOTOR' ? `- Desalineación o desgaste de rodamientos en acoplamientos del husillo.
 - Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.` : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
 - Desalineación o desgaste de rodamientos en acoplamientos del rotor.
 - Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`)}
@@ -766,7 +771,8 @@ Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${hora
 
 1. DATOS DEL ACTIVO Y LICENCIA
 Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
-Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Estatus Global          : ${severityText}
+Variables en Tolerancia : ${toleranceText}
 Nivel de Licencia       : Plan Junior / Técnico Predictivo
 
 Dictamen Simple:
@@ -2855,42 +2861,48 @@ document.addEventListener('DOMContentLoaded', () => {
             badgeContainer.classList.add(results.severityClass);
             resultsClassContainer.classList.add(results.severityClass);
 
-            // Display health percentage
-            document.getElementById('sfa-health-display').textContent = `${results.healthScore}%`;
+            // Display severity status badge
+            const severityTextDisplay = results.severityClass === 'danger' ? '🔴 CRÍTICO' : (results.severityClass === 'warning' ? '🟡 ADVERTENCIA' : '🟢 ÓPTIMO');
+            document.getElementById('sfa-health-display').textContent = severityTextDisplay;
+
+            // Display variables tolerance counter
+            const varsToleranceEl = document.getElementById('sfa-variables-tolerance');
+            if (varsToleranceEl) {
+                const gCount = results.green_count !== undefined ? results.green_count : 0;
+                const tEval = results.total_evaluated !== undefined ? results.total_evaluated : 0;
+                varsToleranceEl.textContent = `Variables evaluadas en Tolerancia: ${gCount} / ${tEval}`;
+                varsToleranceEl.style.display = 'block';
+            }
 
             // Update maintenance planning bar
             const maintenanceFill = document.getElementById('sfa-maintenance-fill');
             const maintenanceContainer = document.getElementById('sfa-maintenance-bar-container');
             if (maintenanceFill) {
-                maintenanceFill.style.width = `${results.healthScore}%`;
-                
-                // Color gradient and box shadow based on healthScore
-                if (results.healthScore >= 90) {
+                if (results.severityClass === 'healthy') {
+                    maintenanceFill.style.width = '100%';
                     maintenanceFill.style.background = 'linear-gradient(90deg, #10b981, #059669)';
                     maintenanceFill.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.6)';
-                } else if (results.healthScore >= 80) {
+                } else if (results.severityClass === 'warning') {
+                    maintenanceFill.style.width = '60%';
                     maintenanceFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
                     maintenanceFill.style.boxShadow = '0 0 8px rgba(245, 158, 11, 0.6)';
-                } else if (results.healthScore >= 60) {
-                    maintenanceFill.style.background = 'linear-gradient(90deg, #f97316, #ea580c)';
-                    maintenanceFill.style.boxShadow = '0 0 8px rgba(249, 115, 22, 0.6)';
                 } else {
+                    // danger
+                    maintenanceFill.style.width = '30%';
                     maintenanceFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
                     maintenanceFill.style.boxShadow = '0 0 8px rgba(239, 68, 68, 0.6)';
                 }
             }
             if (maintenanceContainer) {
-                let severityText = '';
-                if (results.healthScore >= 90) {
-                    severityText = 'Nivel de severidad: Óptimo. Tiempo estimado de intervención: No requiere.';
-                } else if (results.healthScore >= 80) {
-                    severityText = 'Nivel de severidad: Preventivo. Tiempo estimado de intervención: 72 horas.';
-                } else if (results.healthScore >= 60) {
-                    severityText = 'Nivel de severidad: Falla. Tiempo estimado de intervención: 24 horas.';
+                let tooltipText = '';
+                if (results.severityClass === 'healthy') {
+                    tooltipText = 'Nivel de severidad: Óptimo (Operación Nominal Seguro). Tiempo estimado de intervención: No requiere.';
+                } else if (results.severityClass === 'warning') {
+                    tooltipText = 'Nivel de severidad: Advertencia (Requiere Intervención Preventiva). Tiempo estimado de intervención: 72 horas.';
                 } else {
-                    severityText = 'Nivel de severidad: Crítico. Tiempo estimado de intervención: 8 horas (Urgente).';
+                    tooltipText = 'Nivel de severidad: Crítico (Riesgo de Falla Inminente). Tiempo estimado de intervención: Inmediato / Paro Preventivo.';
                 }
-                maintenanceContainer.setAttribute('data-tooltip-text', severityText);
+                maintenanceContainer.setAttribute('data-tooltip-text', tooltipText);
             }
 
             // Variables presence configuration
@@ -3162,7 +3174,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentAlertBox && currentAlertText && currentAlertDot) {
                 if (avgCurrentRawVal > limitWarningCurrent) {
                     currentAlertBox.style.display = 'flex';
-                    if (results.healthScore < 60) {
+                    if (results.severityClass === 'danger') {
                         currentAlertBox.className = 'current-alert-box danger';
                         currentAlertDot.className = 'alert-icon-dot pulsing-red';
                         currentAlertText.innerHTML = `Alerta Crítica: El consumo de corriente elevado (<strong>${avgCurrentRawVal.toFixed(1)} A</strong>) sugiere fricción mecánica severa o sobrecarga. Inspeccionar lubricación de rodamientos de inmediato.`;
@@ -3187,16 +3199,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const degradationAlertBox = document.getElementById('degradation-projection-alert');
             const degradationAlertText = document.getElementById('degradation-alert-text');
             if (degradationAlertBox && degradationAlertText) {
-                if (results.healthScore < 98) {
+                if (results.severityClass !== 'healthy') {
                     degradationAlertBox.style.display = 'flex';
                     
-                    let days = 0;
-                    if (results.healthScore > 60) {
+                    if (results.severityClass === 'warning') {
                         const divisor = (98 - results.healthScore) / 15;
-                        days = divisor > 0 ? Math.round((results.healthScore - 60) / divisor) : 30;
-                        degradationAlertText.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 0.5rem;"></i> Se estima que la salud mecánica descenderá al umbral crítico del 60% en <strong>${days} días</strong> si continúa la tendencia actual.`;
+                        const days = divisor > 0 ? Math.round((results.healthScore - 60) / divisor) : 30;
+                        degradationAlertText.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 0.5rem;"></i> Se estima que el estatus operativo descenderá a nivel crítico en aproximadamente <strong>${days} días</strong> si continúa la tendencia actual.`;
                     } else {
-                        degradationAlertText.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.5rem;"></i> Alerta Crítica: La máquina ha superado el umbral de salud crítico (60%). Se requiere intervención de mantenimiento inmediata.`;
+                        degradationAlertText.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 0.5rem;"></i> Alerta Crítica: El activo presenta un estatus de severidad crítico. Se requiere intervención de mantenimiento inmediata.`;
                     }
                 } else {
                     degradationAlertBox.style.display = 'none';
@@ -3219,9 +3230,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const recCard = document.getElementById('sfa-recommendations-card');
             if (recCard) {
                 recCard.className = 'recommendations-card'; // Reset classes
-                if (results.healthScore < 80) {
+                if (results.severityClass === 'danger') {
                     recCard.classList.add('severity-red');
-                } else if (results.healthScore < 90) {
+                } else if (results.severityClass === 'warning') {
                     recCard.classList.add('severity-yellow');
                 } else {
                     recCard.classList.add('severity-green');
