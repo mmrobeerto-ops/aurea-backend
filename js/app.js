@@ -1012,6 +1012,21 @@ FIRMAS DE RESPONSABILIDAD
 window.SFA = new SFAEngine();
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Generate floating sparks particles for premium dynamic background
+    const particlesContainer = document.querySelector('.sfa-bg-particles');
+    if (particlesContainer) {
+        for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.className = 'sfa-particle';
+            p.style.left = `${Math.random() * 100}%`;
+            p.style.top = `${Math.random() * 100}%`;
+            p.style.animationDuration = `${10 + Math.random() * 15}s`;
+            p.style.animationDelay = `${-Math.random() * 20}s`;
+            p.style.opacity = `${0.1 + Math.random() * 0.4}`;
+            particlesContainer.appendChild(p);
+        }
+    }
+
     // Multi-Step Workflow Navigation helper
     const showStep = (stepNum) => {
         const step1 = document.getElementById('sfa-step-1-upload');
