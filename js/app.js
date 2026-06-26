@@ -2838,6 +2838,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const currency = (licensePlan.includes("Junior") || licensePlan.includes("Consultor") || licensePlan.includes("Gerente") || licensePrice > 1000) ? 'MXN' : 'USD';
             const formattedPrice = `$${licensePrice.toLocaleString()} ${currency}`;
 
+            // Display severity status badge
+            const severityTextDisplay = results.severityClass === 'danger' ? '🔴 CRÍTICO' : (results.severityClass === 'warning' ? '🟡 ADVERTENCIA' : '🟢 ÓPTIMO');
+
             // Populate print-only traceability metadata safely
             const printAssetEl = document.getElementById('print-meta-asset');
             if (printAssetEl) printAssetEl.textContent = sourceName;
@@ -2874,8 +2877,6 @@ document.addEventListener('DOMContentLoaded', () => {
             badgeContainer.classList.add(results.severityClass);
             resultsClassContainer.classList.add(results.severityClass);
 
-            // Display severity status badge
-            const severityTextDisplay = results.severityClass === 'danger' ? '🔴 CRÍTICO' : (results.severityClass === 'warning' ? '🟡 ADVERTENCIA' : '🟢 ÓPTIMO');
             document.getElementById('sfa-health-display').textContent = severityTextDisplay;
 
             // Display variables tolerance counter
@@ -2922,7 +2923,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const varsPresent = results.variables_present || {
                 vibration: true,
                 temperature: true,
-                pressure: hasPressure,
+                pressure: results.hasPressure,
                 current: true,
                 rpm: false,
                 torque: false,
