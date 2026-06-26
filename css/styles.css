@@ -3439,9 +3439,8 @@ footer {
         display: none !important;
     }
     
-    /* Transaction stamp in diagnostic header */
     .sfa-dashboard-header::after {
-        content: "Nivel de Análisis: " attr(data-plan) " ($" attr(data-price) " USD) | ID Transacción: " attr(data-txid);
+        content: "Nivel de Análisis: " attr(data-plan) " (" attr(data-price) ") | ID Transacción: " attr(data-txid);
         display: block;
         font-family: var(--font-accent);
         font-size: 9pt;

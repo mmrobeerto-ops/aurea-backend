@@ -1769,6 +1769,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         severity_class = "danger"
         diagnostico = " | ".join(diagnosticos_list) if diagnosticos_list else "🚨 CRÍTICO: Múltiples variables fuera del rango tolerable."
         
+    if detected_mode == "CNC_MOTOR" and health_score < 80:
+        recommendations.extend([
+            "Revisar desgaste de herramienta.",
+            "Reducir avance.",
+            "Verificar rodamientos."
+        ])
+
     seen = set()
     recommendations = [x for x in recommendations if not (x in seen or seen.add(x))]
 

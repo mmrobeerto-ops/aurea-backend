@@ -574,10 +574,15 @@ class SFAEngine {
         // Código de documento autogenerado
         const docCode = `SFA-${yyyy}-${mm}${dd}-${Math.floor(100 + Math.random() * 900)}`;
 
-        // Determinar tipo de plan
-        let reportPlan = 'Plan Junior / Técnico Predictivo';
-        if (this.license && this.license.plan) {
-            reportPlan = this.license.plan;
+        // Determinar tipo de plan dinámicamente desde el selector
+        const reportFormatSelect = document.getElementById('sfa-report-format-select');
+        let selectedFormat = reportFormatSelect ? reportFormatSelect.value : 'senior';
+        
+        let reportPlan = 'Plan Consultor / Senior';
+        if (selectedFormat === 'junior') {
+            reportPlan = 'Plan Junior / Técnico Predictivo';
+        } else if (selectedFormat === 'gerente') {
+            reportPlan = 'Plan Gerente / Planta Completa';
         }
 
         const isGerente = reportPlan.includes("Gerente") || reportPlan.includes("Planta Completa");
@@ -659,11 +664,13 @@ class SFAEngine {
         let licenseSection = '';
         if (this.license) {
             const isPromo = this.license.plan.includes("Promocional");
+            const priceVal = parseFloat(this.license.price);
+            const currency = (this.license.plan.includes("Junior") || this.license.plan.includes("Consultor") || this.license.plan.includes("Gerente") || priceVal > 1000) ? 'MXN' : 'USD';
             licenseSection = `
 --------------------------------------------------------------------------
 INFORMACIÓN DE LICENCIA Y AUDITORÍA COMERCIAL:
   - Plan de Análisis : ${this.license.plan.toUpperCase()}
-  - Costo de Licencia: $${this.license.price} USD ${isPromo ? '(PROMOCIÓN)' : ''}
+  - Costo de Licencia: $${priceVal.toLocaleString()} ${currency} ${isPromo ? '(PROMOCIÓN)' : ''}
   - ID Transacción   : ${this.license.txId}
   - Estado del Pago  : ${isPromo ? 'VERIFICADO / BENEFICIO GRATUITO' : 'COMPLETADO Y VERIFICADO POR PAYPAL'}
 --------------------------------------------------------------------------`;
@@ -734,9 +741,10 @@ ${rows.join('\n')}
 
 4. DICTAMEN DE FALLAS MECÁNICAS E INTEGRIDAD
 Causas Probables identificadas por el motor de diagnóstico espectral:
-${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada. Operación segura.' : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
+${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada. Operación segura.' : (this.results.detectedMode === 'CNC_MOTOR' ? `- Desalineación o desgaste de rodamientos en acoplamientos del husillo.
+- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.` : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
 - Desalineación o desgaste de rodamientos en acoplamientos del rotor.
-- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`}
+- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`)}
 
 5. ACCIONES DE MANTENIMIENTO E INGENIERÍA DE CAMPO
 ${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n')}
@@ -774,6 +782,12 @@ ${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n'
 ${licenseSection}
 
 FIRMAS DE RESPONSABILIDAD
+[   Generado por Sistema SFA   ]          [                              ]
+   Algoritmo Áurea Systems                    Responsable Técnico de Taller
+==========================================================================`;
+        }
+    }
+
     /**
      * Download the text certificate
      */
@@ -2024,10 +2038,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateCreditsUI();
 
+            // Sincronizar el selector de formato de reporte
+            const reportFormatSelect = document.getElementById('sfa-report-format-select');
+            if (reportFormatSelect) {
+                if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
+                    reportFormatSelect.value = 'gerente';
+                } else if (planName.includes("Consultor") || planName.includes("Senior")) {
+                    reportFormatSelect.value = 'senior';
+                } else if (planName.includes("Junior") || planName.includes("Técnico")) {
+                    reportFormatSelect.value = 'junior';
+                }
+            }
+
             // Set data attributes for media print layout
             if (resultsPanel) {
+                const priceVal = parseFloat(price);
+                const currency = (planName.includes("Junior") || planName.includes("Consultor") || planName.includes("Gerente") || priceVal > 1000) ? 'MXN' : 'USD';
+                const formattedPrice = `$${priceVal.toLocaleString()} ${currency}`;
+                
                 resultsPanel.setAttribute('data-plan', planName);
-                resultsPanel.setAttribute('data-price', price);
+                resultsPanel.setAttribute('data-price', formattedPrice);
                 resultsPanel.setAttribute('data-txid', txId);
             }
 
@@ -2367,14 +2397,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (btnPrint) {
             btnPrint.addEventListener('click', (e) => {
-                if (window.currentAnalysisIsStandard) {
-                    e.preventDefault();
-                    alert("Función Bloqueada: El Plan Electromecánico Base ($300 USD) no incluye la generación de informes PDF certificados. Por favor, adquiera el Plan Total ($750 USD) o Planta Pro para habilitar esta función.");
-                    const pricingSection = document.getElementById('servicios') || document.getElementById('ecosistema');
-                    if (pricingSection) pricingSection.scrollIntoView({ behavior: 'smooth' });
-                    return;
-                }
                 window.print();
+            });
+        }
+
+        const reportFormatSelect = document.getElementById('sfa-report-format-select');
+        if (reportFormatSelect) {
+            reportFormatSelect.addEventListener('change', () => {
+                if (window.currentResults) {
+                    updateDashboard(window.currentResults, window.currentDataSourceName || "Datos Cargados");
+                }
             });
         }
 
@@ -2711,6 +2743,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         // Update Dashboard UI with results
         const updateDashboard = (results, sourceName) => {
+            window.currentResults = results; // Store globally for re-rendering
             window.currentDataSourceName = sourceName;
             
             // Toggle panels
@@ -2721,68 +2754,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateStr = new Date(results.dateAnalyzed).toLocaleString();
             document.getElementById('sfa-analysis-meta').textContent = `${sourceName} | Analizado: ${dateStr}`;
 
-            // Auto-detect if pressure data is present in the results
-            const hasPressure = results.hasPressure;
-            const isSfaPlan = hasPressure;
-            let reportPlan = '';
-            let reportPrice = '';
-
-            if (isSfaPlan) {
-                reportPlan = 'Diagnóstico Predictivo Total (SFA)';
-                reportPrice = '750';
-                
-                // Unlock print PDF button
-                window.currentAnalysisIsStandard = false;
-                if (btnPrint) {
-                    btnPrint.classList.remove('restricted');
-                    btnPrint.title = 'Imprimir Reporte Técnico / PDF';
-                    btnPrint.style.opacity = '1';
-                    btnPrint.style.cursor = 'pointer';
-                }
-            } else {
-                reportPlan = 'Auditoría Electromecánica Base';
-                reportPrice = '300';
-                
-                // Restrict print PDF button
-                window.currentAnalysisIsStandard = true;
-                if (btnPrint) {
-                    btnPrint.classList.add('restricted');
-                    btnPrint.title = 'Función no disponible en el Plan de $300';
-                    btnPrint.style.opacity = '0.6';
-                    btnPrint.style.cursor = 'not-allowed';
-                }
-            }
-
-            // Keep active plan name/price if it is one of the premium tiers or has a saved license
-            if (window.SFA.license && (
-                window.SFA.license.plan.includes("Junior") || 
-                window.SFA.license.plan.includes("Consultor") || 
-                window.SFA.license.plan.includes("Gerente") || 
-                window.SFA.license.plan.includes("Planta Pro") || 
-                window.SFA.license.plan.includes("Anual") ||
-                window.SFA.license.plan.includes("Pioneros") ||
-                window.SFA.license.plan.includes("Club 33")
-            )) {
-                reportPlan = window.SFA.license.plan;
-                reportPrice = window.SFA.license.price.toString();
-                
-                // Premium plans have print unlocked
-                window.currentAnalysisIsStandard = false;
-                if (btnPrint) {
-                    btnPrint.classList.remove('restricted');
-                    btnPrint.title = 'Imprimir Reporte Técnico / PDF';
-                    btnPrint.style.opacity = '1';
-                    btnPrint.style.cursor = 'pointer';
-                }
-            }
-
-            const txIdToShow = window.SFA.license ? window.SFA.license.txId : `TX-EVAL-33-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+            // Read selected report format from dropdown
+            const reportFormatSelect = document.getElementById('sfa-report-format-select');
+            let selectedFormat = reportFormatSelect ? reportFormatSelect.value : 'senior';
             
-            // Sync SFA Engine license for downloadable text reports
+            let reportPlan = 'Plan Consultor / Senior';
+            let reportPrice = '20000';
+            
+            if (selectedFormat === 'junior') {
+                reportPlan = 'Plan Junior / Técnico Predictivo';
+                reportPrice = '1500';
+            } else if (selectedFormat === 'gerente') {
+                reportPlan = 'Plan Gerente / Planta Completa';
+                reportPrice = '45000';
+            }
+
+            // Always unlock printing
+            window.currentAnalysisIsStandard = false;
+            if (btnPrint) {
+                btnPrint.classList.remove('restricted');
+                btnPrint.title = 'Imprimir Reporte Técnico / PDF';
+                btnPrint.style.opacity = '1';
+                btnPrint.style.cursor = 'pointer';
+            }
+
+            // Determine paid license info (prevent overwrite from standard presets)
+            let licensePlan = reportPlan;
+            let licensePrice = parseFloat(reportPrice);
+            let txIdToShow = `TX-EVAL-33-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
             if (window.SFA.license) {
-                if (!window.SFA.license.plan.includes("Planta Pro") && !window.SFA.license.plan.includes("Anual")) {
+                const isPremium = 
+                    window.SFA.license.plan.includes("Junior") || 
+                    window.SFA.license.plan.includes("Consultor") || 
+                    window.SFA.license.plan.includes("Gerente") || 
+                    window.SFA.license.plan.includes("Planta Pro") || 
+                    window.SFA.license.plan.includes("Anual") ||
+                    window.SFA.license.plan.includes("Pioneros") ||
+                    window.SFA.license.plan.includes("Club 33");
+
+                if (isPremium) {
+                    licensePlan = window.SFA.license.plan;
+                    licensePrice = window.SFA.license.price;
+                    txIdToShow = window.SFA.license.txId;
+                } else {
+                    // Update SFA Engine license to matches the fallback plan
                     window.SFA.license.plan = reportPlan;
                     window.SFA.license.price = parseFloat(reportPrice);
+                    licensePlan = reportPlan;
+                    licensePrice = parseFloat(reportPrice);
+                    txIdToShow = window.SFA.license.txId;
                 }
             } else {
                 window.SFA.license = {
@@ -2793,11 +2814,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
 
+            const currency = (licensePlan.includes("Junior") || licensePlan.includes("Consultor") || licensePlan.includes("Gerente") || licensePrice > 1000) ? 'MXN' : 'USD';
+            const formattedPrice = `$${licensePrice.toLocaleString()} ${currency}`;
+
             // Populate print-only traceability metadata
             document.getElementById('print-meta-asset').textContent = sourceName;
-            document.getElementById('print-meta-plan').textContent = `${reportPlan.toUpperCase()} ($${reportPrice} USD)`;
+            document.getElementById('print-meta-plan').textContent = `${licensePlan.toUpperCase()} (${formattedPrice})`;
             document.getElementById('print-meta-txid').textContent = txIdToShow;
             document.getElementById('print-meta-date').textContent = dateStr;
+
+            // Sync attributes of resultsPanel for CSS print styles
+            if (resultsPanel) {
+                resultsPanel.setAttribute('data-plan', licensePlan);
+                resultsPanel.setAttribute('data-price', formattedPrice);
+                resultsPanel.setAttribute('data-txid', txIdToShow);
+            }
 
             // Health badge severity class
             const badgeContainer = document.getElementById('sfa-health-badge-container');
@@ -3310,18 +3341,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Action PDF button within Recommendations Card
         const btnPdfAction = document.getElementById('btn-pdf-action');
         if (btnPdfAction) {
             btnPdfAction.addEventListener('click', (e) => {
-                if (window.currentAnalysisIsStandard) {
-                    e.preventDefault();
-                    alert("Función Bloqueada: El Plan Electromecánico Base ($300 USD) no incluye la generación de informes PDF certificados. Por favor, adquiera el Plan Total ($750 USD) o Planta Pro para habilitar esta función.");
-                    const pricingSection = document.getElementById('servicios') || document.getElementById('ecosistema');
-                    if (pricingSection) pricingSection.scrollIntoView({ behavior: 'smooth' });
-                    return;
-                }
-                
                 // Add print-action-only to body for compact output
                 document.body.classList.add('print-action-only');
                 

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Áurea Systems | Consola de Diagnóstico Espectral SFA</title>
+    <meta name="description" content="Consola dedicada para el diagnóstico predictivo industrial de motores y atenuación de ruido fractal mediante el motor espectral SFA.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/sensores.css">
+</head>
+<body>
+    <!-- Top Core Status Bar -->
+    <div class="core-status-bar">
+        <div class="status-item">
+            <span class="status-indicator-dot pulsing"></span>
+            <span class="status-label">ESTADO DEL NÚCLEO:</span>
+            <span class="status-value text-gold">CALIBRADO</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">FRECUENCIA M:</span>
+            <span class="status-value text-gold">AUTO-SINTONIZADA</span>
+        </div>
+    </div>
+
+    <!-- Floating Action Button 'N' (Bottom Left) -->
+    <button class="btn-floating-n" id="btn-terminal-toggle" aria-label="Consola de Telemetría Coaxial">N</button>
+
+    <!-- Interactive Telemetry Console (Hidden by default) -->
+    <div class="telemetry-console" id="telemetry-console">
+        <div class="console-header">
+            <div class="console-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <span class="console-title">aurea_coaxial_telemetry.log</span>
+            <button class="console-close" id="console-close-btn">&times;</button>
+        </div>
+        <div class="console-body" id="console-log-content">
+            <div class="log-line text-gold">[INICIALIZANDO] Consola de Telemetría SFA de Áurea Systems...</div>
+            <div class="log-line">[OK] Sintonización espectral de PLC en línea.</div>
+            <div class="log-line text-blue">[CONEXIÓN] Servidor OPC UA establecido. Escuchando tags de motor...</div>
+            <div class="log-line">[OK] Frecuencia de muestreo sintonizada a 100 Hz.</div>
+            <div class="log-line text-green">[EFICIENCIA] Amplitud de vibración atenuada por Ecuación SFA.</div>
+            <div class="log-line">[SISTEMA] Estado de salud nominal del estator detectado.</div>
+        </div>
+    </div>
+
+    <!-- Background geometric overlay -->
+    <div class="bg-geometry">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <circle cx="10" cy="20" r="30" class="geom-circle" />
+            <circle cx="90" cy="80" r="40" class="geom-circle" />
+            <path d="M-10,50 Q30,60 70,30 T110,50" class="geom-line" />
+            <path d="M-10,20 Q40,10 80,40 T110,10" class="geom-line" />
+        </svg>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="navbar scrolled">
+        <div class="nav-container">
+            <a href="index.html" class="logo-group" id="logo-link">
+                <div class="logo-text">
+                    <span class="logo-title">Áurea</span>
+                    <span class="logo-subtitle" style="color: var(--color-primary-gold); letter-spacing: 0.18em; font-weight: 500;">SYSTEMS</span>
+                    <span class="logo-tagline">OPTIMIZACIÓN FRACTAL DE ALTA VELOCIDAD</span>
+                </div>
+                <div class="logo-icon-wrapper">
+                    <svg viewBox="0 0 34 55" class="logo-spiral-svg">
+                        <rect x="0" y="0" width="34" height="34" class="grid-square" />
+                        <rect x="0" y="34" width="21" height="21" class="grid-square" />
+                        <rect x="21" y="42" width="13" height="13" class="grid-square" />
+                        <rect x="26" y="34" width="8" height="8" class="grid-square" />
+                        <rect x="21" y="34" width="5" height="5" class="grid-square" />
+                        <rect x="21" y="39" width="3" height="3" class="grid-square" />
+                        <rect x="24" y="40" width="2" height="2" class="grid-square" />
+                        
+                        <line x1="0" y1="0" x2="34" y2="34" class="grid-line" />
+                        <line x1="34" y1="0" x2="0" y2="34" class="grid-line" />
+                        
+                        <path d="M 34,0 A 34,34 0 0,0 0,34 A 21,21 0 0,0 21,55 A 13,13 0 0,0 34,42 A 8,8 0 0,0 26,34 A 5,5 0 0,0 21,39 A 3,3 0 0,0 24,42 A 2,2 0 0,0 26,40" class="spiral-path" />
+                        <circle cx="0" cy="0" r="1.6" class="logo-cyan-dot" />
+                    </svg>
+                </div>
+            </a>
+            
+            <button class="menu-toggle" aria-label="Abrir menú" id="mobile-menu-btn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <nav class="nav-menu" id="nav-menu">
+                <a href="index.html#mision" class="nav-link">MISIÓN</a>
+                <a href="index.html#vision" class="nav-link">VISIÓN</a>
+                <a href="index.html#servicios" class="nav-link">SERVICIOS COMERCIALES</a>
+                <a href="index.html#fundacion" class="nav-link">FUNDACIÓN</a>
+                <a href="index.html#academia" class="nav-link">ACADEMIA</a>
+                <a href="index.html#contacto" class="nav-link">CONTACTO</a>
+                <a href="sensores.html" class="nav-link active">SENSORES</a>
+                <div style="position: relative; display: inline-block; margin-left: 0.5rem;">
+                    <input type="text" placeholder="Buscar..." style="background: rgba(226, 193, 149, 0.12); border: 1px solid var(--color-border-gold); border-radius: 20px; padding: 0.35rem 1rem; font-family: var(--font-accent); font-size: 0.75rem; color: #ffffff; outline: none; width: 140px; transition: width 0.3s;" onfocus="this.style.width='180px'" onblur="this.style.width='140px'">
+                    <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--color-primary-gold); font-size: 0.75rem; pointer-events: none;">🔍</span>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 150px; padding-bottom: 50px;">
+        <div class="sensores-container">
+            <!-- Header section -->
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <span class="section-badge" style="display: table;">NÚCLEO FRACTAL SFA</span>
+                    <h1 style="font-family: var(--font-headings); font-size: 2.2rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Diagnóstico Espectral de Sensores</h1>
+                    <p style="color: var(--color-text-gray); font-family: var(--font-accent); font-size: 0.88rem; letter-spacing: 0.05em;">Visualice señales mecánicas PLC de motores en tiempo real y sintonice frecuencias armónicas activas.</p>
+                </div>
+                
+                <!-- Simulation trigger -->
+                <div>
+                    <button class="btn btn-outline" id="btn-sim-motor" style="padding: 0.5rem 1.4rem; font-size: 0.72rem; border-color: rgba(255,115,0,0.3); color: #ff7300; background: rgba(255,115,0,0.02);">
+                        ⚡ Simular Señal de Motor PLC
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main dual grid -->
+            <div class="sensores-grid">
+                
+                <!-- COLUMN 1: CONTROLS & DIAGNOSTIC PARAMETERS -->
+                <div class="sensor-panel">
+                    <div class="sensor-panel-header">
+                        <h2 class="sensor-panel-title">
+                            Configuración de Sintonizador SFA
+                        </h2>
+                        <div class="health-index-badge" id="lbl-health-badge">
+                            SALUD SFA: 98%
+                        </div>
+                    </div>
+
+                    <!-- Sliders and parameters Box -->
+                    <div class="sfa-sliders-box">
+                        <div class="slider-row">
+                            <span>Configurar Frecuencia (Hz)</span>
+                            <div class="slider-row-btn">
+                                <span class="slider-val-box" id="val-config-freq">20.0 Hz</span>
+                            </div>
+                        </div>
+                        <div class="slider-row">
+                            <span>Frecuencia de Sintonía Maestra (Hz)</span>
+                            <div class="slider-row-btn">
+                                <span class="slider-val-box" id="val-master-tune">1.618</span>
+                            </div>
+                        </div>
+                        <div class="slider-row">
+                            <span style="opacity: 0.9;">Ignition Escala Visito (hs)</span>
+                            <div class="slider-row-btn" style="background: rgba(197, 168, 128, 0.05); border-color: rgba(197,168,128,0.15); pointer-events: none;">
+                                <span class="slider-val-box" style="color: #ffffff;">1,000</span>
+                            </div>
+                        </div>
+                        <!-- Slider Alinear Escala de Tiempo -->
+                        <div class="time-align-box">
+                            <div class="time-align-header">
+                                <label for="time-slider">Alinear Escala de Tiempo (ms)</label>
+                                <span id="time-slider-val">500 ms</span>
+                            </div>
+                            <input type="range" id="time-slider" min="10" max="1000" step="5" value="500" class="custom-gold-slider">
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid (5 boxes) -->
+                    <div class="telemetry-metrics-grid">
+                        <div class="metric-card-hibrida">
+                            <div class="metric-lbl">Frecuencia Sintonizada</div>
+                            <div class="metric-val" id="card-freq">11.73 Hz</div>
+                            <div class="metric-sub">Fórmula F base</div>
+                        </div>
+                        <div class="metric-card-hibrida">
+                            <div class="metric-lbl">Vibración (RMS)</div>
+                            <div class="metric-val" id="card-vib">0.057 G</div>
+                            <div class="metric-sub">Límite 0.30 G</div>
+                        </div>
+                        <div class="metric-card-hibrida">
+                            <div class="metric-lbl">Temperatura</div>
+                            <div class="metric-val" id="card-temp">45.6 °C</div>
+                            <div class="metric-sub">Límite 90.0 °C</div>
+                        </div>
+                        <div class="metric-card-hibrida">
+                            <div class="metric-lbl">Fluctuación Presión</div>
+                            <div class="metric-val" id="card-pres">0.00 bar</div>
+                            <div class="metric-sub">Límite 1.50 bar</div>
+                        </div>
+                        <div class="metric-card-hibrida">
+                            <div class="metric-lbl">Consumo Corriente</div>
+                            <div class="metric-val" id="card-current">12.0 A</div>
+                            <div class="metric-sub">Límite 25.0 A</div>
+                        </div>
+                    </div>
+
+                    <!-- Diagnostic Certificate/Report Card -->
+                    <div class="diagnostic-report-card">
+                        <div class="report-header">
+                            <h3 class="report-title">📋 Informe Diagnóstico SFA</h3>
+                            <button class="btn" id="btn-download-report" style="padding: 0.25rem 0.75rem; font-size: 0.65rem; background: var(--color-primary-gold); color: #ffffff; border: none; border-radius: 4px; cursor: pointer;">
+                                Descargar Reporte
+                            </button>
+                        </div>
+                        <div class="report-text" id="lbl-diagnostic-txt">
+                            Cargue un archivo CSV de telemetría o haga clic en "Simular Señal" para iniciar el análisis automático del motor de vibración y resonancias espectrales.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- COLUMN 2: OSCILLOSCOPE & COAXIAL TERMINAL LOG -->
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    
+                    <!-- Canvas oscilloscope -->
+                    <div class="sensor-panel">
+                        <div class="oscilloscope-title-bar">
+                            | Visualización Espectral SFA (Onda Cruda vs Sintonizada)
+                        </div>
+                        <div class="oscilloscope-canvas-wrapper">
+                            <canvas id="osc-canvas"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- File Drag and Drop zone -->
+                    <div class="sfa-dropzone" id="sfa-dropzone-top">
+                        <svg viewBox="0 0 24 24" style="width: 28px; height: 28px; fill: var(--color-primary-gold); margin: 0 auto 0.6rem; display: block;">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                        </svg>
+                        <p style="font-family: var(--font-accent); font-size: 0.75rem; color: var(--color-text-white); font-weight: 600; margin-bottom: 0.1rem;">
+                            Arrastrar Archivo de Motor
+                        </p>
+                        <p style="font-family: var(--font-body); font-size: 0.65rem; color: var(--color-text-gray);">
+                            Formatos admitidos: CSV o JSON de telemetría de motor
+                        </p>
+                        <input type="file" id="sfa-file-input" accept=".csv,.json" style="opacity: 0; position: absolute; width: 1px; height: 1px; z-index: -1;">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <span class="text-gold font-montserrat font-bold">ÁUREA</span> SYSTEMS
+            </div>
+            <p class="footer-copy">&copy; 2026 Áurea Systems. Todos los derechos reservados. "La estática del mundo se disuelve cuando sintonizamos la frecuencia correcta."</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/sensores.js"></script>
+</body>
+</html>

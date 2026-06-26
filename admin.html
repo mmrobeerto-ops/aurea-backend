@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Áurea Systems - Panel de Control de Calibraciones</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Specific admin styles overriding/extending design system */
+        .admin-login-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 2rem;
+        }
+
+        .admin-login-card {
+            background: rgba(11, 18, 32, 0.55);
+            border: 1px solid var(--color-border-gold);
+            border-radius: var(--border-radius-card);
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 450px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            animation: fadeInStep 0.4s ease-out;
+        }
+
+        .login-logo {
+            font-family: var(--font-headings);
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--color-text-white);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-logo span {
+            color: var(--color-primary-gold);
+        }
+
+        .admin-panel-container {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            animation: fadeInStep 0.4s ease-out;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 1.5rem;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-title-area h2 {
+            font-family: var(--font-headings);
+            color: var(--color-primary-gold);
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-title-area p {
+            color: var(--color-text-gray);
+            font-size: 0.9rem;
+        }
+
+        /* Summary cards */
+        .admin-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .summary-card {
+            background: rgba(11, 18, 32, 0.3);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            backdrop-filter: blur(8px);
+            transition: var(--transition-smooth);
+        }
+
+        .summary-card:hover {
+            border-color: var(--color-border-gold);
+            transform: translateY(-2px);
+        }
+
+        .summary-card-title {
+            font-family: var(--font-accent);
+            font-size: 0.8rem;
+            color: var(--color-text-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-card-value {
+            font-family: var(--font-headings);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text-white);
+        }
+
+        .summary-card-value.gold {
+            color: var(--color-primary-gold);
+        }
+
+        .summary-card-value.blue {
+            color: var(--color-blue-accent);
+        }
+
+        /* Table section */
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .source-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 30px;
+            padding: 0.4rem 1rem;
+        }
+
+        .source-selector select {
+            background: transparent;
+            border: none;
+            color: var(--color-text-white);
+            font-family: var(--font-accent);
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .source-selector select option {
+            background: var(--color-bg-deep);
+            color: var(--color-text-white);
+        }
+
+        .admin-table-wrapper {
+            background: rgba(11, 18, 32, 0.25);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            overflow-x: auto;
+            backdrop-filter: blur(8px);
+            margin-bottom: 2rem;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .admin-table th {
+            font-family: var(--font-accent);
+            font-weight: 600;
+            color: var(--color-text-light);
+            background: rgba(11, 18, 32, 0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 1rem 1.25rem;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .admin-table td {
+            padding: 1.2rem 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--color-text-white);
+            vertical-align: top;
+        }
+
+        .admin-table tr:hover td {
+            background: rgba(255,255,255,0.01);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-family: var(--font-accent);
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 30px;
+        }
+
+        .badge.yes {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--color-blue-accent);
+            border: 1px solid var(--color-border-blue);
+        }
+
+        .badge.no {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+
+        .stars-display {
+            color: var(--color-primary-gold);
+            font-size: 1.1rem;
+            letter-spacing: 0.1em;
+        }
+
+        .comment-text {
+            color: var(--color-text-gray);
+            line-height: 1.5;
+            font-size: 0.85rem;
+            max-width: 450px;
+            word-wrap: break-word;
+        }
+
+        .date-text {
+            font-family: var(--font-accent);
+            color: var(--color-text-gray);
+            font-size: 0.8rem;
+        }
+
+        /* Config box */
+        .config-overlay-box {
+            background: rgba(11, 18, 32, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            display: none;
+            gap: 1rem;
+            flex-direction: column;
+        }
+
+        .config-overlay-box.active {
+            display: flex;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .input-group label {
+            font-family: var(--font-accent);
+            font-size: 0.8rem;
+            color: var(--color-text-gray);
+        }
+
+        .admin-input {
+            background: rgba(6, 11, 19, 0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--color-text-white);
+            padding: 0.75rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+            transition: var(--transition-smooth);
+        }
+
+        .admin-input:focus {
+            border-color: var(--color-primary-gold);
+            box-shadow: 0 0 10px rgba(226, 193, 149, 0.15);
+        }
+
+        /* Empty state */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--color-text-gray);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            fill: rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+
+        /* Tabs Styles */
+        .admin-tabs-nav {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 0 0 2rem 0;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--color-text-gray);
+            padding: 0.75rem 1.5rem;
+            font-family: var(--font-headings);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            border-bottom-color: rgba(197, 168, 128, 0.4);
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary-gold) !important;
+            border-bottom-color: var(--color-primary-gold) !important;
+            text-shadow: 0 0 10px rgba(197, 168, 128, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="core-status-bar">
+        <div class="status-item">
+            <span class="status-indicator-dot pulsing"></span>
+            <span class="status-label">NÚCLEO SFA:</span>
+            <span class="status-value text-gold">CONECTADO</span>
+        </div>
+        <div style="margin-left: auto;">
+            <a href="index.html" class="status-value" style="text-decoration: none; font-size: 0.75rem; letter-spacing: 0.05em; font-family: var(--font-accent); color: var(--color-text-gray);">
+                &larr; VOLVER AL PANEL DE DIAGNÓSTICO
+            </a>
+        </div>
+    </div>
+
+    <!-- Background Geometry Art -->
+    <div class="bg-geometry">
+        <svg viewBox="0 0 1000 1000">
+            <circle cx="500" cy="500" r="450" class="geom-circle"></circle>
+            <circle cx="500" cy="500" r="300" class="geom-circle"></circle>
+            <line x1="100" y1="500" x2="900" y2="500" class="geom-line"></line>
+            <line x1="500" y1="100" x2="500" y2="900" class="geom-line"></line>
+        </svg>
+    </div>
+
+    <!-- Login screen -->
+    <div class="admin-login-wrapper" id="login-screen">
+        <div class="admin-login-card">
+            <div class="login-logo">ÁUREA<span>SYSTEMS</span></div>
+            <p style="color: var(--color-text-gray); font-size: 0.85rem; margin-bottom: 2rem; font-family: var(--font-accent);">Acceso de Administrador / Calibración de Núcleo</p>
+            
+            <form id="login-form" style="display: flex; flex-direction: column; gap: 1.2rem;">
+                <div class="input-group" style="text-align: left;">
+                    <label for="admin-pass">Clave de Seguridad SFA</label>
+                    <input type="password" id="admin-pass" class="admin-input" placeholder="Ingrese clave de seguridad..." required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-gold" style="width: 100%; padding: 0.8rem;">
+                    Autenticar Núcleo ⚡
+                </button>
+                <p id="login-error" style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 0.5rem;"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Panel (Hidden by default) -->
+    <div class="admin-panel-container" id="admin-dashboard" style="display: none;">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="admin-title-area">
+                <h2>Panel de Calibraciones y Feedback</h2>
+                <p>Historial de retroalimentación de ingenieros para calibración fina del motor espectral SFA.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" class="btn btn-outline" id="btn-toggle-config" style="padding: 0.6rem 1.2rem; font-size: 0.8rem;">
+                    ⚙️ Servidor
+                </button>
+                <button type="button" class="btn btn-gold" id="btn-refresh" style="padding: 0.6rem 1.2rem; font-size: 0.8rem;">
+                    🔄 Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection Settings Box (Hidden by default) -->
+        <div class="config-overlay-box" id="config-box">
+            <h4 style="font-family: var(--font-headings); font-size: 0.95rem; color: var(--color-primary-gold); border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 0.5rem;">Configuración de Fuente de Datos</h4>
+            <div class="feedback-grid" style="margin-bottom: 0;">
+                <div class="input-group">
+                    <label for="cfg-source-type">Origen de Datos</label>
+                    <select id="cfg-source-type" class="admin-input" style="background: rgba(6,11,19,0.7); height: 42px;">
+                        <option value="local">Navegador Local (localStorage de este equipo)</option>
+                        <option value="api">Servidor Python Backend (Localhost / API)</option>
+                        <option value="custom">API Externa (ej. Google Sheets / SheetDB / JSONBin)</option>
+                    </select>
+                </div>
+                <div class="input-group" id="cfg-url-group">
+                    <label id="cfg-url-label" for="cfg-api-url">Dirección URL de la API</label>
+                    <input type="text" id="cfg-api-url" class="admin-input" placeholder="https://aurea-backend-eq8d.onrender.com/api/feedback">
+                </div>
+            </div>
+            <div class="feedback-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 0; align-items: flex-end;">
+                <div class="input-group" id="cfg-token-group">
+                    <label for="cfg-api-token">Token / Clave de Acceso API</label>
+                    <input type="text" id="cfg-api-token" class="admin-input" placeholder="Clave secreta de autenticación...">
+                </div>
+                <button type="button" class="btn btn-gold" id="btn-save-config" style="height: 42px; width: 100%;">Guardar y Conectar</button>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="admin-tabs-nav">
+            <button type="button" class="tab-btn active" id="tab-btn-feedback">
+                💬 Retroalimentación SFA
+            </button>
+            <button type="button" class="tab-btn" id="tab-btn-members">
+                🎫 Registro de Membresías
+            </button>
+        </div>
+
+        <!-- SECTION 1: FEEDBACK CONTENT -->
+        <div id="section-feedback">
+            <!-- Summary Cards -->
+            <div class="admin-summary-grid">
+                <div class="summary-card">
+                    <span class="summary-card-title">Comentarios Totales</span>
+                    <span class="summary-card-value" id="stat-total">0</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-card-title">Promedio Espectral</span>
+                    <span class="summary-card-value gold" id="stat-rating">0.0 ★</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-card-title">Precisión del Diagnóstico</span>
+                    <span class="summary-card-value blue" id="stat-accuracy">0%</span>
+                </div>
+            </div>
+
+            <!-- Table controls -->
+            <div class="table-controls">
+                <div class="source-selector">
+                    <span>Fuente activa:</span>
+                    <strong id="active-source-indicator" style="color: var(--color-primary-gold); font-size: 0.85rem;">Navegador Local</strong>
+                </div>
+                
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline" id="btn-export-csv" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 30px;">
+                        📥 Exportar CSV
+                    </button>
+                    <button type="button" class="btn btn-outline" id="btn-clear-history" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 30px; border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                        🗑️ Limpiar Historial
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="feedback-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Fecha y Hora</th>
+                            <th style="width: 120px;">Precisión SFA</th>
+                            <th style="width: 140px;">Calificación</th>
+                            <th>Observaciones y Comentarios del Ingeniero</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION 2: MEMBERS CONTENT (Hidden by default) -->
+        <div id="section-members" style="display: none;">
+            <!-- Summary Cards for Members -->
+            <div class="admin-summary-grid">
+                <div class="summary-card">
+                    <span class="summary-card-title">Membresías Totales</span>
+                    <span class="summary-card-value" id="member-stat-total">0</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-card-title">Licencias Activas</span>
+                    <span class="summary-card-value gold" id="member-stat-active">0</span>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-card-title">Último Registro</span>
+                    <span class="summary-card-value blue" id="member-stat-latest">--</span>
+                </div>
+            </div>
+
+            <!-- Table controls for members -->
+            <div class="table-controls">
+                <div class="source-selector">
+                    <span>Base de Datos:</span>
+                    <strong style="color: var(--color-primary-gold); font-size: 0.85rem;">registros.json</strong>
+                </div>
+                
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-outline" id="btn-export-members-csv" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 30px;">
+                        📥 Exportar Miembros CSV
+                    </button>
+                    <button type="button" class="btn btn-outline" id="btn-clear-members" style="padding: 0.5rem 1rem; font-size: 0.8rem; border-radius: 30px; border-color: rgba(239,68,68,0.3); color: #ef4444;">
+                        🗑️ Limpiar Membresías
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table for members -->
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="members-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 180px;">Fecha/Hora</th>
+                            <th style="width: 150px;">Nombre</th>
+                            <th style="width: 200px;">Correo</th>
+                            <th style="width: 150px;">Empresa</th>
+                            <th style="width: 180px;">Plan</th>
+                            <th>Clave de Licencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-table-body">
+                        <!-- Dynamic content -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script for dashboard interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginScreen = document.getElementById('login-screen');
+            const dashboard = document.getElementById('admin-dashboard');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const feedbackTableBody = document.getElementById('feedback-table-body');
+            
+            // Stats elements
+            const statTotal = document.getElementById('stat-total');
+            const statRating = document.getElementById('stat-rating');
+            const statAccuracy = document.getElementById('stat-accuracy');
+            
+            // Buttons
+            const btnRefresh = document.getElementById('btn-refresh');
+            const btnToggleConfig = document.getElementById('btn-toggle-config');
+            const btnSaveConfig = document.getElementById('btn-save-config');
+            const btnExportCsv = document.getElementById('btn-export-csv');
+            const btnClearHistory = document.getElementById('btn-clear-history');
+            const activeSourceIndicator = document.getElementById('active-source-indicator');
+
+            // Config Elements
+            const configBox = document.getElementById('config-box');
+            const cfgSourceType = document.getElementById('cfg-source-type');
+            const cfgApiUrl = document.getElementById('cfg-api-url');
+            const cfgApiToken = document.getElementById('cfg-api-token');
+            const cfgUrlGroup = document.getElementById('cfg-url-group');
+
+            // Security Key
+            const DEFAULT_PASSWORD = "aurea2026";
+
+            // Storage Config Keys
+            const STORAGE_CFG_TYPE = "aurea_admin_source_type";
+            const STORAGE_CFG_URL = "aurea_admin_api_url";
+            const STORAGE_CFG_TOKEN = "aurea_admin_api_token";
+
+            // Load saved config
+            let currentSource = localStorage.getItem(STORAGE_CFG_TYPE) || "api";
+            let apiUrl = localStorage.getItem(STORAGE_CFG_URL) || "https://aurea-backend-eq8d.onrender.com/api/feedback";
+            let apiToken = localStorage.getItem(STORAGE_CFG_TOKEN) || "aurea2026";
+
+            cfgSourceType.value = currentSource;
+            cfgApiUrl.value = apiUrl;
+            cfgApiToken.value = apiToken;
+
+            // Handle Source Type dropdown changes
+            const updateConfigFieldsUI = () => {
+                const src = cfgSourceType.value;
+                if (src === 'local') {
+                    cfgUrlGroup.style.display = 'none';
+                    document.getElementById('cfg-token-group').style.display = 'none';
+                } else {
+                    cfgUrlGroup.style.display = 'flex';
+                    document.getElementById('cfg-token-group').style.display = 'flex';
+                    if (src === 'api') {
+                        document.getElementById('cfg-url-label').textContent = 'Dirección URL del Backend FastAPI';
+                        cfgApiUrl.placeholder = 'https://aurea-backend-eq8d.onrender.com/api/feedback';
+                    } else {
+                        document.getElementById('cfg-url-label').textContent = 'Dirección URL de la API Externa / SheetDB';
+                        cfgApiUrl.placeholder = 'https://sheetdb.io/api/v1/...';
+                    }
+                }
+            };
+            cfgSourceType.addEventListener('change', updateConfigFieldsUI);
+            updateConfigFieldsUI();
+
+            // Toggle Config Box
+            btnToggleConfig.addEventListener('click', () => {
+                configBox.classList.toggle('active');
+            });
+
+            // Save settings
+            btnSaveConfig.addEventListener('click', () => {
+                currentSource = cfgSourceType.value;
+                apiUrl = cfgApiUrl.value.trim();
+                apiToken = cfgApiToken.value.trim();
+
+                localStorage.setItem(STORAGE_CFG_TYPE, currentSource);
+                localStorage.setItem(STORAGE_CFG_URL, apiUrl);
+                localStorage.setItem(STORAGE_CFG_TOKEN, apiToken);
+
+                configBox.classList.remove('active');
+                loadFeedbackData();
+            });
+
+            // Login Validation
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const enteredPass = document.getElementById('admin-pass').value;
+
+                if (enteredPass === DEFAULT_PASSWORD || enteredPass === apiToken) {
+                    // Successful login
+                    loginScreen.style.display = 'none';
+                    dashboard.style.display = 'block';
+                    loadFeedbackData();
+                } else {
+                    loginError.textContent = "Clave de seguridad inválida. Verifique e intente de nuevo.";
+                    loginError.style.display = 'block';
+                }
+            });
+
+            // Tab switching logic
+            const tabBtnFeedback = document.getElementById('tab-btn-feedback');
+            const tabBtnMembers = document.getElementById('tab-btn-members');
+            const sectionFeedback = document.getElementById('section-feedback');
+            const sectionMembers = document.getElementById('section-members');
+
+            if (tabBtnFeedback && tabBtnMembers && sectionFeedback && sectionMembers) {
+                tabBtnFeedback.addEventListener('click', () => {
+                    tabBtnFeedback.classList.add('active');
+                    tabBtnMembers.classList.remove('active');
+                    sectionFeedback.style.display = 'block';
+                    sectionMembers.style.display = 'none';
+                });
+
+                tabBtnMembers.addEventListener('click', () => {
+                    tabBtnMembers.classList.add('active');
+                    tabBtnFeedback.classList.remove('active');
+                    sectionFeedback.style.display = 'none';
+                    sectionMembers.style.display = 'block';
+                    loadMembersData();
+                });
+            }
+
+            const getRegistrosUrl = () => {
+                if (currentSource === 'local') return '';
+                try {
+                    const urlObj = new URL(apiUrl);
+                    urlObj.pathname = urlObj.pathname.replace('/feedback', '/registros');
+                    return urlObj.toString();
+                } catch (e) {
+                    return 'https://aurea-backend-eq8d.onrender.com/api/registros';
+                }
+            };
+
+            async function loadMembersData() {
+                const membersTableBody = document.getElementById('members-table-body');
+                if (!membersTableBody) return;
+                
+                let records = [];
+                
+                if (currentSource === 'local') {
+                    try {
+                        const localReg = JSON.parse(localStorage.getItem('aurea_promo_club33_reg'));
+                        if (localReg) {
+                            records = [{
+                                timestamp: localReg.registeredAt || new Date().toISOString(),
+                                name: localReg.name,
+                                email: localReg.email,
+                                company: localReg.company,
+                                plan: "Club 33 Premium (3 Meses Gratis)",
+                                license_key: localReg.licenseKey || "SFA-MEM-LOCAL-TEMP"
+                            }];
+                        }
+                    } catch (e) {
+                        records = [];
+                    }
+                    renderMembers(records);
+                } else {
+                    membersTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-gray);">Conectando con el servidor API...</td></tr>`;
+                    
+                    try {
+                        const headers = {};
+                        if (apiToken) {
+                            headers['Authorization'] = `Bearer ${apiToken}`;
+                        }
+                        
+                        let fetchUrl = getRegistrosUrl();
+                        if (apiToken) {
+                            fetchUrl += `?token=${encodeURIComponent(apiToken)}`;
+                        }
+
+                        const response = await fetch(fetchUrl, {
+                            method: 'GET',
+                            headers: headers
+                        });
+
+                        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+                        records = await response.json();
+                        
+                        if (!Array.isArray(records)) records = [];
+                        renderMembers(records);
+                    } catch (err) {
+                        console.error("Error fetching registrations:", err);
+                        membersTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #ef4444; padding: 2.5rem 1.25rem;">
+                                    <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: #ef4444; margin-bottom: 0.5rem;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                    <div>No se pudo conectar con la API de membresías.</div>
+                                    <div style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.7;">Detalle: ${err.message}</div>
+                                </td>
+                            </tr>
+                        `;
+                        updateMembersStats([]);
+                    }
+                }
+            }
+
+            function updateMembersStats(records) {
+                const memberTotal = document.getElementById('member-stat-total');
+                const memberActive = document.getElementById('member-stat-active');
+                const memberLatest = document.getElementById('member-stat-latest');
+
+                if (!memberTotal || !memberActive || !memberLatest) return;
+
+                if (!records || records.length === 0) {
+                    memberTotal.textContent = "0";
+                    memberActive.textContent = "0";
+                    memberLatest.textContent = "--";
+                    return;
+                }
+
+                memberTotal.textContent = records.length;
+                memberActive.textContent = records.length;
+
+                const sorted = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const latestDate = new Date(sorted[0].timestamp);
+                memberLatest.textContent = latestDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+            }
+
+            function renderMembers(records) {
+                const membersTableBody = document.getElementById('members-table-body');
+                if (!membersTableBody) return;
+                
+                membersTableBody.innerHTML = '';
+                updateMembersStats(records);
+
+                if (!records || records.length === 0) {
+                    membersTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                                </svg>
+                                <div>No se han registrado membresías aún.</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                const sorted = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                sorted.forEach(r => {
+                    const tr = document.createElement('tr');
+                    
+                    let dateDisplay = '---';
+                    if (r.timestamp) {
+                        try {
+                            const d = new Date(r.timestamp);
+                            dateDisplay = d.toLocaleString('es-ES', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        } catch (e) {
+                            dateDisplay = r.timestamp;
+                        }
+                    }
+
+                    tr.innerHTML = `
+                        <td class="date-text">${dateDisplay}</td>
+                        <td style="font-weight: 600; color: #fff;">${escapeHtml(r.name || '')}</td>
+                        <td>${escapeHtml(r.email || '')}</td>
+                        <td>${escapeHtml(r.company || 'Particular')}</td>
+                        <td><span class="badge yes" style="background: rgba(197, 168, 128, 0.15); border: 1px solid var(--color-primary-gold); color: var(--color-primary-gold);">${escapeHtml(r.plan || '')}</span></td>
+                        <td><code style="font-family: monospace; font-size: 0.9rem; color: #00d2ff; letter-spacing: 0.05em;">${escapeHtml(r.license_key || '')}</code></td>
+                    `;
+                    membersTableBody.appendChild(tr);
+                });
+            }
+
+            // Clear members history action
+            const btnClearMembers = document.getElementById('btn-clear-members');
+            if (btnClearMembers) {
+                btnClearMembers.addEventListener('click', async () => {
+                    const confirmed = confirm("¿Está seguro de que desea eliminar todas las membresías del servidor? Esta acción borrará registros.json.");
+                    if (!confirmed) return;
+
+                    if (currentSource === 'local') {
+                        localStorage.removeItem('aurea_promo_club33_reg');
+                        loadMembersData();
+                    } else {
+                        try {
+                            const headers = {};
+                            if (apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
+                            
+                            let deleteUrl = getRegistrosUrl();
+                            if (apiToken) {
+                                deleteUrl += `?token=${encodeURIComponent(apiToken)}`;
+                            }
+
+                            const response = await fetch(deleteUrl, {
+                                method: 'DELETE',
+                                headers: headers
+                            });
+
+                            if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+                            loadMembersData();
+                        } catch (err) {
+                            alert(`No se pudo limpiar las membresías en el servidor. Detalle: ${err.message}`);
+                        }
+                    }
+                });
+            }
+
+            // Export Members CSV action
+            const btnExportMembersCsv = document.getElementById('btn-export-members-csv');
+            if (btnExportMembersCsv) {
+                btnExportMembersCsv.addEventListener('click', () => {
+                    const membersTableBody = document.getElementById('members-table-body');
+                    if (!membersTableBody) return;
+
+                    const rows = membersTableBody.querySelectorAll('tr');
+                    if (rows.length === 1 && rows[0].querySelector('.empty-state')) {
+                        alert("No hay membresías disponibles para exportar.");
+                        return;
+                    }
+
+                    let records = [];
+                    rows.forEach(row => {
+                        const date = row.cells[0]?.textContent;
+                        const name = row.cells[1]?.textContent;
+                        const email = row.cells[2]?.textContent;
+                        const company = row.cells[3]?.textContent;
+                        const plan = row.cells[4]?.textContent;
+                        const license = row.cells[5]?.textContent;
+                        
+                        if (date && name) {
+                            records.push({
+                                timestamp: date,
+                                name: name,
+                                email: email,
+                                company: company,
+                                plan: plan,
+                                license_key: license
+                            });
+                        }
+                    });
+
+                    if (records.length === 0) {
+                        alert("No hay registros para exportar.");
+                        return;
+                    }
+
+                    // Construct CSV
+                    let csvContent = "\uFEFFFecha,Nombre,Correo,Empresa,Plan,Clave_Licencia\n";
+                    records.forEach(r => {
+                        csvContent += `"${r.timestamp}","${r.name}","${r.email}","${r.company}","${r.plan}","${r.license_key}"\n`;
+                    });
+
+                    // Trigger download
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `members_aurea_systems_${new Date().toISOString().split('T')[0]}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }
+
+            // Fetch Data
+            async function loadFeedbackData() {
+                let records = [];
+                activeSourceIndicator.textContent = getSourceNameText(currentSource);
+
+                if (currentSource === 'local') {
+                    try {
+                        records = JSON.parse(localStorage.getItem('aurea_feedback_history')) || [];
+                    } catch (e) {
+                        records = [];
+                    }
+                    renderRecords(records);
+                } else {
+                    // API request
+                    feedbackTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-text-gray);">Conectando con el servidor API...</td></tr>`;
+                    
+                    try {
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (apiToken) {
+                            headers['Authorization'] = `Bearer ${apiToken}`;
+                        }
+                        
+                        let fetchUrl = apiUrl;
+                        if (currentSource === 'api' && apiToken) {
+                            // Append token as parameter for safety
+                            fetchUrl += `?token=${encodeURIComponent(apiToken)}`;
+                        }
+
+                        const response = await fetch(fetchUrl, {
+                            method: 'GET',
+                            headers: headers
+                        });
+
+                        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+                        records = await response.json();
+                        
+                        // Parse structure if wrapped
+                        if (records.data) records = records.data;
+                        if (!Array.isArray(records)) records = [];
+                        
+                        renderRecords(records);
+                    } catch (err) {
+                        console.error("Error fetching feedback:", err);
+                        feedbackTableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #ef4444; padding: 2.5rem 1.25rem;">
+                                    <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: #ef4444; margin-bottom: 0.5rem;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                                    <div>No se pudo establecer conexión con la API externa.</div>
+                                    <div style="font-size: 0.75rem; margin-top: 0.25rem; opacity: 0.7;">Detalle: ${err.message}</div>
+                                    <button class="btn btn-outline" onclick="window.useLocalFallback()" style="margin-top: 1rem; font-size: 0.75rem; padding: 0.4rem 0.8rem;">Usar respaldo local</button>
+                                </td>
+                            </tr>
+                        `;
+                        // Set statistics to zero
+                        updateStats([]);
+                    }
+                }
+            }
+
+            window.useLocalFallback = () => {
+                currentSource = 'local';
+                cfgSourceType.value = 'local';
+                localStorage.setItem(STORAGE_CFG_TYPE, 'local');
+                updateConfigFieldsUI();
+                loadFeedbackData();
+            };
+
+            function getSourceNameText(src) {
+                switch(src) {
+                    case 'local': return "Navegador Local";
+                    case 'api': return "FastAPI Backend";
+                    case 'custom': return "API Externa / Sheets";
+                    default: return "Desconocido";
+                }
+            }
+
+            function updateStats(records) {
+                if (!records || records.length === 0) {
+                    statTotal.textContent = "0";
+                    statRating.textContent = "0.0 ★";
+                    statAccuracy.textContent = "0%";
+                    return;
+                }
+
+                const total = records.length;
+                let ratingSum = 0;
+                let accuracyCount = 0;
+
+                records.forEach(r => {
+                    ratingSum += parseInt(r.rating) || 5;
+                    if (r.accuracy === 'si') {
+                        accuracyCount++;
+                    }
+                });
+
+                const avgRating = (ratingSum / total).toFixed(1);
+                const accPercent = Math.round((accuracyCount / total) * 100);
+
+                statTotal.textContent = total;
+                statRating.textContent = `${avgRating} ★`;
+                statAccuracy.textContent = `${accPercent}%`;
+            }
+
+            function renderRecords(records) {
+                feedbackTableBody.innerHTML = '';
+                updateStats(records);
+
+                if (!records || records.length === 0) {
+                    feedbackTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="empty-state">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                                </svg>
+                                <div>No se han registrado comentarios aún en esta fuente.</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Sort records: newest first
+                const sorted = [...records].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                sorted.forEach(r => {
+                    const tr = document.createElement('tr');
+                    
+                    // Format Date
+                    let dateDisplay = '---';
+                    if (r.timestamp) {
+                        try {
+                            const d = new Date(r.timestamp);
+                            dateDisplay = d.toLocaleString('es-ES', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        } catch (e) {
+                            dateDisplay = r.timestamp;
+                        }
+                    }
+
+                    // Accuracy Badge
+                    const isYes = r.accuracy === 'si';
+                    const accuracyBadge = `<span class="badge ${isYes ? 'yes' : 'no'}">${isYes ? '✓ Sí' : '✗ No'}</span>`;
+
+                    // Stars
+                    let starCount = parseInt(r.rating) || 5;
+                    const starsHtml = `<span class="stars-display">${'★'.repeat(starCount)}${'☆'.repeat(5 - starCount)}</span>`;
+
+                    // Comment
+                    const safeComment = r.comment ? escapeHtml(r.comment) : '<span style="font-style: italic; opacity: 0.5;">Sin comentarios escritos</span>';
+
+                    tr.innerHTML = `
+                        <td class="date-text">${dateDisplay}</td>
+                        <td>${accuracyBadge}</td>
+                        <td>${starsHtml}</td>
+                        <td class="comment-text">${safeComment}</td>
+                    `;
+                    feedbackTableBody.appendChild(tr);
+                });
+            }
+
+            function escapeHtml(text) {
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+            // Export to CSV Action
+            btnExportCsv.addEventListener('click', () => {
+                let records = [];
+                if (currentSource === 'local') {
+                    records = JSON.parse(localStorage.getItem('aurea_feedback_history')) || [];
+                } else {
+                    // Extract currently rendered rows from table
+                    const rows = feedbackTableBody.querySelectorAll('tr');
+                    if (rows.length === 1 && rows[0].querySelector('.empty-state')) {
+                        alert("No hay registros disponibles para exportar.");
+                        return;
+                    }
+                    
+                    // We can just grab what is in the table or alert. Let's alert if source is remote and failed.
+                    // If we successfully loaded records, they are in the memory or table.
+                    // For safety, let's build CSV from localStorage if local, or parse the table rows!
+                    // Let's parse from the table to guarantee we export exactly what the user is seeing.
+                    rows.forEach(row => {
+                        const date = row.cells[0]?.textContent;
+                        const accuracyText = row.cells[1]?.textContent?.includes('Sí') ? 'si' : 'no';
+                        const starsText = row.cells[2]?.textContent;
+                        const starCount = (starsText?.match(/★/g) || []).length;
+                        const comment = row.cells[3]?.textContent;
+                        
+                        if (date && comment) {
+                            records.push({
+                                timestamp: date,
+                                accuracy: accuracyText,
+                                rating: starCount,
+                                comment: comment
+                            });
+                        }
+                    });
+                }
+
+                if (records.length === 0) {
+                    alert("No hay registros para exportar.");
+                    return;
+                }
+
+                // Construct CSV
+                let csvContent = "\uFEFFFecha,Diagnostico_Acertado,Calificacion,Comentario\n";
+                records.forEach(r => {
+                    const cleanComment = (r.comment || '').replace(/"/g, '""');
+                    csvContent += `"${r.timestamp}","${r.accuracy.toUpperCase()}",${r.rating},"${cleanComment}"\n`;
+                });
+
+                // Trigger download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `feedback_aurea_systems_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // Clear history action
+            btnClearHistory.addEventListener('click', async () => {
+                const confirmed = confirm("¿Está seguro de que desea limpiar el historial de retroalimentación? Esta acción es irreversible.");
+                if (!confirmed) return;
+
+                if (currentSource === 'local') {
+                    localStorage.removeItem('aurea_feedback_history');
+                    loadFeedbackData();
+                } else {
+                    // Try to send DELETE to API
+                    try {
+                        const headers = {};
+                        if (apiToken) headers['Authorization'] = `Bearer ${apiToken}`;
+                        
+                        let deleteUrl = apiUrl;
+                        if (currentSource === 'api' && apiToken) {
+                            deleteUrl += `?token=${encodeURIComponent(apiToken)}`;
+                        }
+
+                        const response = await fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: headers
+                        });
+
+                        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+                        loadFeedbackData();
+                    } catch (err) {
+                        alert(`No se pudo limpiar el historial en el servidor. Detalle: ${err.message}`);
+                    }
+                }
+            });
+
+            btnRefresh.addEventListener('click', () => {
+                if (sectionMembers && sectionMembers.style.display === 'block') {
+                    loadMembersData();
+                } else {
+                    loadFeedbackData();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+/* ==========================================================================
+   ÁUREA SYSTEMS - HOJA DE ESTILOS DE LA CONSOLA DE SENSORES
+   ========================================================================== */
+
+/* Main Layout Grid */
+.sensores-container {
+    max-width: 1550px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.sensores-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 2.2rem;
+    align-items: start;
+    margin-bottom: 3rem;
+}
+
+@media (max-width: 1150px) {
+    .sensores-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Common Card/Panel Styles */
+.sensor-panel {
+    background: rgba(8, 14, 26, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 193, 149, 0.15);
+    border-radius: 14px;
+    padding: 2.2rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4),
+                inset 0 0 25px rgba(197, 168, 128, 0.02);
+    transition: var(--transition-smooth);
+}
+
+.sensor-panel:hover {
+    border-color: rgba(226, 193, 149, 0.25);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5),
+                inset 0 0 35px rgba(197, 168, 128, 0.04);
+}
+
+.sensor-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.8rem;
+}
+
+.sensor-panel-title {
+    font-size: 1.15rem;
+    font-family: var(--font-headings);
+    color: var(--color-text-white);
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-transform: uppercase;
+}
+
+/* Sliders Config Box */
+.sfa-sliders-box {
+    background: rgba(197, 168, 128, 0.03);
+    border: 1px solid rgba(197, 168, 128, 0.12);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.slider-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--color-text-light);
+}
+
+.slider-row-btn {
+    background: rgba(2, 6, 12, 0.5);
+    border: 1px solid rgba(197, 168, 128, 0.2);
+    border-radius: 4px;
+    padding: 0.35rem 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.slider-row-btn:hover {
+    border-color: var(--color-primary-gold);
+    background: rgba(197, 168, 128, 0.08);
+}
+
+.slider-val-box {
+    color: var(--color-primary-gold);
+    font-weight: 600;
+}
+
+/* Custom Gold Slider */
+.time-align-box {
+    margin-top: 0.6rem;
+}
+
+.time-align-header {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-accent);
+    font-size: 0.75rem;
+    color: var(--color-text-gray);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+.custom-gold-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    transition: background 0.3s;
+}
+
+.custom-gold-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary-gold);
+    box-shadow: 0 0 10px var(--color-gold-glow);
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.custom-gold-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+/* Index Health Badge */
+.health-index-badge {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #10b981;
+    font-family: var(--font-accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.35rem 0.9rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.15));
+}
+
+.health-index-badge.warning {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #f59e0b;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.15));
+}
+
+.health-index-badge.danger {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #ef4444;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.15));
+}
+
+/* Metrics Grid */
+.telemetry-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .telemetry-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.metric-card-hibrida {
+    background: rgba(16, 185, 129, 0.04);
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    border-radius: 6px;
+    padding: 0.85rem 0.65rem;
+    text-align: center;
+    transition: var(--transition-smooth);
+}
+
+.metric-card-hibrida.warning {
+    background: rgba(245, 158, 11, 0.04);
+    border-color: rgba(245, 158, 11, 0.15);
+}
+
+.metric-card-hibrida.danger {
+    background: rgba(239, 68, 68, 0.04);
+    border-color: rgba(239, 68, 68, 0.15);
+}
+
+.metric-card-hibrida:hover {
+    border-color: rgba(197, 168, 128, 0.3);
+    background: rgba(197, 168, 128, 0.02);
+}
+
+.metric-lbl {
+    font-size: 0.52rem;
+    font-family: var(--font-accent);
+    color: var(--color-text-gray);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+    line-height: 1.2;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-val {
+    font-size: 0.95rem;
+    font-family: var(--font-headings);
+    font-weight: 700;
+    color: var(--color-primary-gold);
+    line-height: 1.2;
+}
+
+.metric-sub {
+    font-size: 0.52rem;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--color-text-gray);
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+/* Oscilloscope Container */
+.oscilloscope-title-bar {
+    font-family: var(--font-accent);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: var(--color-text-light);
+    margin-bottom: 0.8rem;
+    border-left: 2px solid var(--color-primary-gold);
+    padding-left: 0.6rem;
+    text-transform: uppercase;
+}
+
+.oscilloscope-canvas-wrapper {
+    background: rgba(2, 6, 12, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 0.5rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.oscilloscope-canvas-wrapper canvas {
+    display: block;
+    width: 100%;
+    height: 240px;
+}
+
+/* Diagnostic Certificate Card */
+.diagnostic-report-card {
+    background: rgba(197, 168, 128, 0.03);
+    border: 1px solid rgba(197, 168, 128, 0.15);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-accent);
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(197, 168, 128, 0.1);
+    padding-bottom: 0.5rem;
+}
+
+.report-title {
+    font-family: var(--font-headings);
+    font-size: 0.85rem;
+    color: var(--color-primary-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.report-text {
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    line-height: 1.4;
+    margin-bottom: 1.2rem;
+}
+
+/* Drag and drop zone */
+.sfa-dropzone {
+    background: rgba(197, 168, 128, 0.01);
+    border: 1px dashed rgba(197, 168, 128, 0.2);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.sfa-dropzone:hover {
+    background: rgba(197, 168, 128, 0.05);
+    border-color: var(--color-primary-gold);
+}
+
+/* Console logs */
+.log-line.log-cargo {
+    color: #ef4444;
+}

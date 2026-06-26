@@ -1,0 +1,53 @@
+{
+  "siemens": {
+    "name": "Siemens PLC S7 Export",
+    "mappings": {
+      "time": ["ts_utc", "datetime", "epoch_ms", "timestamp", "tiempo", "time"],
+      "vibration": ["vib_rms_g", "acel_g", "sensor_00", "vibration_g", "vibracion_g", "vibracion"],
+      "temperature": ["temp_station_c", "temp_estator", "sensor_10", "temperature_c", "temperatura_c", "temperatura"],
+      "pressure": ["pres_out_bar", "presion_filtro", "sensor_04", "pressure_bar", "presion_bar", "presion"],
+      "current": ["curr_amp_a", "corriente_motor", "sensor_05", "current_a", "corriente_a", "corriente"],
+      "rpm": ["rotational_speed", "rpm", "act_speed", "speed_rpm", "n_actualrpm", "speed", "rotation", "rotational", "velocity", "velocidad", "spindle"],
+      "torque": ["torque", "torque_nm", "act_torque", "momento_mnm", "torsion", "load", "tension", "esfuerzo", "trq", "torq"],
+      "tool_wear": ["tool_wear", "desgaste_min", "lifespan_min", "tool_pos", "desgaste"],
+      "flow": ["flow_rate", "caudal_lpm", "fit_101", "flow_ma", "litros_min", "flow", "caudal"],
+      "level": ["level_mtr", "tank_level", "lit_101", "nivel_porcentaje", "level", "nivel"],
+      "voltage": ["voltage_v", "v_actual", "bus_voltage", "linea_v", "volt", "voltage", "voltaje"],
+      "sensor_id": ["plc_id", "sensor_name", "sensor_id"]
+    }
+  },
+  "allen_bradley": {
+    "name": "Allen Bradley CompactLogix",
+    "mappings": {
+      "time": ["t_sec", "time_offset", "secs", "time"],
+      "vibration": ["rms_vibe", "vibration_acceleration", "vib"],
+      "temperature": ["winding_temp", "stator_c", "temp"],
+      "pressure": ["discharge_pres", "hydraulic_bar", "pres"],
+      "current": ["amperage_motor", "current_draw", "current"],
+      "rpm": ["rotational_speed", "rpm", "act_speed", "speed_rpm", "n_actualrpm", "speed", "rotation", "rotational", "velocity", "velocidad", "spindle"],
+      "torque": ["torque", "torque_nm", "act_torque", "momento_mnm", "torsion", "load", "tension", "esfuerzo", "trq", "torq"],
+      "tool_wear": ["tool_wear", "desgaste_min", "lifespan_min", "tool_pos", "desgaste"],
+      "flow": ["flow_rate", "caudal_lpm", "fit_101", "flow_ma", "litros_min", "flow", "caudal"],
+      "level": ["level_mtr", "tank_level", "lit_101", "nivel_porcentaje", "level", "nivel"],
+      "voltage": ["voltage_v", "v_actual", "bus_voltage", "linea_v", "volt", "voltage", "voltaje"],
+      "sensor_id": ["device_tag", "ab_tagname", "sensor_id"]
+    }
+  },
+  "generic_scada": {
+    "name": "SCADA Genérico de Planta",
+    "mappings": {
+      "time": ["t", "segundos", "sec", "time"],
+      "vibration": ["aceleracion", "g", "velocidad", "vibracion"],
+      "temperature": ["temp", "winding", "stator", "temperatura"],
+      "pressure": ["presion", "bar", "psi", "torque", "pres"],
+      "current": ["corriente", "amp", "amperios", "current"],
+      "rpm": ["rotational_speed", "rpm", "act_speed", "speed_rpm", "n_actualrpm", "speed", "rotation", "rotational", "velocity", "velocidad", "spindle"],
+      "torque": ["torque", "torque_nm", "act_torque", "momento_mnm", "torsion", "load", "tension", "esfuerzo", "trq", "torq"],
+      "tool_wear": ["tool_wear", "desgaste_min", "lifespan_min", "tool_pos", "desgaste"],
+      "flow": ["flow_rate", "caudal_lpm", "fit_101", "flow_ma", "litros_min", "flow", "caudal"],
+      "level": ["level_mtr", "tank_level", "lit_101", "nivel_porcentaje", "level", "nivel"],
+      "voltage": ["voltage_v", "v_actual", "bus_voltage", "linea_v", "volt", "voltage", "voltaje"],
+      "sensor_id": ["id", "tag", "sensor_id"]
+    }
+  }
+}

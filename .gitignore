@@ -1,0 +1,31 @@
+# Variables de entorno locales (Secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Archivos de caché y compilación de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+env/
+venv/
+
+# Bases de datos locales
+*.db
+*.sqlite3
+
+# Logs del sistema y de paquetes
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos temporales de sistema operativo
+.DS_Store
+Thumbs.db
