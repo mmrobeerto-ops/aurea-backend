@@ -1514,6 +1514,19 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     scoring_warning_curr = 35.0 if is_testing else limit_warning_curr
     scoring_danger_curr = 50.0 if is_testing else limit_danger_curr
 
+    scoring_warning_rpm = 1000.0 if is_testing else limit_warning_rpm
+    scoring_danger_rpm = 1500.0 if is_testing else limit_danger_rpm
+    scoring_warning_torque = 30.0 if is_testing else limit_warning_torque
+    scoring_danger_torque = 50.0 if is_testing else limit_danger_torque
+    scoring_warning_wear = 100.0 if is_testing else limit_warning_wear
+    scoring_danger_wear = 200.0 if is_testing else limit_danger_wear
+    scoring_warning_flow = 50.0 if is_testing else limit_warning_flow
+    scoring_danger_flow = 80.0 if is_testing else limit_danger_flow
+    scoring_warning_level = 80.0 if is_testing else limit_warning_level
+    scoring_danger_level = 95.0 if is_testing else limit_danger_level
+    scoring_warning_voltage = 240.0 if is_testing else limit_warning_voltage
+    scoring_danger_voltage = 480.0 if is_testing else limit_danger_voltage
+
     frequency_m = f_base
     phi = 1.618033988749895
 
@@ -1578,15 +1591,98 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     else:
         h_curr = 100.0
 
+    # Sub-health calculations for the new variables
+    if has_rpm:
+        if max_rpm <= scoring_warning_rpm:
+            h_rpm = 100.0
+        elif scoring_warning_rpm < max_rpm <= scoring_danger_rpm:
+            range_rpm = max(0.001, scoring_danger_rpm - scoring_warning_rpm)
+            h_rpm = 100.0 - 60.0 * (max_rpm - scoring_warning_rpm) / range_rpm
+        else:
+            h_rpm = max(5.0, 40.0 - 0.5 * (max_rpm - scoring_danger_rpm))
+    else:
+        h_rpm = 100.0
+
+    if has_torque:
+        if max_torque <= scoring_warning_torque:
+            h_torque = 100.0
+        elif scoring_warning_torque < max_torque <= scoring_danger_torque:
+            range_torque = max(0.001, scoring_danger_torque - scoring_warning_torque)
+            h_torque = 100.0 - 60.0 * (max_torque - scoring_warning_torque) / range_torque
+        else:
+            h_torque = max(5.0, 40.0 - 0.5 * (max_torque - scoring_danger_torque))
+    else:
+        h_torque = 100.0
+
+    if has_wear:
+        if max_wear <= scoring_warning_wear:
+            h_wear = 100.0
+        elif scoring_warning_wear < max_wear <= scoring_danger_wear:
+            range_wear = max(0.001, scoring_danger_wear - scoring_warning_wear)
+            h_wear = 100.0 - 60.0 * (max_wear - scoring_warning_wear) / range_wear
+        else:
+            h_wear = max(5.0, 40.0 - 0.5 * (max_wear - scoring_danger_wear))
+    else:
+        h_wear = 100.0
+
+    if has_flow:
+        if max_flow <= scoring_warning_flow:
+            h_flow = 100.0
+        elif scoring_warning_flow < max_flow <= scoring_danger_flow:
+            range_flow = max(0.001, scoring_danger_flow - scoring_warning_flow)
+            h_flow = 100.0 - 60.0 * (max_flow - scoring_warning_flow) / range_flow
+        else:
+            h_flow = max(5.0, 40.0 - 0.5 * (max_flow - scoring_danger_flow))
+    else:
+        h_flow = 100.0
+
+    if has_level:
+        if max_level <= scoring_warning_level:
+            h_level = 100.0
+        elif scoring_warning_level < max_level <= scoring_danger_level:
+            range_level = max(0.001, scoring_danger_level - scoring_warning_level)
+            h_level = 100.0 - 60.0 * (max_level - scoring_warning_level) / range_level
+        else:
+            h_level = max(5.0, 40.0 - 0.5 * (max_level - scoring_danger_level))
+    else:
+        h_level = 100.0
+
+    if has_voltage:
+        if max_voltage <= scoring_warning_voltage:
+            h_voltage = 100.0
+        elif scoring_warning_voltage < max_voltage <= scoring_danger_voltage:
+            range_voltage = max(0.001, scoring_danger_voltage - scoring_warning_voltage)
+            h_voltage = 100.0 - 60.0 * (max_voltage - scoring_warning_voltage) / range_voltage
+        else:
+            h_voltage = max(5.0, 40.0 - 0.5 * (max_voltage - scoring_danger_voltage))
+    else:
+        h_voltage = 100.0
+
     # 5. Combinación ponderada con sesgo al mínimo
-    h_min = min(h_vib, h_temp, h_pres, h_curr)
-    h_avg = 0.40 * h_vib + 0.25 * h_temp + 0.15 * h_pres + 0.20 * h_curr
+    h_min = min(h_vib, h_temp, h_pres, h_curr, h_rpm, h_torque, h_wear, h_flow, h_level, h_voltage)
+    
+    # Backward compatible core variables average
+    h_core_avg = 0.40 * h_vib + 0.25 * h_temp + 0.15 * h_pres + 0.20 * h_curr
+    
+    new_vars_healths = []
+    if has_rpm: new_vars_healths.append(h_rpm)
+    if has_torque: new_vars_healths.append(h_torque)
+    if has_wear: new_vars_healths.append(h_wear)
+    if has_flow: new_vars_healths.append(h_flow)
+    if has_level: new_vars_healths.append(h_level)
+    if has_voltage: new_vars_healths.append(h_voltage)
+    
+    if new_vars_healths:
+        h_new_avg = sum(new_vars_healths) / len(new_vars_healths)
+        h_avg = 0.60 * h_core_avg + 0.40 * h_new_avg
+    else:
+        h_avg = h_core_avg
     
     health_score = round(0.60 * h_min + 0.40 * h_avg)
     health_score = max(5, min(100, health_score))
 
     print(f"--- AUDITORÍA SFA EN VIVO ---")
-    print(f"Sub-índices -> Vib: {h_vib}, Temp: {h_temp}, Presion: {h_pres}, Corriente: {h_curr}")
+    print(f"Sub-índices -> Vib: {h_vib}, Temp: {h_temp}, Presion: {h_pres}, Corriente: {h_curr}, Rpm: {h_rpm}, Torque: {h_torque}, Wear: {h_wear}, Flow: {h_flow}, Level: {h_level}, Voltage: {h_voltage}")
     print(f"Mínimo (H_min): {h_min} | Promedio (H_avg): {h_avg}")
     print(f"Resultado Final Calculado: {health_score}")
 
