@@ -404,15 +404,15 @@
 
                                  <!-- Mock Data Trigger Buttons -->
                                  <div class="mock-buttons-group">
-                                     <button type="button" class="btn-mock-data btn-opt" data-type="optimal" disabled>
-                                         ⚙️ Motor Eléctrico
-                                     </button>
-                                     <button type="button" class="btn-mock-data btn-warn" data-type="misalignment" disabled>
-                                         💨 Compresor Industrial
-                                     </button>
-                                     <button type="button" class="btn-mock-data btn-crit" data-type="critical" disabled>
-                                         🔄 Husillo de CNC
-                                     </button>
+                                      <button type="button" class="btn-mock-data btn-opt" data-type="automotriz" disabled>
+                                          🚗 Automotriz
+                                      </button>
+                                      <button type="button" class="btn-mock-data btn-warn" data-type="hidraulicos" disabled>
+                                          🛢️ Hidráulicos
+                                      </button>
+                                      <button type="button" class="btn-mock-data btn-crit" data-type="electricos" disabled>
+                                          ⚡ Eléctricos
+                                      </button>
                                  </div>
 
                                 <!-- Lambda tuning slider -->
@@ -711,6 +711,17 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                                         </svg>
                                         Generar PDF de Acción
                                     </button>
+                                </div>
+                            </div>
+
+                            <!-- Rationale section -->
+                            <div class="sfa-rationale-section" id="sfa-rationale-section" style="margin-top: 1.5rem; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); padding: 1.5rem; border-radius: 12px; font-family: var(--font-main);">
+                                <h4 style="color: var(--color-primary-gold); margin-bottom: 1rem; font-family: var(--font-accent); font-size: 1.1rem; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0;">
+                                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; display: inline-block; vertical-align: middle;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                                    Racional de Diagnóstico y Detalle de Variables (<span id="sfa-rationale-plan-label">Plan Técnico</span>)
+                                </h4>
+                                <div id="sfa-rationale-content" class="sfa-rationale-content" style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <!-- Dynamically filled with professional justifications of each variable -->
                                 </div>
                             </div>
 

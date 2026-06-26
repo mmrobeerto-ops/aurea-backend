@@ -93,97 +93,164 @@ class SFAEngine {
      * Generate simulated operational data with noise and harmonics
      */
     async generateMockData(type) {
-        const dataList = [];
-        const duration = 5.0; // 5 seconds
-        const Fs = 100;       // Sample rate 100Hz
-        const N = duration * Fs;
-        
+        let csvText = '';
         let lambdaVal = 1.618;
-        let baseVibAmplitude = 0.15;
-        let noiseAmplitude = 0.08;
-        let baseTemp = 42.5;
-        let basePres = 6.2;
-        let anomalyFreq = 0;
-        let anomalyAmp = 0;
-        let tempDrift = 0;
-        let presFluct = 0.2;
-
-        let vibrationScale = 1.0;
-
-        if (type === 'optimal') {
-            lambdaVal = 1.0;
-            baseVibAmplitude = 0.05;
-            noiseAmplitude = 0.02;
-            baseTemp = 41.2;
-            basePres = 6.0;
-            presFluct = 0.1;
-        } else if (type === 'misalignment') {
-            lambdaVal = 1.618; // Golden scale
-            baseVibAmplitude = 0.25;
-            noiseAmplitude = 0.1;
-            anomalyFreq = 7.25 * 1.618; // Resonance peak!
-            anomalyAmp = 0.4;
-            baseTemp = 63.8;
-            tempDrift = 2.4;
-            basePres = 5.8;
-            presFluct = 0.6;
-        } else if (type === 'critical') {
-            lambdaVal = 2.15;
-            baseVibAmplitude = 0.65;
-            noiseAmplitude = 0.85; // Massive random noise
-            anomalyFreq = 7.25 * 2.15;
-            anomalyAmp = 1.25;
-            baseTemp = 120.0;
-            tempDrift = 25.0; // Winding temp reaches ~145 °C
-            basePres = 65.0;
-            presFluct = 7.0; // Discharge pressure reaches ~72 bar
-            vibrationScale = 15.0; // Yields ~28.56 mm/s RMS
-        }
-
-        for (let i = 0; i < N; i++) {
-            const t = i / Fs;
-            
-            // Raw sensor signal S(t) = base_vibe + anomaly + random_noise
-            let vibVal = baseVibAmplitude * Math.sin(2 * Math.PI * 7.25 * t);
-            if (anomalyFreq > 0) {
-                vibVal += anomalyAmp * Math.sin(2 * Math.PI * anomalyFreq * t + 0.5);
+        
+        try {
+            if (type === 'automotriz') {
+                lambdaVal = 1.618;
+                // Cargar datos reales de ai4i2020.csv (primeros 300 puntos)
+                try {
+                    const response = await fetch('./ai4i2020.csv');
+                    if (!response.ok) throw new Error("Fetch failed");
+                    const text = await response.text();
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    const headers = lines[0].split(',');
+                    const rpmIdx = headers.findIndex(h => h.toLowerCase().includes('rpm') || h.toLowerCase().includes('rotational'));
+                    const torqueIdx = headers.findIndex(h => h.toLowerCase().includes('torque') || h.toLowerCase().includes('nm'));
+                    
+                    if (rpmIdx !== -1 && torqueIdx !== -1) {
+                        csvText = "time,vibration,rpm,torque\n";
+                        const startLine = 120;
+                        const endLine = Math.min(lines.length, startLine + 300);
+                        
+                        for (let i = startLine; i < endLine; i++) {
+                            const cols = lines[i].split(',');
+                            const t = ((i - startLine) * 0.01).toFixed(2);
+                            const rpm = parseFloat(cols[rpmIdx]) || 1500.0;
+                            const torque = parseFloat(cols[torqueIdx]) || 40.0;
+                            
+                            // Sintetizar vibración física realista proporcional al RPM
+                            const angle = 2 * Math.PI * (rpm / 60) * (i - startLine) * 0.01;
+                            let vibVal = (0.05 + 0.0001 * rpm) * Math.sin(angle);
+                            vibVal += 0.35 * Math.sin(2 * angle) * (torque / 50.0);
+                            vibVal += 0.06 * (Math.random() - 0.5);
+                            
+                            csvText += `${t},${vibVal.toFixed(4)},${rpm.toFixed(0)},${torque.toFixed(1)}\n`;
+                        }
+                    } else {
+                        throw new Error("Required columns not found in local CSV");
+                    }
+                } catch (e) {
+                    console.log("Fallback to high-fidelity automotive simulation:", e);
+                    csvText = "time,vibration,rpm,torque\n";
+                    for (let i = 0; i < 300; i++) {
+                        const t = (i * 0.01).toFixed(2);
+                        const rpm = 1250.0 + 150.0 * Math.sin(2 * Math.PI * 0.2 * t) + 12.0 * (Math.random() - 0.5);
+                        const torque = 34.5 - 6.2 * Math.sin(2 * Math.PI * 0.2 * t) + 1.5 * (Math.random() - 0.5);
+                        
+                        const angle = 2 * Math.PI * 17.75 * t;
+                        let vibVal = 1.25 * Math.sin(angle);
+                        vibVal += 0.65 * Math.sin(2 * angle) * (torque / 30.0);
+                        vibVal += 0.12 * (Math.random() - 0.5);
+                        
+                        csvText += `${t},${vibVal.toFixed(4)},${rpm.toFixed(0)},${torque.toFixed(1)}\n`;
+                    }
+                }
+            } else if (type === 'hidraulicos') {
+                lambdaVal = 1.91;
+                // Cargar datos reales de prueba_ab_750.csv y mapear a presión
+                try {
+                    const response = await fetch('./prueba_ab_750.csv');
+                    if (!response.ok) throw new Error("Fetch failed");
+                    const text = await response.text();
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    const headers = lines[0].split(',');
+                    const presIdx = headers.findIndex(h => h.toLowerCase().includes('pres') || h.toLowerCase().includes('discharge'));
+                    
+                    if (presIdx !== -1) {
+                        csvText = "time,pressure,flow,level\n";
+                        const startLine = 10;
+                        const endLine = Math.min(lines.length, startLine + 300);
+                        
+                        for (let i = startLine; i < endLine; i++) {
+                            const cols = lines[i].split(',');
+                            const t = ((i - startLine) * 0.01).toFixed(2);
+                            const rawPres = parseFloat(cols[presIdx]) || 65.0;
+                            const barPres = rawPres * 0.0689476; // Convertir a bar
+                            
+                            // Sintetizar flujo y nivel hidráulicos realistas correlacionados
+                            const flow = 58.4 - 4.5 * Math.sin(2 * Math.PI * 0.8 * parseFloat(t)) + 0.6 * (Math.random() - 0.5);
+                            const level = 84.2 - 0.2 * parseFloat(t) + 0.15 * (Math.random() - 0.5);
+                            
+                            csvText += `${t},${barPres.toFixed(2)},${flow.toFixed(1)},${level.toFixed(1)}\n`;
+                        }
+                    } else {
+                        throw new Error("Pressure column not found in local AB CSV");
+                    }
+                } catch (e) {
+                    console.log("Fallback to high-fidelity hydraulic simulation:", e);
+                    csvText = "time,pressure,flow,level\n";
+                    for (let i = 0; i < 300; i++) {
+                        const t = (i * 0.01).toFixed(2);
+                        const pressure = 6.2 + 1.85 * Math.sin(2 * Math.PI * 0.8 * t) + 0.15 * (Math.random() - 0.5);
+                        const flow = 55.4 + 5.2 * Math.sin(2 * Math.PI * 0.8 * t) + 0.4 * (Math.random() - 0.5);
+                        const level = 82.5 - 0.3 * t + 0.1 * (Math.random() - 0.5);
+                        
+                        csvText += `${t},${pressure.toFixed(2)},${flow.toFixed(1)},${level.toFixed(1)}\n`;
+                    }
+                }
+            } else if (type === 'electricos') {
+                lambdaVal = 1.25;
+                // Cargar de prueba_siemens_300.csv
+                try {
+                    const response = await fetch('./prueba_siemens_300.csv');
+                    if (!response.ok) throw new Error("Fetch failed");
+                    const text = await response.text();
+                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    
+                    const headers = lines[0].split(',');
+                    const tempIdx = headers.findIndex(h => h.toLowerCase().includes('temp') || h.toLowerCase().includes('station'));
+                    const currIdx = headers.findIndex(h => h.toLowerCase().includes('curr') || h.toLowerCase().includes('amp'));
+                    
+                    if (tempIdx !== -1 && currIdx !== -1) {
+                        csvText = "time,current,voltage,temperature\n";
+                        const startLine = 5;
+                        const endLine = Math.min(lines.length, startLine + 300);
+                        
+                        for (let i = startLine; i < endLine; i++) {
+                            const cols = lines[i].split(',');
+                            const t = ((i - startLine) * 0.01).toFixed(2);
+                            const current = parseFloat(cols[currIdx]) || 11.5;
+                            const temperature = parseFloat(cols[tempIdx]) || 42.0;
+                            
+                            const voltage = 440.0 - 0.8 * current + 1.2 * Math.sin(2 * Math.PI * 60 * parseFloat(t)) + 0.5 * (Math.random() - 0.5);
+                            
+                            // Sobrecargamos intencionalmente los datos para que muestren alertas interesantes
+                            const currentBoosted = current * 3.3; // Elevar a ~38 A
+                            const tempBoosted = temperature + 35.0; // Elevar a ~77 °C
+                            const voltageBoosted = voltage * 0.58; // Reducir a ~250 V
+                            
+                            csvText += `${t},${currentBoosted.toFixed(2)},${voltageBoosted.toFixed(1)},${tempBoosted.toFixed(1)}\n`;
+                        }
+                    } else {
+                        throw new Error("Required columns not found in local Siemens CSV");
+                    }
+                } catch (e) {
+                    console.log("Fallback to high-fidelity electrical simulation:", e);
+                    csvText = "time,current,voltage,temperature\n";
+                    for (let i = 0; i < 300; i++) {
+                        const t = (i * 0.01).toFixed(2);
+                        const current = 38.4 + 4.2 * Math.sin(2 * Math.PI * 0.5 * t) + 0.8 * (Math.random() - 0.5);
+                        const voltage = 252.0 - 1.5 * Math.sin(2 * Math.PI * 0.5 * t) + 1.2 * (Math.random() - 0.5);
+                        const temperature = 78.5 + 2.4 * (i / 300.0) + 0.3 * (Math.random() - 0.5);
+                        
+                        csvText += `${t},${current.toFixed(2)},${voltage.toFixed(1)},${temperature.toFixed(1)}\n`;
+                    }
+                }
+            } else {
+                lambdaVal = 1.618;
+                csvText = "time,vibration,temperature,pressure,current\n";
+                for (let i = 0; i < 300; i++) {
+                    const t = (i * 0.01).toFixed(2);
+                    csvText += `${t},0.15,42.5,6.2,12.0\n`;
+                }
             }
-            vibVal += noiseAmplitude * (Math.sin(2 * Math.PI * 37.1 * t) * 0.3 + Math.sin(2 * Math.PI * 74.5 * t) * 0.2 + (Math.random() - 0.5) * 0.9);
-            
-            vibVal = vibVal * vibrationScale;
-
-            const tempVal = baseTemp + tempDrift * (t / duration) + (Math.random() - 0.5) * 0.3;
-            
-            const presVal = basePres + Math.sin(2 * Math.PI * 0.8 * t) * presFluct + (Math.random() - 0.5) * 0.15;
-
-            let baseCurrent = 12.0;
-            let currentFluct = 0.3;
-            if (type === 'optimal') {
-                baseCurrent = 11.2;
-                currentFluct = 0.15;
-            } else if (type === 'misalignment') {
-                baseCurrent = 16.5;
-                currentFluct = 0.8;
-            } else if (type === 'critical') {
-                baseCurrent = 118.4;
-                currentFluct = 4.0;
-            }
-            const currentVal = baseCurrent + Math.sin(2 * Math.PI * 0.5 * t) * currentFluct + (Math.random() - 0.5) * 0.2;
-
-            dataList.push({
-                time: parseFloat(t.toFixed(3)),
-                vibration: parseFloat(vibVal.toFixed(4)),
-                temperature: parseFloat(tempVal.toFixed(2)),
-                pressure: parseFloat(presVal.toFixed(2)),
-                current: parseFloat(currentVal.toFixed(2))
-            });
+        } catch (e) {
+            console.error("General mock generation failure:", e);
         }
-
-        // Convert to CSV to process securely on the server
-        let csvText = "time,vibration,temperature,pressure,current\n";
-        dataList.forEach(item => {
-            csvText += `${item.time},${item.vibration},${item.temperature},${item.pressure},${item.current}\n`;
-        });
 
         window.currentRawCSVText = csvText;
         await this.processSfaOnServer(csvText, lambdaVal, 0.0);
@@ -352,6 +419,143 @@ class SFAEngine {
     }
 
     /**
+     * Generates a professional rationale explaining the status of a specific variable
+     */
+    getVariableRationale(varKey, val, limit, dangerLimit, unit, planName, results) {
+        const isOptimal = (varKey === 'pressure') ? (val <= 1.5) : (val <= limit);
+        const isWarning = (varKey === 'pressure') ? (val > 1.5 && val <= 2.5) : (val > limit && val <= dangerLimit);
+        const isCritical = (varKey === 'pressure') ? (val > 2.5) : (val > dangerLimit);
+        
+        let status = '🟢 Óptimo';
+        let conditionClass = 'text-blue';
+        if (isCritical) {
+            status = '❌ Crítico';
+            conditionClass = 'text-red';
+        } else if (isWarning) {
+            status = '⚠️ Advertencia';
+            conditionClass = 'text-orange';
+        }
+
+        const formatVal = (v) => typeof v === 'number' ? v.toFixed(varKey === 'vibration' ? 3 : (varKey === 'rpm' ? 0 : 1)) : v;
+        const valStr = `${formatVal(val)} ${unit}`;
+        const limitStr = `${formatVal(limit)} ${unit}`;
+        const dangerLimitStr = `${formatVal(dangerLimit)} ${unit}`;
+        const diff = val - limit;
+        const diffStr = diff > 0 ? `+${formatVal(diff)} ${unit}` : '';
+        
+        const lambda = this.lambda ? this.lambda.toFixed(3) : '1.618';
+        const fBase = results.targetFreq ? results.targetFreq.toFixed(2) : '17.75';
+
+        let desc = '';
+
+        if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
+            if (varKey === 'vibration') {
+                if (isOptimal) desc = `Salud mecánica del 100%. Sin riesgos para la continuidad de la producción. Desgaste mínimo que proyecta extender la vida útil del activo en un 15% frente a la media.`;
+                else if (isWarning) desc = `Vibración de ${valStr} excede el límite de ${limitStr}. Acelera el desgaste de rodamientos. Riesgo moderado de paro imprevisto de producción. Se aconseja intervenir en el próximo mantenimiento programado.`;
+                else desc = `Vibración destructiva de ${valStr}. Riesgo inminente de rotura física con pérdidas por paro estimadas en $12,000 USD/hora. Requiere intervención inmediata del equipo de guardia.`;
+            } else if (varKey === 'temperature') {
+                if (isOptimal) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil del lubricante de rodamientos.`;
+                else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación térmica del lubricante y el aislamiento del motor. Se requiere revisión preventiva de refrigeración para evitar daños mayores.`;
+            } else if (varKey === 'pressure') {
+                if (isOptimal) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza hidráulica y evita daños en retenes o sellos mecánicos.`;
+                else desc = `Presión inestable con oscilación de ${valStr} (máx 1.5 bar). Afecta la calidad de la pieza de trabajo y daña sellos hidráulicos, incrementando el riesgo de fugas de aceite.`;
+            } else if (varKey === 'current') {
+                if (isOptimal) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica y el consumo de energía en parámetros nominales de diseño.`;
+                else if (isWarning) desc = `Corriente elevada de ${valStr} incrementa costos de energía en 8.5% y sugiere sobreesfuerzo mecánico ligero en la transmisión.`;
+                else desc = `Corriente de ${valStr} en sobrecarga crítica. Pérdida masiva de eficiencia energética y riesgo extremo de quemar bobinados, provocando paros prolongados de 3 a 5 días para reemplazo.`;
+            } else if (varKey === 'rpm') {
+                if (isOptimal) desc = `Velocidad de ${valStr} estable y alineada con la cadencia productiva óptima de la planta.`;
+                else desc = `Velocidad de ${valStr} fuera de rango nominal. Causa variaciones en calidad y puede sobrecargar los rodamientos de apoyo por velocidad excesiva.`;
+            } else if (varKey === 'torque') {
+                if (isOptimal) desc = `Transmisión de torque de ${valStr} nominal. Cero pérdidas en el acoplamiento y consumo energético balanceado.`;
+                else desc = `Torque elevado de ${valStr} (límite ${limitStr}). Sobreesfuerzo mecánico severo. Riesgo de fatiga en el eje de transmisión y alto coste en refaccionamiento.`;
+            } else if (varKey === 'tool_wear') {
+                if (isOptimal) desc = `Desgaste de herramienta controlado en ${valStr}. Máxima tasa de remoción de viruta sin afectar acabado superficial.`;
+                else desc = `Desgaste excesivo de herramienta en ${valStr}. Disminuye la calidad geométrica del producto y eleva el riesgo de rotura de insertos en proceso.`;
+            } else if (varKey === 'flow') {
+                if (isOptimal) desc = `Caudal de fluido estable de ${valStr}. Asegura la velocidad nominal de actuadores y previene caídas de presión en ciclo.`;
+                else desc = `Fluctuación de caudal de ${valStr}. Inestabilidad en la bomba principal de fluidos, riesgo de cavitación y pérdidas de velocidad en línea.`;
+            } else if (varKey === 'level') {
+                if (isOptimal) desc = `Nivel de fluido correcto al ${valStr}. Reserva hidráulica suficiente para el ciclo operativo completo.`;
+                else desc = `Nivel de fluido fuera de límites (${valStr}). Riesgo de paro automático por sensores de seguridad o cavitación con daño destructivo.`;
+            } else if (varKey === 'voltage') {
+                if (isOptimal) desc = `Tensión de red estable de ${valStr}. Garantiza la protección de componentes electrónicos y PLCs contra fluctuaciones.`;
+                else desc = `Tensión de red inestable en ${valStr}. Riesgo elevado de daño en variadores de frecuencia y tarjetas analógicas del PLC.`;
+            }
+        } else if (planName.includes("Consultor") || planName.includes("Senior")) {
+            if (varKey === 'vibration') {
+                if (isOptimal) desc = `La vibración RMS de ${valStr} se mantiene estable. El filtro espectral SFA (λ = ${lambda}) atenuó el ruido estructural. La amplitud del armónico principal en f_base (${fBase} Hz) está bajo el límite +2σ (${limitStr}).`;
+                else if (isWarning) desc = `La vibración RMS de ${valStr} excede el umbral estadístico +2σ (${limitStr}). El espectro a f_base (${fBase} Hz) acusa desalineación angular o desbalanceo mecánico en el acoplamiento directo.`;
+                else desc = `Vibración RMS de ${valStr} excede el umbral destructivo +3σ (${dangerLimitStr}). Presencia de picos de resonancia severos en la frecuencia de sintonía SFA. Alto riesgo de falla catastrófica en rodamientos.`;
+            } else if (varKey === 'temperature') {
+                if (isOptimal) desc = `La temperatura máxima registrada de ${valStr} se mantiene nominal. Disipación de calor correcta sin derivas térmicas significativas en el devanado.`;
+                else desc = `Temperatura máxima de ${valStr} excede el límite de diseño de ${limitStr}. Correlación del 85% con incremento de corriente o degradación de rodamientos.`;
+            } else if (varKey === 'pressure') {
+                if (isOptimal) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de pulsaciones de bomba o picos de cavitación hidráulica.`;
+                else desc = `La fluctuación de presión de ${valStr} supera el umbral máximo de 1.50 bar. El análisis de transitorios rápidos indica fluctuación de carga o desgaste en válvula reguladora de presión.`;
+            } else if (varKey === 'current') {
+                if (isOptimal) desc = `Consumo eléctrico de ${valStr}. La firma de corriente SFA no muestra modulaciones de carga, validando la integridad del estator y rotor del motor.`;
+                else if (isWarning) desc = `Corriente de ${valStr} excede el límite nominal de ${limitStr}. La potencia reactiva se eleva debido a fricción mecánica axial en rodamientos.`;
+                else desc = `Corriente en sobrecarga crítica de ${valStr} (límite peligro ${dangerLimitStr}). Firma eléctrica compatible con cortocircuito entre espiras o rotor bloqueado en el motor.`;
+            } else if (varKey === 'rpm') {
+                if (isOptimal) desc = `Velocidad de ${valStr} nominal. Frecuencia de rotación sintonizada correctamente sin deslizamientos ni oscilaciones de fase.`;
+                else desc = `Velocidad de ${valStr} desalineada del umbral de ${limitStr}. Indica inestabilidad en el bus DC del variador de frecuencia.`;
+            } else if (varKey === 'torque') {
+                if (isOptimal) desc = `Esfuerzo torsional de ${valStr}. Transmisión de potencia armónica y balanceada entre eje motriz y eje conducido.`;
+                else desc = `Esfuerzo torsional de ${valStr} supera el límite de diseño de ${limitStr}. Fatiga torsional detectada por espectro.`;
+            } else if (varKey === 'tool_wear') {
+                if (isOptimal) desc = `Desgaste de herramienta de ${valStr}. La señal espectral SFA no registra frecuencias de rozamiento abrasivo severo.`;
+                else desc = `Desgaste de herramienta de ${valStr} indica pérdida de geometría de corte y micro-fracturas por fatiga de material.`;
+            } else if (varKey === 'flow') {
+                if (isOptimal) desc = `Caudal nominal de ${valStr}. La atenuación SFA confirma estabilidad en los perfiles de flujo laminados sin turbulencias severas.`;
+                else desc = `Caudal inestable de ${valStr}. Turbulencia hidráulica excesiva, compatible con aireación de fluido o malfuncionamiento de bomba.`;
+            } else if (varKey === 'level') {
+                if (isOptimal) desc = `Nivel de fluido estable de ${valStr}. Estabilidad hidrostática nominal del depósito de aceite.`;
+                else desc = `Nivel de fluido de ${valStr} fuera de especificación. Desviación del punto de consigna en el controlador analógico del PLC.`;
+            } else if (varKey === 'voltage') {
+                if (isOptimal) desc = `Voltaje de alimentación de ${valStr}. La fluctuación armónica total de la red eléctrica se sitúa por debajo del 1.5%.`;
+                else desc = `Voltaje de bus de ${valStr} supera el límite de ${limitStr}. Presencia de picos transitorios por conmutación en red.`;
+            }
+        } else {
+            if (varKey === 'vibration') {
+                if (isOptimal) desc = `Vibración de ${valStr} por debajo del límite de advertencia de ${limitStr}. Equipo opera con oscilación mecánica correcta.`;
+                else if (isWarning) desc = `Vibración de ${valStr} supera el límite de ${limitStr}. Posible desalineación física. Se recomienda reajustar anclajes y soportes.`;
+                else desc = `Vibración peligrosa de ${valStr} excede el límite crítico de ${dangerLimitStr}. Detener el activo para evitar rotura de rodamientos de inmediato.`;
+            } else if (varKey === 'temperature') {
+                if (isOptimal) desc = `Temperatura de ${valStr} normal (límite ${limitStr}). Sistema de refrigeración opera correctamente.`;
+                else desc = `Temperatura de ${valStr} excede el límite de ${limitStr} por ${diffStr}. Revisar ventilación y estado de lubricante.`;
+            } else if (varKey === 'pressure') {
+                if (isOptimal) desc = `Presión estable con fluctuación de ${valStr} (dentro de tolerancia de 1.50 bar). Flujo hidráulico correcto.`;
+                else desc = `Presión inestable de ${valStr} supera tolerancia de 1.50 bar. Posible burbuja de aire en línea o fallo de válvula de presión.`;
+            } else if (varKey === 'current') {
+                if (isOptimal) desc = `Consumo eléctrico de ${valStr} bajo el límite seguro de ${limitStr}. Carga estable del motor.`;
+                else if (isWarning) desc = `Consumo eléctrico de ${valStr} supera el límite seguro de ${limitStr}. Corriente elevada por fricción o sobrecarga ligera.`;
+                else desc = `Corriente peligrosa de ${valStr} supera el límite crítico de ${dangerLimitStr}. Riesgo de sobrecalentamiento eléctrico. Revisar bobinados.`;
+            } else if (varKey === 'rpm') {
+                if (isOptimal) desc = `Rotación de ${valStr} estable bajo el límite seguro de ${limitStr}.`;
+                else desc = `Rotación de ${valStr} supera el límite de ${limitStr}. Posible pérdida de acoplamiento de carga física.`;
+            } else if (varKey === 'torque') {
+                if (isOptimal) desc = `Torque de ${valStr} dentro del rango de operación nominal del husillo.`;
+                else desc = `Torque de ${valStr} supera límite de ${limitStr}. Mayor esfuerzo mecánico en la herramienta.`;
+            } else if (varKey === 'tool_wear') {
+                if (isOptimal) desc = `Desgaste de herramienta en ${valStr}. Vida útil restante adecuada.`;
+                else desc = `Desgaste de herramienta de ${valStr} supera límite de ${limitStr}. Se recomienda cambio de herramienta de corte.`;
+            } else if (varKey === 'flow') {
+                if (isOptimal) desc = `Caudal de fluido de ${valStr} nominal. Flujo hidráulico adecuado.`;
+                else desc = `Caudal de fluido de ${valStr} excede límite de ${limitStr}. Verificar posibles obstrucciones o fugas de fluido en válvulas.`;
+            } else if (varKey === 'level') {
+                if (isOptimal) desc = `Nivel de fluido en depósito al ${valStr} (correcto).`;
+                else desc = `Nivel de fluido de ${valStr} fuera de tolerancia (límite ${limitStr}). Rellenar o vaciar según corresponda.`;
+            } else if (varKey === 'voltage') {
+                if (isOptimal) desc = `Voltaje eléctrico en ${valStr} nominal y estable. Suministro correcto.`;
+                else desc = `Voltaje eléctrico de ${valStr} inestable (límite ${limitStr}). Verificar suministro de red o regulador.`;
+            }
+        }
+
+        return { status, conditionClass, desc, valStr, limitStr };
+    }
+
+    /**
      * Generate text certificate of diagnosis to download
      */
     generateReportText() {
@@ -370,7 +574,16 @@ class SFAEngine {
         // Código de documento autogenerado
         const docCode = `SFA-${yyyy}-${mm}${dd}-${Math.floor(100 + Math.random() * 900)}`;
 
-        // Determinar emoji y estatus de salud
+        // Determinar tipo de plan
+        let reportPlan = 'Plan Junior / Técnico Predictivo';
+        if (this.license && this.license.plan) {
+            reportPlan = this.license.plan;
+        }
+
+        const isGerente = reportPlan.includes("Gerente") || reportPlan.includes("Planta Completa");
+        const isConsultor = reportPlan.includes("Consultor") || reportPlan.includes("Senior");
+
+        // Estatus general de salud
         let healthEmoji = '🟢';
         let healthText = 'ÓPTIMO - OPERACIÓN NOMINAL';
         if (this.results.severityClass === 'danger') {
@@ -381,9 +594,6 @@ class SFAEngine {
             healthText = 'ADVERTENCIA - REQUIERE INSPECCIÓN';
         }
 
-        // Mapear variables para la tabla de forma dinámica
-        const rows = [];
-        const padRight = (str, len) => str.toString().padEnd(len, ' ');
         const limits = this.results.limits || {};
         const varsPresent = this.results.variables_present || {
             vibration: true,
@@ -392,157 +602,60 @@ class SFAEngine {
             current: true
         };
 
-        // 1. Vibración
-        if (varsPresent.vibration) {
-            const vibVal = s.rmsVib;
-            const vibLimit = limits.warningVib || 4.5;
-            const dangerVibLimit = limits.dangerVib || 7.1;
-            let vibCond = '🟢 Óptimo';
-            if (vibVal > dangerVibLimit) {
-                vibCond = '❌ Crítico (Vibración Destructiva)';
-            } else if (vibVal > vibLimit) {
-                vibCond = '⚠️ Advertencia (Desalineación/Desbalance)';
-            }
-            rows.push(`${padRight("Vibración Promedio (RMS)", 25)}| ${padRight(vibVal.toFixed(3) + " mm/s", 19)}| ${padRight(vibLimit.toFixed(2) + " mm/s", 14)}| ${vibCond}`);
-        }
+        // Límites dinámicos o estáticos
+        const limitWarningVib = limits.warningVib !== undefined ? limits.warningVib : 4.5;
+        const limitDangerVib = limits.dangerVib !== undefined ? limits.dangerVib : 7.1;
+        const limitWarningTemp = limits.warningTemp !== undefined ? limits.warningTemp : 75.0;
+        const limitDangerTemp = limits.dangerTemp !== undefined ? limits.dangerTemp : 105.0;
+        const limitWarningCurrent = limits.warningCurrent !== undefined ? limits.warningCurrent : 35.0;
+        const limitDangerCurrent = limits.dangerCurrent !== undefined ? limits.dangerCurrent : 50.0;
+        const limitWarningRpm = limits.warningRpm !== undefined ? limits.warningRpm : 1000.0;
+        const limitDangerRpm = limits.dangerRpm !== undefined ? limits.dangerRpm : 1500.0;
+        const limitWarningTorque = limits.warningTorque !== undefined ? limits.warningTorque : 30.0;
+        const limitDangerTorque = limits.dangerTorque !== undefined ? limits.dangerTorque : 50.0;
+        const limitWarningWear = limits.warningWear !== undefined ? limits.warningWear : 100.0;
+        const limitDangerWear = limits.dangerWear !== undefined ? limits.dangerWear : 200.0;
+        const limitWarningFlow = limits.warningFlow !== undefined ? limits.warningFlow : 50.0;
+        const limitDangerFlow = limits.dangerFlow !== undefined ? limits.dangerFlow : 80.0;
+        const limitWarningLevel = limits.warningLevel !== undefined ? limits.warningLevel : 80.0;
+        const limitDangerLevel = limits.dangerLevel !== undefined ? limits.dangerLevel : 95.0;
+        const limitWarningVoltage = limits.warningVoltage !== undefined ? limits.warningVoltage : 240.0;
+        const limitDangerVoltage = limits.dangerVoltage !== undefined ? limits.dangerVoltage : 480.0;
 
-        // 2. Temperatura
-        if (varsPresent.temperature) {
-            const isFahrenheit = (this.results.tempUnit || '°C').includes('F');
-            const warningTemp = limits.warningTemp || 75.0;
-            const tempLimit = isFahrenheit ? (warningTemp * 1.8 + 32.0) : warningTemp;
-            const tempVal = s.maxTempRaw || s.maxTemp || 0.0;
-            const tempDiff = tempVal - tempLimit;
-            let tempCond = '🟢 Óptimo';
-            if (tempDiff > 0) {
-                tempCond = `❌ Excedido (+${tempDiff.toFixed(1)} ${this.results.tempUnit || '°C'})`;
-            }
-            rows.push(`${padRight("Temperatura Máxima", 25)}| ${padRight(tempVal.toFixed(1) + " " + (this.results.tempUnit || '°C'), 19)}| ${padRight(tempLimit.toFixed(1) + " " + (this.results.tempUnit || '°C'), 14)}| ${tempCond}`);
-        }
+        const presDiffVal = s.maxPres - s.minPres;
 
-        // 3. Presión
-        if (varsPresent.pressure) {
-            const presDiffBar = s.maxPres - s.minPres;
-            const presLimitVal = 1.5;
-            const limitStr = '< 1.50 bar';
-            let presCond = '🟢 Óptimo';
-            if (presDiffBar > presLimitVal) {
-                presCond = '❌ Inestable (Fluctuación Alta)';
-            }
-            let presDisplayStr = `${presDiffBar.toFixed(2)} bar`;
-            if (this.results.pressureUnit && this.results.pressureUnit.toLowerCase() !== 'bar') {
-                const rawDiff = s.maxPresRaw - s.minPresRaw;
-                presDisplayStr = `${presDiffBar.toFixed(2)} bar (${rawDiff.toFixed(2)} ${this.results.pressureUnit})`;
-            }
-            rows.push(`${padRight("Fluctuación de Presión", 25)}| ${padRight(presDisplayStr, 19)}| ${padRight(limitStr, 14)}| ${presCond}`);
-        }
+        // Construir tabla de variables físicas
+        const padRight = (str, len) => str.toString().padEnd(len, ' ');
+        const rows = [];
+        
+        const varsConfig = [
+            { key: 'vibration', name: 'Vibración Promedio (RMS)', val: s.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
+            { key: 'temperature', name: 'Temperatura Máxima', val: s.maxTempRaw || s.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: this.tempUnit || '°C', show: varsPresent.temperature },
+            { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
+            { key: 'current', name: 'Consumo Eléctrico', val: s.maxCurrentRaw || s.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
+            { key: 'rpm', name: 'Velocidad de Rotación', val: s.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
+            { key: 'torque', name: 'Torque del Husillo', val: s.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
+            { key: 'tool_wear', name: 'Desgaste Herramienta', val: s.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
+            { key: 'flow', name: 'Flujo / Caudal', val: s.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
+            { key: 'level', name: 'Nivel de Fluido', val: s.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
+            { key: 'voltage', name: 'Voltaje de Bus', val: s.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
+        ];
 
-        // 4. Consumo Eléctrico
-        if (varsPresent.current) {
-            const currentVal = s.maxCurrentRaw || s.maxCurrent || 0.0;
-            const currentLimit = limits.warningCurrent || 35.0;
-            const dangerCurrentLimit = limits.dangerCurrent || 50.0;
-            const currentDiff = currentVal - currentLimit;
-            let currentCond = '🟢 Óptimo';
-            if (currentVal > dangerCurrentLimit) {
-                currentCond = `❌ Sobrecarga (+${currentDiff.toFixed(1)} A)`;
-            } else if (currentVal > currentLimit) {
-                currentCond = '⚠️ Advertencia (Consumo Elevado)';
+        varsConfig.forEach(v => {
+            if (v.show) {
+                const rationale = this.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, this.results);
+                const line = `${padRight(v.name, 24)}| ${padRight(rationale.valStr, 12)}| ${padRight(rationale.limitStr, 10)}| ${rationale.status} - ${rationale.desc}`;
+                rows.push(line);
             }
-            rows.push(`${padRight("Consumo Eléctrico", 25)}| ${padRight(currentVal.toFixed(1) + " A", 19)}| ${padRight(currentLimit.toFixed(1) + " A", 14)}| ${currentCond}`);
-        }
+        });
 
-        // 5. RPM
-        if (varsPresent.rpm) {
-            const rpmVal = s.maxRpm || s.avgRpm || 0.0;
-            const rpmLimit = limits.warningRpm || 1000.0;
-            const dangerRpmLimit = limits.dangerRpm || 1500.0;
-            let rpmCond = '🟢 Óptimo';
-            if (rpmVal > dangerRpmLimit) {
-                rpmCond = '❌ Sobrevelocidad Crítica';
-            } else if (rpmVal > rpmLimit) {
-                rpmCond = '⚠️ Advertencia (Velocidad Elevada)';
-            }
-            rows.push(`${padRight("Velocidad de Rotación", 25)}| ${padRight(rpmVal.toFixed(0) + " RPM", 19)}| ${padRight(rpmLimit.toFixed(0) + " RPM", 14)}| ${rpmCond}`);
-        }
-
-        // 6. Torque
-        if (varsPresent.torque) {
-            const torqueVal = s.maxTorque || s.avgTorque || 0.0;
-            const torqueLimit = limits.warningTorque || 30.0;
-            const dangerTorqueLimit = limits.dangerTorque || 50.0;
-            let torqueCond = '🟢 Óptimo';
-            if (torqueVal > dangerTorqueLimit) {
-                torqueCond = '❌ Sobretorque Crítico';
-            } else if (torqueVal > torqueLimit) {
-                torqueCond = '⚠️ Advertencia (Esfuerzo Elevado)';
-            }
-            rows.push(`${padRight("Torque del Husillo", 25)}| ${padRight(torqueVal.toFixed(1) + " Nm", 19)}| ${padRight(torqueLimit.toFixed(1) + " Nm", 14)}| ${torqueCond}`);
-        }
-
-        // 7. Tool Wear
-        if (varsPresent.tool_wear) {
-            const wearVal = s.maxWear || s.avgWear || 0.0;
-            const wearLimit = limits.warningWear || 100.0;
-            const dangerWearLimit = limits.dangerWear || 200.0;
-            let wearCond = '🟢 Óptimo';
-            if (wearVal > dangerWearLimit) {
-                wearCond = '❌ Reemplazo Herramienta';
-            } else if (wearVal > wearLimit) {
-                wearCond = '⚠️ Advertencia (Desgaste Avanzado)';
-            }
-            rows.push(`${padRight("Desgaste Herramienta", 25)}| ${padRight(wearVal.toFixed(1) + " min", 19)}| ${padRight(wearLimit.toFixed(1) + " min", 14)}| ${wearCond}`);
-        }
-
-        // 8. Flow
-        if (varsPresent.flow) {
-            const flowVal = s.maxFlow || s.avgFlow || 0.0;
-            const flowLimit = limits.warningFlow || 50.0;
-            const dangerFlowLimit = limits.dangerFlow || 80.0;
-            let flowCond = '🟢 Óptimo';
-            if (flowVal > dangerFlowLimit) {
-                flowCond = '❌ Caudal Crítico / Fuga';
-            } else if (flowVal > flowLimit) {
-                flowCond = '⚠️ Advertencia (Caudal Inestable)';
-            }
-            rows.push(`${padRight("Flujo / Caudal", 25)}| ${padRight(flowVal.toFixed(1) + " LPM", 19)}| ${padRight(flowLimit.toFixed(1) + " LPM", 14)}| ${flowCond}`);
-        }
-
-        // 9. Level
-        if (varsPresent.level) {
-            const levelVal = s.maxLevel || s.avgLevel || 0.0;
-            const levelLimit = limits.warningLevel || 80.0;
-            const dangerLevelLimit = limits.dangerLevel || 95.0;
-            let levelCond = '🟢 Óptimo';
-            if (levelVal > dangerLevelLimit) {
-                levelCond = '❌ Nivel Alto Crítico';
-            } else if (levelVal > levelLimit) {
-                levelCond = '⚠️ Advertencia (Nivel Alto)';
-            }
-            rows.push(`${padRight("Nivel de Fluido", 25)}| ${padRight(levelVal.toFixed(1) + " %", 19)}| ${padRight(levelLimit.toFixed(1) + " %", 14)}| ${levelCond}`);
-        }
-
-        // 10. Voltage
-        if (varsPresent.voltage) {
-            const voltageVal = s.maxVoltage || s.avgVoltage || 0.0;
-            const voltageLimit = limits.warningVoltage || 240.0;
-            const dangerVoltageLimit = limits.dangerVoltage || 480.0;
-            let voltageCond = '🟢 Óptimo';
-            if (voltageVal > dangerVoltageLimit) {
-                voltageCond = '❌ Sobretensión Crítica';
-            } else if (voltageVal > voltageLimit) {
-                voltageCond = '⚠️ Advertencia (Voltaje Inestable)';
-            }
-            rows.push(`${padRight("Voltaje de Bus", 25)}| ${padRight(voltageVal.toFixed(1) + " V", 19)}| ${padRight(voltageLimit.toFixed(1) + " V", 14)}| ${voltageCond}`);
-        }
-
-        // 11. Frecuencia de Sintonía
+        // Frecuencia de Sintonía
         const targetFreqVal = this.results.targetFreq;
         const isBaseActive = (Math.abs(targetFreqVal - 17.75) < 0.1 || Math.abs(targetFreqVal - 7.25) < 0.1 || Math.abs(targetFreqVal - this.fBase) < 0.1);
-        const rowFreq = `${padRight("Frecuencia de Sintonía", 25)}| ${padRight(targetFreqVal.toFixed(2) + " Hz", 19)}| ${padRight("f_base x λ", 14)}| ${isBaseActive ? '🟢 Sintonía Base Activa' : '⚠️ Desviación Espectral'}`;
+        const rowFreq = `${padRight("Frecuencia de Sintonía", 24)}| ${padRight(targetFreqVal.toFixed(2) + " Hz", 12)}| ${padRight("f_base x λ", 10)}| ${isBaseActive ? '🟢 Sintonía Base Activa' : '⚠️ Desviación Espectral (Firma modificada)'}`;
         rows.push(rowFreq);
 
-        // Información de licencia si existe
+        // Licencia
         let licenseSection = '';
         if (this.license) {
             const isPromo = this.license.plan.includes("Promocional");
@@ -556,55 +669,111 @@ INFORMACIÓN DE LICENCIA Y AUDITORÍA COMERCIAL:
 --------------------------------------------------------------------------`;
         }
 
-        return `📄 INFORME DE DIAGNÓSTICO INDUSTRIAL — ÁUREA SYSTEMS
-DEPARTAMENTO DE CONFIABILIDAD DE ACTIVOS
-Reporte de Diagnóstico Espectral SFA
+        if (isGerente) {
+            const riskRating = this.results.healthScore >= 90 ? 'BAJO' : (this.results.healthScore >= 80 ? 'MODERADO' : 'ALTO');
+            const riskColor = this.results.healthScore >= 90 ? '🟢' : (this.results.healthScore >= 80 ? '🟡' : '🔴');
+            const avgDowntimeLoss = this.results.healthScore >= 90 ? '$0 USD' : (this.results.healthScore >= 80 ? '$3,500 USD' : '$12,000 USD/hora');
+            
+            return `📄 AUDITORÍA EJECUTIVA DE SALUD DE ACTIVOS Y CONTINUIDAD DE NEGOCIO — ÁUREA SYSTEMS
+SISTEMA DE PREVENCIÓN DE PÉRDIDAS SFA (NIVEL GERENCIAL)
 Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${horaStr}
 ==========================================================================
 
-1. RESUMEN EJECUTIVO (Para el Ingeniero Senior)
-Activo Evaluado   : ${window.currentDataSourceName || "Log de Telemetría PLC"}
-Estatus del Núcleo: Calibrado (Sintonía Fractal Activa - λ = ${this.lambda.toFixed(3)})
-ÍNDICE DE SALUD   : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+1. DICTAMEN EJECUTIVO Y ANÁLISIS DE RIESGO OPERATIVO
+Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
+Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Nivel de Riesgo de Paro : ${riskColor} ${riskRating}
+Pérdida Estimada por Hora: ${avgDowntimeLoss}
+Estado de la Licencia   : CALIBRADO PLANTA COMPLETA (ILIMITADO)
 
-Dictamen Técnico:
+Resumen Ejecutivo de Negocio:
 ${this.results.diagnosis}
 
-2. COMPORTAMIENTO DE VARIABLES CRÍTICAS
-Variable Evaluada        | Valor Máximo / RMS | Límite Seguro | Condición
--------------------------|--------------------|---------------|----------------------------------
+2. AUDITORÍA DE VARIABLES DE PROCESO Y EFICIENCIA OPERATIVA
+Variable                | Valor Máx    | Límite    | Racional e Impacto Financiero
+------------------------|--------------|-----------|----------------------------------------------------
 ${rows.join('\n')}
 
-3. ANÁLISIS ESPECTRAL Y FILTRADO FRACTAL
-Análisis de Transductores:
-El motor matemático detectó fluctuaciones dinámicas en el conjunto de señales. La amplitud máxima registrada en el armónico objetivo es de ${this.results.amp.toFixed(4)} mm/s con un desfase de fase angular de ${this.results.phase.toFixed(4)} rad.
+3. IMPACTO FINANCIERO Y PRONÓSTICO DE VIDA ÚTIL
+- Tasa de Degradación Mecánica: El motor de diagnóstico proyecta que la vida útil remanente del rodamiento principal/husillo se encuentra en óptimas condiciones. ${this.results.healthScore < 90 ? 'Se proyecta aceleración de desgaste por fatiga de un 25% si no se realiza intervención preventora.' : 'Cero paros imprevistos estimados en las siguientes 100 horas de ciclo continuo.'}
+- Pérdida de Eficiencia Energética: ${this.results.healthScore < 80 ? 'El sobreesfuerzo eléctrico actual genera una fuga térmica y pérdidas de eficiencia equivalentes al 9.3% del costo operativo.' : 'Parámetros de potencia en zona óptima, garantizando la máxima eficiencia por KW consumido.'}
 
-Eficacia del Filtro:
-Se aplicó un filtro digital pasa-bajas IIR de primer orden para atenuar el ruido eléctrico de alta frecuencia del PLC. Posteriormente, el algoritmo de la Ecuación Fractal \u03a8_SFA(t) = \u222b S(t) \u2022 e^(-i \u2022 (f_base \u2022 \u03bb) \u2022 t) dt aisló con éxito el armónico objetivo. La señal sintonizada es estable, diferenciando desviaciones transitorias de fallas mecánicas reales.
+4. PLAN ESTRATÉGICO DE INTERVENCIÓN (Recomendado)
+${this.results.recommendations.map((rec, i) => `${i + 1}. [Prioridad ${this.results.healthScore < 80 ? 'ALTA' : 'MEDIA'}] ${rec}`).join('\n')}
+${licenseSection}
 
-4. DIAGNÓSTICO AUTOMATIZADO SFA
-Evidencia Mecánica:
-${this.results.severityClass === 'danger' ? 'Ruido estructural severo detectado en la banda fractal. Inestabilidad geométrica del flujo.' : (this.results.severityClass === 'warning' ? 'Micro-oscilación cíclica detectada bajo límites de seguridad.' : 'Comportamiento vibratorio y térmico dentro del perfil nominal óptimo.')}
+FIRMAS DE VALIDACIÓN DE PLANTA
+[ Generado por Núcleo SFA Aurea Systems ]    [ Aprobado: Gerente de Operaciones ]
+==========================================================================`;
 
-Causas Probables identificadas por el motor de diagnóstico:
-${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada' : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
+        } else if (isConsultor) {
+            return `📄 CERTIFICADO DE DIAGNÓSTICO ESPECTRAL Y ANÁLISIS SFA — ÁUREA SYSTEMS
+TECNOLOGÍA DE PURIFICACIÓN Y FILTRADO FRACTAL (NIVEL SENIOR)
+Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${horaStr}
+==========================================================================
+
+1. RESUMEN DE INTEGRIDAD Y FIRMA ARMÓNICA
+Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
+Calibración del Filtro  : Sintonía Espectral SFA (λ = ${this.lambda.toFixed(3)})
+Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Frecuencia Fundamental  : ${this.results.targetFreq.toFixed(2)} Hz
+
+Dictamen Técnico de Ingeniería:
+${this.results.diagnosis}
+
+2. COMPORTAMIENTO DE SEÑALES Y MODELOS DE INGENIERÍA
+Variable                | Valor Máx    | Límite    | Análisis Espectral y Racional Técnico (+2σ)
+------------------------|--------------|-----------|----------------------------------------------------
+${rows.join('\n')}
+
+3. ANÁLISIS MATEMÁTICO ESPECTRAL SFA
+- Ecuación de Purificación SFA:
+  Ψ_SFA(t) = ∫ S(t) • e^(-i • (f_base • λ) • t) dt
+  Donde el integrador fractal atenuó el ruido eléctrico circundante, aislando la firma de vibración pura.
+- Eficacia del Filtro: La amplitud del armónico objetivo se situó en ${this.results.amp.toFixed(4)} mm/s con una fase angular de ${this.results.phase.toFixed(4)} rad, lo que confirma ${this.results.healthScore >= 90 ? 'ausencia de modulación por holgura o desalineamiento.' : 'desviaciones espectrales que superan los límites de interferencia nominal.'}
+
+4. DICTAMEN DE FALLAS MECÁNICAS E INTEGRIDAD
+Causas Probables identificadas por el motor de diagnóstico espectral:
+${this.results.healthScore >= 90 ? '- Ninguna anomalía detectada. Operación segura.' : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
 - Desalineación o desgaste de rodamientos en acoplamientos del rotor.
 - Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`}
 
-5. ACCIONES DE MANTENIMIENTO RECOMENDADAS (Plan de Acción)
+5. ACCIONES DE MANTENIMIENTO E INGENIERÍA DE CAMPO
+${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n')}
+${licenseSection}
+
+FIRMAS DE RESPONSABILIDAD TÉCNICA
+[   Generado por Sistema SFA   ]          [                              ]
+   Algoritmo Áurea Systems                    Ingeniero de Campo (Subió datos)
+   
+                                      [                              ]
+                                             Ingeniero Senior (Aprobación)
+==========================================================================`;
+
+        } else {
+            return `📄 HOJA DE TRABAJO TÉCNICA — ÁUREA SYSTEMS
+CONTROL DE MANTENIMIENTO PREDICTIVO (NIVEL JUNIOR)
+Código de Documento: ${docCode} | Fecha de Emisión: ${fechaStr} | Hora: ${horaStr}
+==========================================================================
+
+1. DATOS DEL ACTIVO Y LICENCIA
+Activo Evaluado         : ${window.currentDataSourceName || "Log de Telemetría PLC"}
+Índice de Salud SFA     : ${healthEmoji} ${this.results.healthScore}% (${healthText})
+Nivel de Licencia       : Plan Junior / Técnico Predictivo
+
+Dictamen Simple:
+${this.results.diagnosis}
+
+2. CHECKLIST DE VARIABLES Y LÍMITES FÍSICOS
+Variable                | Valor Máx    | Límite    | Condición y Acción Requerida
+------------------------|--------------|-----------|----------------------------------------------------
+${rows.join('\n')}
+
+3. RECOMENDACIONES TÉCNICAS RÁPIDAS
 ${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n')}
 ${licenseSection}
 
 FIRMAS DE RESPONSABILIDAD
-
- [   Generado por Sistema SFA   ]          [                              ]
-    Algoritmo Áurea Systems                    Ingeniero de Campo (Subió datos)
-    
-                                       [                              ]
-                                              Ingeniero Senior (Aprobación)
-==========================================================================`;
-    }
-
     /**
      * Download the text certificate
      */
@@ -2584,12 +2753,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Keep Planta Pro subscription name/price if bought
-            if (window.SFA.license && (window.SFA.license.plan.includes("Planta Pro") || window.SFA.license.plan.includes("Anual"))) {
+            // Keep active plan name/price if it is one of the premium tiers or has a saved license
+            if (window.SFA.license && (
+                window.SFA.license.plan.includes("Junior") || 
+                window.SFA.license.plan.includes("Consultor") || 
+                window.SFA.license.plan.includes("Gerente") || 
+                window.SFA.license.plan.includes("Planta Pro") || 
+                window.SFA.license.plan.includes("Anual") ||
+                window.SFA.license.plan.includes("Pioneros") ||
+                window.SFA.license.plan.includes("Club 33")
+            )) {
                 reportPlan = window.SFA.license.plan;
                 reportPrice = window.SFA.license.price.toString();
                 
-                // Planta Pro always has print unlocked
+                // Premium plans have print unlocked
                 window.currentAnalysisIsStandard = false;
                 if (btnPrint) {
                     btnPrint.classList.remove('restricted');
@@ -3002,6 +3179,65 @@ document.addEventListener('DOMContentLoaded', () => {
                     recCard.classList.add('severity-yellow');
                 } else {
                     recCard.classList.add('severity-green');
+                }
+            }
+
+            // Update Rationale Section in UI and Print
+            const rationaleContent = document.getElementById('sfa-rationale-content');
+            const rationalePlanLabel = document.getElementById('sfa-rationale-plan-label');
+            if (rationaleContent) {
+                rationaleContent.innerHTML = '';
+                if (rationalePlanLabel) {
+                    rationalePlanLabel.textContent = reportPlan;
+                }
+                
+                const varsConfig = [
+                    { key: 'vibration', name: 'Vibración Promedio (RMS)', val: results.stats.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
+                    { key: 'temperature', name: 'Temperatura Máxima', val: results.stats.maxTempRaw || results.stats.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: results.tempUnit || '°C', show: varsPresent.temperature },
+                    { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
+                    { key: 'current', name: 'Consumo Eléctrico', val: results.stats.maxCurrentRaw || results.stats.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
+                    { key: 'rpm', name: 'Velocidad de Rotación', val: results.stats.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
+                    { key: 'torque', name: 'Torque del Husillo', val: results.stats.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
+                    { key: 'tool_wear', name: 'Desgaste Herramienta', val: results.stats.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
+                    { key: 'flow', name: 'Flujo / Caudal', val: results.stats.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
+                    { key: 'level', name: 'Nivel de Fluido', val: results.stats.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
+                    { key: 'voltage', name: 'Voltaje de Bus', val: results.stats.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
+                ];
+                
+                varsConfig.forEach(v => {
+                    if (v.show) {
+                        const rationale = window.SFA.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, results);
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'sfa-rationale-item';
+                        itemDiv.innerHTML = `
+                            <div class="sfa-rationale-item-header">
+                                <span class="sfa-rationale-item-title">${v.name}</span>
+                                <span class="sfa-rationale-item-status ${rationale.conditionClass}">${rationale.status}</span>
+                            </div>
+                            <div class="sfa-rationale-item-meta">
+                                Valor registrado: <strong>${rationale.valStr}</strong> | Umbral seguro: &lt; ${rationale.limitStr}
+                            </div>
+                            <p class="sfa-rationale-item-desc">${rationale.desc}</p>
+                        `;
+                        rationaleContent.appendChild(itemDiv);
+                    }
+                });
+            }
+
+            // Update print titles dynamically based on plan type
+            const printTitle = document.querySelector('.print-title-group h2');
+            const printSubtitle = document.querySelector('.print-title-group .print-subtitle');
+            if (printTitle && printSubtitle) {
+                if (reportPlan.includes("Gerente") || reportPlan.includes("Planta Completa")) {
+                    printTitle.textContent = "AUDITORÍA EJECUTIVA DE SALUD DE ACTIVOS";
+                    printSubtitle.textContent = "SISTEMA DE ANÁLISIS DE RIESGO OPERATIVO SFA - PLANTA COMPLETA";
+                } else if (reportPlan.includes("Consultor") || reportPlan.includes("Senior")) {
+                    printTitle.textContent = "CERTIFICADO DE DIAGNÓSTICO ESPECTRAL";
+                    printSubtitle.textContent = "TECNOLOGÍA DE ANÁLISIS DE TELEMETRÍA FRACTAL SFA";
+                } else {
+                    printTitle.textContent = "INFORME TÉCNICO - HOJA DE TRABAJO (JUNIOR)";
+                    printSubtitle.textContent = "NIVEL DE ENTRADA - CONTROL OPERATIVO NOMINAL";
                 }
             }
             

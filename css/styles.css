@@ -5249,3 +5249,88 @@ footer {
         transform: scale(1.05);
     }
 }
+
+/* ==========================================================================
+   RACIONAL DE DIAGNÓSTICO Y DETALLE DE VARIABLES
+   ========================================================================== */
+.sfa-rationale-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: background 0.3s;
+}
+.sfa-rationale-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+.sfa-rationale-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.sfa-rationale-item-title {
+    font-family: var(--font-accent);
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: #fff;
+}
+.sfa-rationale-item-status {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.sfa-rationale-item-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-gray);
+    margin-bottom: 0.25rem;
+}
+.sfa-rationale-item-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--color-text-light);
+}
+
+@media print {
+    .sfa-rationale-section {
+        background: transparent !important;
+        border: 1px solid #ddd !important;
+        color: #000000 !important;
+        margin-top: 20px !important;
+        padding: 15px !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+    }
+    .sfa-rationale-section h4 {
+        color: #000000 !important;
+        border-bottom: 1px solid #ccc !important;
+    }
+    .sfa-rationale-item {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px dashed #eee !important;
+        border-radius: 0 !important;
+        padding: 8px 0 !important;
+        page-break-inside: avoid !important;
+    }
+    .sfa-rationale-item-title {
+        color: #000000 !important;
+        font-size: 10pt !important;
+    }
+    .sfa-rationale-item-meta {
+        color: #555555 !important;
+        font-size: 8.5pt !important;
+    }
+    .sfa-rationale-item-desc {
+        color: #222222 !important;
+        font-size: 9.5pt !important;
+    }
+}
