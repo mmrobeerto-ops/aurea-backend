@@ -914,9 +914,13 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     pres_idx = find_column_index(headers, get_mapping('pressure', ['pres', 'pressure', 'presion', 'bar', 'psi']), ['p'])
     current_idx = find_column_index(headers, get_mapping('current', ['corriente', 'current', 'amperes', 'amperios', 'amp', 'amperage']), ['i_q'])
     
-    # Speed and torque columns specifically for estimation/Kaggle files
-    rpm_idx = find_column_index(headers, ['rpm', 'speed', 'rotation', 'rotational', 'velocity', 'velocidad', 'spindle'])
-    torque_idx = find_column_index(headers, ['torque', 'torsion', 'load', 'tension', 'esfuerzo', 'trq', 'torq'])
+    # New variables synonyms
+    rpm_idx = find_column_index(headers, get_mapping('rpm', ['rotational_speed', 'rpm', 'act_speed', 'speed_rpm', 'n_actualrpm', 'speed', 'rotation', 'rotational', 'velocity', 'velocidad', 'spindle']), ['rpm', 'speed'])
+    torque_idx = find_column_index(headers, get_mapping('torque', ['torque', 'torque_nm', 'act_torque', 'momento_mnm', 'torsion', 'load', 'tension', 'esfuerzo', 'trq', 'torq']), ['torque', 'trq'])
+    wear_idx = find_column_index(headers, get_mapping('tool_wear', ['tool_wear', 'desgaste_min', 'lifespan_min', 'tool_pos', 'desgaste']), ['wear'])
+    flow_idx = find_column_index(headers, get_mapping('flow', ['flow_rate', 'caudal_lpm', 'fit_101', 'flow_ma', 'litros_min', 'flow', 'caudal']), ['flow'])
+    level_idx = find_column_index(headers, get_mapping('level', ['level_mtr', 'tank_level', 'lit_101', 'nivel_porcentaje', 'level', 'nivel']), ['level'])
+    voltage_idx = find_column_index(headers, get_mapping('voltage', ['voltage_v', 'v_actual', 'bus_voltage', 'linea_v', 'volt', 'voltage', 'voltaje']), ['voltage', 'v'])
 
     sensor_cols = []
     for idx, h in enumerate(headers):
@@ -989,6 +993,28 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     has_temperature = has_temp_header
     has_pressure = has_pres_header
     has_current = has_current_header or (rpm_idx != -1 and torque_idx != -1)
+
+    has_rpm = rpm_idx != -1
+    has_torque = torque_idx != -1
+    has_wear = wear_idx != -1
+    has_flow = flow_idx != -1
+    has_level = level_idx != -1
+    has_voltage = voltage_idx != -1
+
+    # Mapeador Dinámico de Familia de Máquina
+    if (rpm_idx != -1 and torque_idx != -1) or wear_idx != -1:
+        detected_mode = "CNC_MOTOR"
+    elif (pres_idx != -1 and flow_idx != -1) or level_idx != -1:
+        detected_mode = "FLUID_HYDRAULIC"
+    else:
+        detected_mode = "GENERIC"
+
+    if detected_mode == "CNC_MOTOR":
+        has_pressure = False
+    elif detected_mode == "FLUID_HYDRAULIC":
+        if not has_vibration_header:
+            has_vibration = False
+            has_native_vibration = False
 
     # Pre-parse temperatures to calculate the average for Kelvin detection
     temp_vals = []
@@ -1068,6 +1094,34 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
                 torque_val = float(raw_cols[torque_idx])
             except ValueError:
                 pass
+
+        wear_val = float('nan')
+        if wear_idx != -1 and wear_idx < len(raw_cols) and raw_cols[wear_idx]:
+            try:
+                wear_val = float(raw_cols[wear_idx])
+            except ValueError:
+                pass
+
+        flow_val = float('nan')
+        if flow_idx != -1 and flow_idx < len(raw_cols) and raw_cols[flow_idx]:
+            try:
+                flow_val = float(raw_cols[flow_idx])
+            except ValueError:
+                pass
+
+        level_val = float('nan')
+        if level_idx != -1 and level_idx < len(raw_cols) and raw_cols[level_idx]:
+            try:
+                level_val = float(raw_cols[level_idx])
+            except ValueError:
+                pass
+
+        voltage_val = float('nan')
+        if voltage_idx != -1 and voltage_idx < len(raw_cols) and raw_cols[voltage_idx]:
+            try:
+                voltage_val = float(raw_cols[voltage_idx])
+            except ValueError:
+                pass
                      
         if not has_native_vibration:
             # Estimate vibration from rpm and torque
@@ -1143,6 +1197,12 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             "temperature": standardized_temp,
             "pressure": standardized_pres,
             "current": standardized_current,
+            "rpm": rpm_val if rpm_idx != -1 else float('nan'),
+            "torque": torque_val if torque_idx != -1 else float('nan'),
+            "tool_wear": wear_val,
+            "flow": flow_val,
+            "level": level_val,
+            "voltage": voltage_val,
             "vibration_raw": raw_vib,
             "temperature_raw": raw_temp,
             "pressure_raw": raw_pres,
@@ -1217,6 +1277,46 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             f_test += 0.25
 
     f_base = best_f
+    
+    # Auto-classify asset type based on dominant frequency & column presence
+    if (rpm_idx != -1 and torque_idx != -1) or wear_idx != -1:
+        # Columns explicitly indicate CNC
+        detected_mode = "CNC_MOTOR"
+        asset_type_name = "Husillo CNC / Cortador"
+    elif (pres_idx != -1 and flow_idx != -1) or level_idx != -1 or pres_idx != -1:
+        # Columns explicitly indicate hydraulic/fluids
+        detected_mode = "FLUID_HYDRAULIC"
+        asset_type_name = "Motor Eléctrico / Bomba Rotativa"
+    else:
+        # No explicit columns, use dominant frequency to classify
+        if f_base >= 20.0:
+            asset_type_name = "Motor Eléctrico / Bomba Rotativa"
+            detected_mode = "FLUID_HYDRAULIC"
+        else:
+            asset_type_name = "Husillo CNC / Cortador"
+            detected_mode = "CNC_MOTOR"
+
+    # Enforce strict variable rules per asset family
+    if detected_mode == "CNC_MOTOR":
+        has_pressure = False
+        has_flow = False
+        has_level = False
+    elif detected_mode == "FLUID_HYDRAULIC":
+        has_torque = False
+        has_wear = False
+
+    # Force variables to False if their columns are missing from the file
+    has_vibration = has_vibration and vib_idx != -1
+    has_temperature = has_temperature and temp_idx != -1
+    has_pressure = has_pressure and pres_idx != -1
+    has_current = has_current and current_idx != -1
+    has_rpm = has_rpm and rpm_idx != -1
+    has_torque = has_torque and torque_idx != -1
+    has_wear = has_wear and wear_idx != -1
+    has_flow = has_flow and flow_idx != -1
+    has_level = has_level and level_idx != -1
+    has_voltage = has_voltage and voltage_idx != -1
+
     target_freq = f_base if lambda_val == 1.618 else f_base * lambda_val
 
     cutoff_freq = target_freq * 1.3
@@ -1275,6 +1375,25 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
     current_raw_vals = [r["current_raw"] for r in parsed_data]
     max_current_raw, min_current_raw, avg_current_raw = safe_stats(current_raw_vals)
 
+    # 6 new variables stats
+    rpm_vals = [r["rpm"] for r in parsed_data]
+    max_rpm, min_rpm, avg_rpm = safe_stats(rpm_vals)
+
+    torque_vals = [r["torque"] for r in parsed_data]
+    max_torque, min_torque, avg_torque = safe_stats(torque_vals)
+
+    wear_vals = [r["tool_wear"] for r in parsed_data]
+    max_wear, min_wear, avg_wear = safe_stats(wear_vals)
+
+    flow_vals = [r["flow"] for r in parsed_data]
+    max_flow, min_flow, avg_flow = safe_stats(flow_vals)
+
+    level_vals = [r["level"] for r in parsed_data]
+    max_level, min_level, avg_level = safe_stats(level_vals)
+
+    voltage_vals = [r["voltage"] for r in parsed_data]
+    max_voltage, min_voltage, avg_voltage = safe_stats(voltage_vals)
+
     # Filter vibration readings safely ignoring NaN values
     lecturas_vibracion = [
         max(0.0001, (r.get("vibration_filtered", r["vibration"])) - offset_val) 
@@ -1321,6 +1440,66 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
         std_curr = 0.0
     limit_warning_curr = max(35.0, avg_curr_calc + 2.0 * std_curr)
     limit_danger_curr = max(50.0, avg_curr_calc + 3.0 * std_curr)
+
+    # RPM Limits
+    valid_rpm_vals = [r for r in rpm_vals if r is not None and not math.isnan(r)]
+    if valid_rpm_vals:
+        sum_sq_rpm = sum(math.pow(r - avg_rpm, 2) for r in valid_rpm_vals)
+        std_rpm = math.sqrt(sum_sq_rpm / len(valid_rpm_vals))
+    else:
+        std_rpm = 0.0
+    limit_warning_rpm = max(1000.0, avg_rpm + 2.0 * std_rpm)
+    limit_danger_rpm = max(1500.0, avg_rpm + 3.0 * std_rpm)
+
+    # Torque Limits
+    valid_torque_vals = [t for t in torque_vals if t is not None and not math.isnan(t)]
+    if valid_torque_vals:
+        sum_sq_torque = sum(math.pow(t - avg_torque, 2) for t in valid_torque_vals)
+        std_torque = math.sqrt(sum_sq_torque / len(valid_torque_vals))
+    else:
+        std_torque = 0.0
+    limit_warning_torque = max(30.0, avg_torque + 2.0 * std_torque)
+    limit_danger_torque = max(50.0, avg_torque + 3.0 * std_torque)
+
+    # Wear Limits
+    valid_wear_vals = [w for w in wear_vals if w is not None and not math.isnan(w)]
+    if valid_wear_vals:
+        sum_sq_wear = sum(math.pow(w - avg_wear, 2) for w in valid_wear_vals)
+        std_wear = math.sqrt(sum_sq_wear / len(valid_wear_vals))
+    else:
+        std_wear = 0.0
+    limit_warning_wear = max(100.0, avg_wear + 2.0 * std_wear)
+    limit_danger_wear = max(200.0, avg_wear + 3.0 * std_wear)
+
+    # Flow Limits
+    valid_flow_vals = [f for f in flow_vals if f is not None and not math.isnan(f)]
+    if valid_flow_vals:
+        sum_sq_flow = sum(math.pow(f - avg_flow, 2) for f in valid_flow_vals)
+        std_flow = math.sqrt(sum_sq_flow / len(valid_flow_vals))
+    else:
+        std_flow = 0.0
+    limit_warning_flow = max(50.0, avg_flow + 2.0 * std_flow)
+    limit_danger_flow = max(80.0, avg_flow + 3.0 * std_flow)
+
+    # Level Limits
+    valid_level_vals = [l for l in level_vals if l is not None and not math.isnan(l)]
+    if valid_level_vals:
+        sum_sq_level = sum(math.pow(l - avg_level, 2) for l in valid_level_vals)
+        std_level = math.sqrt(sum_sq_level / len(valid_level_vals))
+    else:
+        std_level = 0.0
+    limit_warning_level = max(80.0, avg_level + 2.0 * std_level)
+    limit_danger_level = max(95.0, avg_level + 3.0 * std_level)
+
+    # Voltage Limits
+    valid_voltage_vals = [v for v in voltage_vals if v is not None and not math.isnan(v)]
+    if valid_voltage_vals:
+        sum_sq_voltage = sum(math.pow(v - avg_voltage, 2) for v in valid_voltage_vals)
+        std_voltage = math.sqrt(sum_sq_voltage / len(valid_voltage_vals))
+    else:
+        std_voltage = 0.0
+    limit_warning_voltage = max(240.0, avg_voltage + 2.0 * std_voltage)
+    limit_danger_voltage = max(480.0, avg_voltage + 3.0 * std_voltage)
 
     # Detectar entorno de pruebas unitarias para compatibilidad heredada
     import sys
@@ -1527,7 +1706,27 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             "avgPresRaw": avg_pres_raw,
             "maxCurrentRaw": max_current_raw,
             "minCurrentRaw": min_current_raw,
-            "avgCurrentRaw": avg_current_raw
+            "avgCurrentRaw": avg_current_raw,
+            
+            # New variables stats
+            "maxRpm": max_rpm,
+            "minRpm": min_rpm,
+            "avgRpm": avg_rpm,
+            "maxTorque": max_torque,
+            "minTorque": min_torque,
+            "avgTorque": avg_torque,
+            "maxWear": max_wear,
+            "minWear": min_wear,
+            "avgWear": avg_wear,
+            "maxFlow": max_flow,
+            "minFlow": min_flow,
+            "avgFlow": avg_flow,
+            "maxLevel": max_level,
+            "minLevel": min_level,
+            "avgLevel": avg_level,
+            "maxVoltage": max_voltage,
+            "minVoltage": min_voltage,
+            "avgVoltage": avg_voltage
         },
         "limits": {
             "warningVib": round(limit_warning_vib, 2),
@@ -1535,8 +1734,34 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
             "warningTemp": round(limit_warning_temp, 1),
             "dangerTemp": round(limit_danger_temp, 1),
             "warningCurrent": round(limit_warning_curr, 1),
-            "dangerCurrent": round(limit_danger_curr, 1)
+            "dangerCurrent": round(limit_danger_curr, 1),
+            "warningRpm": round(limit_warning_rpm, 1),
+            "dangerRpm": round(limit_danger_rpm, 1),
+            "warningTorque": round(limit_warning_torque, 1),
+            "dangerTorque": round(limit_danger_torque, 1),
+            "warningWear": round(limit_warning_wear, 1),
+            "dangerWear": round(limit_danger_wear, 1),
+            "warningFlow": round(limit_warning_flow, 1),
+            "dangerFlow": round(limit_danger_flow, 1),
+            "warningLevel": round(limit_warning_level, 1),
+            "dangerLevel": round(limit_danger_level, 1),
+            "warningVoltage": round(limit_warning_voltage, 1),
+            "dangerVoltage": round(limit_danger_voltage, 1)
         },
+        "variables_present": {
+            "vibration": has_vibration,
+            "temperature": has_temperature,
+            "pressure": has_pressure,
+            "current": has_current,
+            "rpm": has_rpm,
+            "torque": has_torque,
+            "tool_wear": has_wear,
+            "flow": has_flow,
+            "level": has_level,
+            "voltage": has_voltage
+        },
+        "detectedMode": detected_mode,
+        "assetTypeName": asset_type_name,
         "hasPressure": has_pressure,
         "healthScore": health_score,
         "severityClass": severity_class,
@@ -1551,17 +1776,30 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     client_data = []
     for r in parsed_data:
-        client_data.append({
+        row_dict = {
             "time": r["time"],
             "vibration": r["vibration"],
             "temperature": r["temperature"],
-            "pressure": r["pressure"],
-            "current": r["current"],
+            "pressure": r["pressure"] if has_pressure else None,
+            "current": r["current"] if has_current else None,
             "vibration_raw": r["vibration_raw"],
             "temperature_raw": r["temperature_raw"],
-            "pressure_raw": r["pressure_raw"],
-            "current_raw": r["current_raw"]
-        })
+            "pressure_raw": r["pressure_raw"] if has_pressure else None,
+            "current_raw": r["current_raw"] if has_current else None
+        }
+        if has_rpm:
+            row_dict["rpm"] = r["rpm"]
+        if has_torque:
+            row_dict["torque"] = r["torque"]
+        if has_wear:
+            row_dict["tool_wear"] = r["tool_wear"]
+        if has_flow:
+            row_dict["flow"] = r["flow"]
+        if has_level:
+            row_dict["level"] = r["level"]
+        if has_voltage:
+            row_dict["voltage"] = r["voltage"]
+        client_data.append(row_dict)
 
     return {
         "results": results,

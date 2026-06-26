@@ -381,70 +381,164 @@ class SFAEngine {
             healthText = 'ADVERTENCIA - REQUIERE INSPECCIÓN';
         }
 
-        // Mapear variables para la tabla
-        // 1. Temperatura
-        const isFahrenheit = (this.results.tempUnit || '°C').includes('F');
-        const warningTemp = this.results.limits ? this.results.limits.warningTemp : 75.0;
-        const tempLimit = isFahrenheit ? (warningTemp * 1.8 + 32.0) : warningTemp;
-        const tempVal = s.maxTempRaw;
-        const tempDiff = tempVal - tempLimit;
-        let tempCond = '🟢 Óptimo';
-        if (tempDiff > 0) {
-            tempCond = `❌ Excedido (+${tempDiff.toFixed(1)} ${this.results.tempUnit})`;
+        // Mapear variables para la tabla de forma dinámica
+        const rows = [];
+        const padRight = (str, len) => str.toString().padEnd(len, ' ');
+        const limits = this.results.limits || {};
+        const varsPresent = this.results.variables_present || {
+            vibration: true,
+            temperature: true,
+            pressure: this.results.hasPressure,
+            current: true
+        };
+
+        // 1. Vibración
+        if (varsPresent.vibration) {
+            const vibVal = s.rmsVib;
+            const vibLimit = limits.warningVib || 4.5;
+            const dangerVibLimit = limits.dangerVib || 7.1;
+            let vibCond = '🟢 Óptimo';
+            if (vibVal > dangerVibLimit) {
+                vibCond = '❌ Crítico (Vibración Destructiva)';
+            } else if (vibVal > vibLimit) {
+                vibCond = '⚠️ Advertencia (Desalineación/Desbalance)';
+            }
+            rows.push(`${padRight("Vibración Promedio (RMS)", 25)}| ${padRight(vibVal.toFixed(3) + " mm/s", 19)}| ${padRight(vibLimit.toFixed(2) + " mm/s", 14)}| ${vibCond}`);
         }
 
-        // 2. Vibración (mm/s RMS bajo ISO 10816)
-        const vibVal = s.rmsVib;
-        const vibLimit = this.results.limits ? this.results.limits.warningVib : 4.5;
-        const dangerVibLimit = this.results.limits ? this.results.limits.dangerVib : 7.1;
-        let vibCond = '🟢 Óptimo';
-        if (vibVal > dangerVibLimit) {
-            vibCond = '❌ Crítico (Vibración Destructiva)';
-        } else if (vibVal > vibLimit) {
-            vibCond = '⚠️ Advertencia (Desalineación/Desbalance)';
+        // 2. Temperatura
+        if (varsPresent.temperature) {
+            const isFahrenheit = (this.results.tempUnit || '°C').includes('F');
+            const warningTemp = limits.warningTemp || 75.0;
+            const tempLimit = isFahrenheit ? (warningTemp * 1.8 + 32.0) : warningTemp;
+            const tempVal = s.maxTempRaw || s.maxTemp || 0.0;
+            const tempDiff = tempVal - tempLimit;
+            let tempCond = '🟢 Óptimo';
+            if (tempDiff > 0) {
+                tempCond = `❌ Excedido (+${tempDiff.toFixed(1)} ${this.results.tempUnit || '°C'})`;
+            }
+            rows.push(`${padRight("Temperatura Máxima", 25)}| ${padRight(tempVal.toFixed(1) + " " + (this.results.tempUnit || '°C'), 19)}| ${padRight(tempLimit.toFixed(1) + " " + (this.results.tempUnit || '°C'), 14)}| ${tempCond}`);
         }
 
         // 3. Presión
-        const presDiffBar = s.maxPres - s.minPres;
-        const presLimitVal = 1.5;
-        const limitStr = '< 1.50 bar';
-        let presCond = '🟢 Óptimo';
-        if (presDiffBar > presLimitVal) {
-            presCond = '❌ Inestable (Fluctuación Alta)';
-        }
-        
-        let presDisplayStr = `${presDiffBar.toFixed(2)} bar`;
-        if (this.results.pressureUnit && this.results.pressureUnit.toLowerCase() !== 'bar') {
-            const rawDiff = s.maxPresRaw - s.minPresRaw;
-            presDisplayStr = `${presDiffBar.toFixed(2)} bar (${rawDiff.toFixed(2)} ${this.results.pressureUnit})`;
+        if (varsPresent.pressure) {
+            const presDiffBar = s.maxPres - s.minPres;
+            const presLimitVal = 1.5;
+            const limitStr = '< 1.50 bar';
+            let presCond = '🟢 Óptimo';
+            if (presDiffBar > presLimitVal) {
+                presCond = '❌ Inestable (Fluctuación Alta)';
+            }
+            let presDisplayStr = `${presDiffBar.toFixed(2)} bar`;
+            if (this.results.pressureUnit && this.results.pressureUnit.toLowerCase() !== 'bar') {
+                const rawDiff = s.maxPresRaw - s.minPresRaw;
+                presDisplayStr = `${presDiffBar.toFixed(2)} bar (${rawDiff.toFixed(2)} ${this.results.pressureUnit})`;
+            }
+            rows.push(`${padRight("Fluctuación de Presión", 25)}| ${padRight(presDisplayStr, 19)}| ${padRight(limitStr, 14)}| ${presCond}`);
         }
 
         // 4. Consumo Eléctrico
-        const currentVal = s.maxCurrentRaw;
-        const currentLimit = this.results.limits ? this.results.limits.warningCurrent : 35.0;
-        const dangerCurrentLimit = this.results.limits ? this.results.limits.dangerCurrent : 50.0;
-        const currentDiff = currentVal - currentLimit;
-        let currentCond = '🟢 Óptimo';
-        if (currentVal > dangerCurrentLimit) {
-            currentCond = `❌ Sobrecarga (+${currentDiff.toFixed(1)} A)`;
-        } else if (currentVal > currentLimit) {
-            currentCond = '⚠️ Advertencia (Consumo Elevado)';
+        if (varsPresent.current) {
+            const currentVal = s.maxCurrentRaw || s.maxCurrent || 0.0;
+            const currentLimit = limits.warningCurrent || 35.0;
+            const dangerCurrentLimit = limits.dangerCurrent || 50.0;
+            const currentDiff = currentVal - currentLimit;
+            let currentCond = '🟢 Óptimo';
+            if (currentVal > dangerCurrentLimit) {
+                currentCond = `❌ Sobrecarga (+${currentDiff.toFixed(1)} A)`;
+            } else if (currentVal > currentLimit) {
+                currentCond = '⚠️ Advertencia (Consumo Elevado)';
+            }
+            rows.push(`${padRight("Consumo Eléctrico", 25)}| ${padRight(currentVal.toFixed(1) + " A", 19)}| ${padRight(currentLimit.toFixed(1) + " A", 14)}| ${currentCond}`);
         }
 
-        // Formatear tabla de variables con espaciados fijos para alineación perfecta
-        const padRight = (str, len) => str.toString().padEnd(len, ' ');
+        // 5. RPM
+        if (varsPresent.rpm) {
+            const rpmVal = s.maxRpm || s.avgRpm || 0.0;
+            const rpmLimit = limits.warningRpm || 1000.0;
+            const dangerRpmLimit = limits.dangerRpm || 1500.0;
+            let rpmCond = '🟢 Óptimo';
+            if (rpmVal > dangerRpmLimit) {
+                rpmCond = '❌ Sobrevelocidad Crítica';
+            } else if (rpmVal > rpmLimit) {
+                rpmCond = '⚠️ Advertencia (Velocidad Elevada)';
+            }
+            rows.push(`${padRight("Velocidad de Rotación", 25)}| ${padRight(rpmVal.toFixed(0) + " RPM", 19)}| ${padRight(rpmLimit.toFixed(0) + " RPM", 14)}| ${rpmCond}`);
+        }
 
-        const rowTemp = `${padRight("Temperatura Máxima", 25)}| ${padRight(tempVal.toFixed(1) + " " + this.results.tempUnit, 19)}| ${padRight(tempLimit.toFixed(1) + " " + this.results.tempUnit, 14)}| ${tempCond}`;
-        const rowVib = `${padRight("Vibración Promedio (RMS)", 25)}| ${padRight(vibVal.toFixed(3) + " mm/s", 19)}| ${padRight(vibLimit.toFixed(2) + " mm/s", 14)}| ${vibCond}`;
-        const rowPres = `${padRight("Fluctuación de Presión", 25)}| ${padRight(presDisplayStr, 19)}| ${padRight(limitStr, 14)}| ${presCond}`;
-        const rowCurrent = `${padRight("Consumo Eléctrico", 25)}| ${padRight(currentVal.toFixed(1) + " A", 19)}| ${padRight(currentLimit.toFixed(1) + " A", 14)}| ${currentCond}`;
+        // 6. Torque
+        if (varsPresent.torque) {
+            const torqueVal = s.maxTorque || s.avgTorque || 0.0;
+            const torqueLimit = limits.warningTorque || 30.0;
+            const dangerTorqueLimit = limits.dangerTorque || 50.0;
+            let torqueCond = '🟢 Óptimo';
+            if (torqueVal > dangerTorqueLimit) {
+                torqueCond = '❌ Sobretorque Crítico';
+            } else if (torqueVal > torqueLimit) {
+                torqueCond = '⚠️ Advertencia (Esfuerzo Elevado)';
+            }
+            rows.push(`${padRight("Torque del Husillo", 25)}| ${padRight(torqueVal.toFixed(1) + " Nm", 19)}| ${padRight(torqueLimit.toFixed(1) + " Nm", 14)}| ${torqueCond}`);
+        }
+
+        // 7. Tool Wear
+        if (varsPresent.tool_wear) {
+            const wearVal = s.maxWear || s.avgWear || 0.0;
+            const wearLimit = limits.warningWear || 100.0;
+            const dangerWearLimit = limits.dangerWear || 200.0;
+            let wearCond = '🟢 Óptimo';
+            if (wearVal > dangerWearLimit) {
+                wearCond = '❌ Reemplazo Herramienta';
+            } else if (wearVal > wearLimit) {
+                wearCond = '⚠️ Advertencia (Desgaste Avanzado)';
+            }
+            rows.push(`${padRight("Desgaste Herramienta", 25)}| ${padRight(wearVal.toFixed(1) + " min", 19)}| ${padRight(wearLimit.toFixed(1) + " min", 14)}| ${wearCond}`);
+        }
+
+        // 8. Flow
+        if (varsPresent.flow) {
+            const flowVal = s.maxFlow || s.avgFlow || 0.0;
+            const flowLimit = limits.warningFlow || 50.0;
+            const dangerFlowLimit = limits.dangerFlow || 80.0;
+            let flowCond = '🟢 Óptimo';
+            if (flowVal > dangerFlowLimit) {
+                flowCond = '❌ Caudal Crítico / Fuga';
+            } else if (flowVal > flowLimit) {
+                flowCond = '⚠️ Advertencia (Caudal Inestable)';
+            }
+            rows.push(`${padRight("Flujo / Caudal", 25)}| ${padRight(flowVal.toFixed(1) + " LPM", 19)}| ${padRight(flowLimit.toFixed(1) + " LPM", 14)}| ${flowCond}`);
+        }
+
+        // 9. Level
+        if (varsPresent.level) {
+            const levelVal = s.maxLevel || s.avgLevel || 0.0;
+            const levelLimit = limits.warningLevel || 80.0;
+            const dangerLevelLimit = limits.dangerLevel || 95.0;
+            let levelCond = '🟢 Óptimo';
+            if (levelVal > dangerLevelLimit) {
+                levelCond = '❌ Nivel Alto Crítico';
+            } else if (levelVal > levelLimit) {
+                levelCond = '⚠️ Advertencia (Nivel Alto)';
+            }
+            rows.push(`${padRight("Nivel de Fluido", 25)}| ${padRight(levelVal.toFixed(1) + " %", 19)}| ${padRight(levelLimit.toFixed(1) + " %", 14)}| ${levelCond}`);
+        }
+
+        // 10. Voltage
+        if (varsPresent.voltage) {
+            const voltageVal = s.maxVoltage || s.avgVoltage || 0.0;
+            const voltageLimit = limits.warningVoltage || 240.0;
+            const dangerVoltageLimit = limits.dangerVoltage || 480.0;
+            let voltageCond = '🟢 Óptimo';
+            if (voltageVal > dangerVoltageLimit) {
+                voltageCond = '❌ Sobretensión Crítica';
+            } else if (voltageVal > voltageLimit) {
+                voltageCond = '⚠️ Advertencia (Voltaje Inestable)';
+            }
+            rows.push(`${padRight("Voltaje de Bus", 25)}| ${padRight(voltageVal.toFixed(1) + " V", 19)}| ${padRight(voltageLimit.toFixed(1) + " V", 14)}| ${voltageCond}`);
+        }
+
+        // 11. Frecuencia de Sintonía
         const rowFreq = `${padRight("Frecuencia de Sintonía", 25)}| ${padRight(this.results.targetFreq.toFixed(2) + " Hz", 19)}| ${padRight("f_base x λ", 14)}| ${this.results.targetFreq !== this.fBase ? '⚠️ Desviación Espectral' : '🟢 Sintonía Base'}`;
-
-        const rows = [rowTemp, rowVib];
-        if (this.results.hasPressure) {
-            rows.push(rowPres);
-        }
-        rows.push(rowCurrent, rowFreq);
+        rows.push(rowFreq);
 
         // Información de licencia si existe
         let licenseSection = '';
@@ -1956,6 +2050,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw serverErr;
                     }
 
+                    // Update processing subtitle with the actual frequency
+                    const processingSubtitle = document.getElementById('sfa-processing-subtitle');
+                    if (processingSubtitle && results && results.targetFreq) {
+                        processingSubtitle.innerHTML = `Atenuando ruido fractal mediante filtro espectral SFA (f<sub>base</sub> = ${results.targetFreq.toFixed(2)} Hz)`;
+                    }
+
                     runPurificationAnimation(() => {
                         updateDashboard(results, file.name);
                         showStep(3);
@@ -2017,6 +2117,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (referenceDisplay) referenceDisplay.textContent = "0.00 mm/s";
                     }
                     
+                    // Update processing subtitle with the actual frequency
+                    const processingSubtitle = document.getElementById('sfa-processing-subtitle');
+                    if (processingSubtitle && simulation && simulation.results && simulation.results.targetFreq) {
+                        processingSubtitle.innerHTML = `Atenuando ruido fractal mediante filtro espectral SFA (f<sub>base</sub> = ${simulation.results.targetFreq.toFixed(2)} Hz)`;
+                    }
+
                     runPurificationAnimation(() => {
                         updateDashboard(simulation.results, `Simulación: ${button.textContent.trim()}`);
                         showStep(3);
@@ -2562,45 +2668,93 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintenanceContainer.setAttribute('data-tooltip-text', severityText);
             }
 
+            // Variables presence configuration
+            const varsPresent = results.variables_present || {
+                vibration: true,
+                temperature: true,
+                pressure: hasPressure,
+                current: true,
+                rpm: false,
+                torque: false,
+                tool_wear: false,
+                flow: false,
+                level: false,
+                voltage: false
+            };
+
             // Stats values
             document.getElementById('stat-freq').textContent = `${results.targetFreq.toFixed(2)} Hz`;
-            document.getElementById('stat-vib').textContent = `${results.stats.rmsVib.toFixed(3)} mm/s`;
-            document.getElementById('stat-temp').textContent = `${results.stats.maxTempRaw.toFixed(1)} ${results.tempUnit || '°C'}`;
+            
+            if (varsPresent.vibration) {
+                document.getElementById('stat-vib').textContent = `${results.stats.rmsVib.toFixed(3)} mm/s`;
+            }
+            if (varsPresent.temperature) {
+                document.getElementById('stat-temp').textContent = `${results.stats.maxTempRaw.toFixed(1)} ${results.tempUnit || '°C'}`;
+            }
             
             // Standardize display: convert to bar if it was psi and show both
             const presDiffVal = results.stats.maxPres - results.stats.minPres;
-            const presCard = document.getElementById('stat-pres').closest('.stat-card');
-            const statsGrid = document.querySelector('.sfa-stats-grid');
-            
-            if (hasPressure) {
-                if (statsGrid) statsGrid.classList.remove('four-cols');
-                if (presCard) presCard.style.display = 'block';
+            if (varsPresent.pressure) {
                 if (results.pressureUnit && results.pressureUnit.toLowerCase() !== 'bar') {
                     const rawDiff = results.stats.maxPresRaw - results.stats.minPresRaw;
                     document.getElementById('stat-pres').textContent = `${presDiffVal.toFixed(2)} bar (${rawDiff.toFixed(2)} ${results.pressureUnit})`;
                 } else {
                     document.getElementById('stat-pres').textContent = `${presDiffVal.toFixed(2)} bar`;
                 }
-            } else {
-                if (statsGrid) statsGrid.classList.add('four-cols');
-                if (presCard) presCard.style.display = 'none';
             }
-            
-            document.getElementById('stat-current').textContent = `${results.stats.maxCurrentRaw.toFixed(1)} A`;
+
+            if (varsPresent.current) {
+                document.getElementById('stat-current').textContent = `${results.stats.maxCurrentRaw.toFixed(1)} A`;
+            }
+
+            // Update new variables values if present
+            if (varsPresent.rpm) {
+                document.getElementById('stat-rpm').textContent = `${results.stats.maxRpm.toFixed(0)} RPM`;
+            }
+            if (varsPresent.torque) {
+                document.getElementById('stat-torque').textContent = `${results.stats.maxTorque.toFixed(1)} Nm`;
+            }
+            if (varsPresent.tool_wear) {
+                document.getElementById('stat-wear').textContent = `${results.stats.maxWear.toFixed(1)} min`;
+            }
+            if (varsPresent.flow) {
+                document.getElementById('stat-flow').textContent = `${results.stats.maxFlow.toFixed(1)} LPM`;
+            }
+            if (varsPresent.level) {
+                document.getElementById('stat-level').textContent = `${results.stats.maxLevel.toFixed(1)} %`;
+            }
+            if (varsPresent.voltage) {
+                document.getElementById('stat-voltage').textContent = `${results.stats.maxVoltage.toFixed(1)} V`;
+            }
 
             // Reset colors
-            document.getElementById('stat-vib').className = 'stat-value';
-            document.getElementById('stat-temp').className = 'stat-value';
-            document.getElementById('stat-pres').className = 'stat-value';
-            document.getElementById('stat-current').className = 'stat-value';
+            const cardValIds = ['stat-vib', 'stat-temp', 'stat-pres', 'stat-current', 'stat-rpm', 'stat-torque', 'stat-flow', 'stat-level', 'stat-voltage', 'stat-wear'];
+            cardValIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.className = 'stat-value';
+            });
 
             // Get limits from results if available, else use legacy defaults
-            const limitWarningVib = results.limits ? results.limits.warningVib : 4.5;
-            const limitDangerVib = results.limits ? results.limits.dangerVib : 7.1;
-            const limitWarningTemp = results.limits ? results.limits.warningTemp : 75.0;
-            const limitDangerTemp = results.limits ? results.limits.dangerTemp : 105.0;
-            const limitWarningCurrent = results.limits ? results.limits.warningCurrent : 35.0;
-            const limitDangerCurrent = results.limits ? results.limits.dangerCurrent : 50.0;
+            const limits = results.limits || {};
+            const limitWarningVib = limits.warningVib !== undefined ? limits.warningVib : 4.5;
+            const limitDangerVib = limits.dangerVib !== undefined ? limits.dangerVib : 7.1;
+            const limitWarningTemp = limits.warningTemp !== undefined ? limits.warningTemp : 75.0;
+            const limitDangerTemp = limits.dangerTemp !== undefined ? limits.dangerTemp : 105.0;
+            const limitWarningCurrent = limits.warningCurrent !== undefined ? limits.warningCurrent : 35.0;
+            const limitDangerCurrent = limits.dangerCurrent !== undefined ? limits.dangerCurrent : 50.0;
+
+            const limitWarningRpm = limits.warningRpm !== undefined ? limits.warningRpm : 1000.0;
+            const limitDangerRpm = limits.dangerRpm !== undefined ? limits.dangerRpm : 1500.0;
+            const limitWarningTorque = limits.warningTorque !== undefined ? limits.warningTorque : 30.0;
+            const limitDangerTorque = limits.dangerTorque !== undefined ? limits.dangerTorque : 50.0;
+            const limitWarningWear = limits.warningWear !== undefined ? limits.warningWear : 100.0;
+            const limitDangerWear = limits.dangerWear !== undefined ? limits.dangerWear : 200.0;
+            const limitWarningFlow = limits.warningFlow !== undefined ? limits.warningFlow : 50.0;
+            const limitDangerFlow = limits.dangerFlow !== undefined ? limits.dangerFlow : 80.0;
+            const limitWarningLevel = limits.warningLevel !== undefined ? limits.warningLevel : 80.0;
+            const limitDangerLevel = limits.dangerLevel !== undefined ? limits.dangerLevel : 95.0;
+            const limitWarningVoltage = limits.warningVoltage !== undefined ? limits.warningVoltage : 240.0;
+            const limitDangerVoltage = limits.dangerVoltage !== undefined ? limits.dangerVoltage : 480.0;
 
             // Update card label texts dynamically
             const isFahrenheit = (results.tempUnit || '°C').includes('F');
@@ -2615,7 +2769,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const lblCurrent = document.getElementById('stat-lbl-current');
             if (lblCurrent) lblCurrent.textContent = `Límite: ${limitWarningCurrent.toFixed(1)} A`;
 
-            // Check vibration threshold (warn at limitWarningVib, danger at limitDangerVib)
+            const lblRpm = document.getElementById('stat-lbl-rpm');
+            if (lblRpm) lblRpm.textContent = `Límite: ${limitWarningRpm.toFixed(0)} RPM`;
+
+            const lblTorque = document.getElementById('stat-lbl-torque');
+            if (lblTorque) lblTorque.textContent = `Límite: ${limitWarningTorque.toFixed(1)} Nm`;
+
+            const lblWear = document.getElementById('stat-lbl-wear');
+            if (lblWear) lblWear.textContent = `Límite: ${limitWarningWear.toFixed(1)} min`;
+
+            const lblFlow = document.getElementById('stat-lbl-flow');
+            if (lblFlow) lblFlow.textContent = `Límite: ${limitWarningFlow.toFixed(1)} LPM`;
+
+            const lblLevel = document.getElementById('stat-lbl-level');
+            if (lblLevel) lblLevel.textContent = `Límite: ${limitWarningLevel.toFixed(1)} %`;
+
+            const lblVoltage = document.getElementById('stat-lbl-voltage');
+            if (lblVoltage) lblVoltage.textContent = `Límite: ${limitWarningVoltage.toFixed(1)} V`;
+
+            // Check vibration threshold
             if (results.stats.rmsVib > limitDangerVib) {
                 document.getElementById('stat-vib').classList.add('text-red');
             } else if (results.stats.rmsVib > limitWarningVib) {
@@ -2624,7 +2796,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('stat-vib').classList.add('text-blue');
             }
 
-            // Check temperature threshold (warn at limitWarningTemp, danger at limitDangerTemp)
+            // Check temperature threshold
             if (results.stats.maxTemp > limitDangerTemp) {
                 document.getElementById('stat-temp').classList.add('text-red');
             } else if (results.stats.maxTemp > limitWarningTemp) {
@@ -2634,20 +2806,122 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Check pressure threshold (warn at 1.5 bar)
-            const pDiff = results.stats.maxPres - results.stats.minPres;
-            if (pDiff > 1.5) {
+            if (presDiffVal > 1.5) {
                 document.getElementById('stat-pres').classList.add('text-red');
             } else {
                 document.getElementById('stat-pres').classList.add('text-blue');
             }
 
-            // Check current threshold (warn at limitWarningCurrent, danger at limitDangerCurrent)
+            // Check current threshold
             if (results.stats.maxCurrentRaw > limitDangerCurrent) {
                 document.getElementById('stat-current').classList.add('text-red');
             } else if (results.stats.maxCurrentRaw > limitWarningCurrent) {
                 document.getElementById('stat-current').classList.add('text-orange');
             } else {
                 document.getElementById('stat-current').classList.add('text-blue');
+            }
+
+            // Check RPM threshold
+            if (results.stats.maxRpm > limitDangerRpm) {
+                document.getElementById('stat-rpm').classList.add('text-red');
+            } else if (results.stats.maxRpm > limitWarningRpm) {
+                document.getElementById('stat-rpm').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-rpm').classList.add('text-blue');
+            }
+
+            // Check Torque threshold
+            if (results.stats.maxTorque > limitDangerTorque) {
+                document.getElementById('stat-torque').classList.add('text-red');
+            } else if (results.stats.maxTorque > limitWarningTorque) {
+                document.getElementById('stat-torque').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-torque').classList.add('text-blue');
+            }
+
+            // Check Wear threshold
+            if (results.stats.maxWear > limitDangerWear) {
+                document.getElementById('stat-wear').classList.add('text-red');
+            } else if (results.stats.maxWear > limitWarningWear) {
+                document.getElementById('stat-wear').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-wear').classList.add('text-blue');
+            }
+
+            // Check Flow threshold
+            if (results.stats.maxFlow > limitDangerFlow) {
+                document.getElementById('stat-flow').classList.add('text-red');
+            } else if (results.stats.maxFlow > limitWarningFlow) {
+                document.getElementById('stat-flow').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-flow').classList.add('text-blue');
+            }
+
+            // Check Level threshold
+            if (results.stats.maxLevel > limitDangerLevel) {
+                document.getElementById('stat-level').classList.add('text-red');
+            } else if (results.stats.maxLevel > limitWarningLevel) {
+                document.getElementById('stat-level').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-level').classList.add('text-blue');
+            }
+
+            // Check Voltage threshold
+            if (results.stats.maxVoltage > limitDangerVoltage) {
+                document.getElementById('stat-voltage').classList.add('text-red');
+            } else if (results.stats.maxVoltage > limitWarningVoltage) {
+                document.getElementById('stat-voltage').classList.add('text-orange');
+            } else {
+                document.getElementById('stat-voltage').classList.add('text-blue');
+            }
+
+            // Recalculate stats grid columns & show/hide cards
+            const statsGrid = document.querySelector('.sfa-stats-grid');
+            if (statsGrid) {
+                const cardsConfig = [
+                    { id: 'card-freq', show: true },
+                    { id: 'card-vib', show: varsPresent.vibration },
+                    { id: 'card-temp', show: varsPresent.temperature },
+                    { id: 'card-pres', show: varsPresent.pressure },
+                    { id: 'card-current', show: varsPresent.current },
+                    { id: 'card-rpm', show: varsPresent.rpm },
+                    { id: 'card-torque', show: varsPresent.torque },
+                    { id: 'card-flow', show: varsPresent.flow },
+                    { id: 'card-level', show: varsPresent.level },
+                    { id: 'card-voltage', show: varsPresent.voltage },
+                    { id: 'card-wear', show: varsPresent.tool_wear }
+                ];
+                
+                let visibleCount = 0;
+                cardsConfig.forEach(c => {
+                    const el = document.getElementById(c.id);
+                    if (el) {
+                        if (c.show) {
+                            el.style.display = 'block';
+                            visibleCount++;
+                        } else {
+                            el.style.display = 'none';
+                        }
+                    }
+                });
+
+                const adjustGridColumns = () => {
+                    if (window.innerWidth > 1024) {
+                        if (visibleCount <= 5) {
+                            statsGrid.style.gridTemplateColumns = `repeat(${visibleCount}, 1fr)`;
+                        } else {
+                            statsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
+                        }
+                    } else {
+                        statsGrid.style.gridTemplateColumns = '';
+                    }
+                };
+                adjustGridColumns();
+                
+                if (!window.sfaGridResizeBound) {
+                    window.addEventListener('resize', adjustGridColumns);
+                    window.sfaGridResizeBound = true;
+                }
             }
 
             // Control dynamic current alert box

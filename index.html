@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Áurea Systems | Armonizando el caos con precisión geométrica</title>
+    <meta name="description" content="Transformamos datos caóticos en soluciones armónicas de alta eficiencia. Descubre el Motor SFA de sintonización fractal de armónicos e impacto social.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- PayPal SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AewGtK31C24qS1dJM0IhZkl4YDrN2dNuJ0q90WGuB6kmR5sbS8e_uFrXsC2nJS0WY8MiElKh0VWfX2Io&currency=USD"></script>
+</head>
+<body>
+    <!-- Top Core Status Bar -->
+    <div class="core-status-bar">
+        <div class="status-item">
+            <span class="status-indicator-dot pulsing"></span>
+            <span class="status-label">ESTADO DEL NÚCLEO:</span>
+            <span class="status-value text-gold">CALIBRADO</span>
+        </div>
+    </div>
+
+    <!-- Floating Action Button 'N' (Bottom Left) -->
+    <button class="btn-floating-n" id="btn-terminal-toggle" aria-label="Consola de Telemetría">N</button>
+
+    <!-- Interactive Telemetry Console (Hidden by default) -->
+    <div class="telemetry-console" id="telemetry-console">
+        <div class="console-header">
+            <div class="console-dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <span class="console-title">aurea_coaxial_telemetry.log</span>
+            <button class="console-close" id="console-close-btn">&times;</button>
+        </div>
+        <div class="console-body" id="console-log-content">
+            <div class="log-line text-gold">[INICIALIZANDO] Sintonización Fractal de Armónicos (SFA)...</div>
+            <div class="log-line">[OK] Sintonía espectral establecida.</div>
+            <div class="log-line">[OK] Núcleo calibrado con constante espectral lambda = 1.618.</div>
+            <div class="log-line">[CONEXIÓN] Mapeando registros de telemetría en PLCs...</div>
+            <div class="log-line text-blue">[OK] Servidor OPC UA activo. Escuchando tags de planta.</div>
+            <div class="log-line">[OK] Acelerómetros (Vibración) sintonizados a 2.5 kHz.</div>
+            <div class="log-line">[OK] Transmisores de Presión sintonizados por canal Modbus IW.</div>
+            <div class="log-line text-gold">[PROCESANDO] Análisis espectral SFA en ráfaga de datos...</div>
+            <div class="log-line text-green">[EFICIENCIA] Atenuación de ruido fractal completada en 0.12s.</div>
+            <div class="log-line">[HISTORIA] Filosofía: "El protón invisible" - el arq. Mario Murillo.</div>
+        </div>
+    </div>
+
+    <!-- Background geometric overlay -->
+    <div class="bg-geometry">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+            <circle cx="10" cy="20" r="30" class="geom-circle" />
+            <circle cx="90" cy="80" r="40" class="geom-circle" />
+            <path d="M-10,50 Q30,60 70,30 T110,50" class="geom-line" />
+            <path d="M-10,20 Q40,10 80,40 T110,10" class="geom-line" />
+        </svg>
+    </div>
+
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#inicio" class="logo-group" id="logo-link">
+                <div class="logo-text">
+                    <span class="logo-title">Áurea</span>
+                    <span class="logo-subtitle">SYSTEMS</span>
+                    <span class="logo-tagline">OPTIMIZACIÓN FRACTAL DE ALTA VELOCIDAD</span>
+                </div>
+                <div class="logo-icon-wrapper">
+                    <!-- Mathematically accurate Vertical Fibonacci Spiral SVG matching the image logo exactly -->
+                    <svg viewBox="0 0 34 55" class="logo-spiral-svg">
+                        <!-- Fibonacci Grid Squares -->
+                        <rect x="0" y="0" width="34" height="34" class="grid-square" />
+                        <rect x="0" y="34" width="21" height="21" class="grid-square" />
+                        <rect x="21" y="42" width="13" height="13" class="grid-square" />
+                        <rect x="26" y="34" width="8" height="8" class="grid-square" />
+                        <rect x="21" y="34" width="5" height="5" class="grid-square" />
+                        <rect x="21" y="39" width="3" height="3" class="grid-square" />
+                        <rect x="24" y="40" width="2" height="2" class="grid-square" />
+                        <rect x="24" y="39" width="1" height="1" class="grid-square" />
+                        <rect x="25" y="39" width="1" height="1" class="grid-square" />
+                        
+                        <!-- Diagonal grid lines of triangulation (like the image) -->
+                        <line x1="0" y1="0" x2="34" y2="34" class="grid-line" />
+                        <line x1="34" y1="0" x2="0" y2="34" class="grid-line" />
+                        <line x1="0" y1="34" x2="21" y2="55" class="grid-line" />
+                        <line x1="21" y1="34" x2="0" y2="55" class="grid-line" />
+                        
+                        <!-- Rays radiating from the center of spiral (26, 40) -->
+                        <line x1="26" y1="40" x2="0" y2="0" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="34" y2="0" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="34" y2="34" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="0" y2="34" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="0" y2="55" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="21" y2="55" class="grid-line-faint" />
+                        <line x1="26" y1="40" x2="34" y2="55" class="grid-line-faint" />
+                        
+                        <!-- Spiral Path -->
+                        <path d="M 34,0 A 34,34 0 0,0 0,34 A 21,21 0 0,0 21,55 A 13,13 0 0,0 34,42 A 8,8 0 0,0 26,34 A 5,5 0 0,0 21,39 A 3,3 0 0,0 24,42 A 2,2 0 0,0 26,40" class="spiral-path" />
+                        
+                        <!-- Cyan Dot in top-left corner -->
+                        <circle cx="0" cy="0" r="1.6" class="logo-cyan-dot" />
+                    </svg>
+                </div>
+            </a>
+            
+            <button class="menu-toggle" aria-label="Abrir menú" id="mobile-menu-btn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <nav class="nav-menu" id="nav-menu">
+                <a href="#mision" class="nav-link">MISIÓN</a>
+                <a href="#vision" class="nav-link">VISIÓN</a>
+                <a href="#servicios" class="nav-link">SERVICIOS COMERCIALES</a>
+                <a href="#fundacion" class="nav-link">FUNDACIÓN</a>
+                <a href="#academia" class="nav-link">ACADEMIA</a>
+                <a href="#contacto" class="nav-link">CONTACTO</a>
+                <a href="sensores.html" class="nav-link">SENSORES</a>
+
+                <a href="#ecosistema" class="nav-btn">ECOSISTEMA</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- HERO SECTION (INICIO) & ECOSISTEMA DUAL (COMBINED SCREEN LIKE SCREENSHOT) -->
+        <section id="inicio" class="hero-section">
+            <!-- Giant faint background spiral behind hero content -->
+            <div class="hero-bg-spiral-wrapper">
+                <svg viewBox="0 0 34 55" class="hero-bg-spiral-svg">
+                    <rect x="0" y="0" width="34" height="34" class="grid-square-faint" />
+                    <rect x="0" y="34" width="21" height="21" class="grid-square-faint" />
+                    <rect x="21" y="42" width="13" height="13" class="grid-square-faint" />
+                    <rect x="26" y="34" width="8" height="8" class="grid-square-faint" />
+                    <rect x="21" y="34" width="5" height="5" class="grid-square-faint" />
+                    <rect x="21" y="39" width="3" height="3" class="grid-square-faint" />
+                    <rect x="24" y="40" width="2" height="2" class="grid-square-faint" />
+                    
+                    <line x1="0" y1="0" x2="34" y2="34" class="grid-square-faint" />
+                    <line x1="34" y1="0" x2="0" y2="34" class="grid-square-faint" />
+                    <line x1="0" y1="34" x2="21" y2="55" class="grid-square-faint" />
+                    <line x1="21" y1="34" x2="0" y2="55" class="grid-square-faint" />
+
+                    <path d="M 34,0 A 34,34 0 0,0 0,34 A 21,21 0 0,0 21,55 A 13,13 0 0,0 34,42 A 8,8 0 0,0 26,34 A 5,5 0 0,0 21,39 A 3,3 0 0,0 24,42 A 2,2 0 0,0 26,40" class="spiral-path-faint" />
+                </svg>
+            </div>
+
+            <!-- Floating Sparkle Star (Right) -->
+            <div class="sparkle-star-wrapper">
+                <svg viewBox="0 0 24 24" class="sparkle-star">
+                    <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z" />
+                </svg>
+            </div>
+
+            <div class="hero-container">
+                <h1 class="hero-title">
+                    OPTIMIZACIÓN PREDICTIVA Y<br>
+                    <span class="text-gold font-bold">DIAGNÓSTICO ESPECTRAL AUTOMATIZADO</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Conecte la telemetría de sus activos críticos. Procese registros analógicos crudos de PLCs (Vibración, Corriente, Temperatura y Presión) y obtenga reportes técnicos con acciones de mantenimiento en segundos mediante el Motor SFA.<br>
+                    <span class="hero-promo-badge" style="font-size: 0.82rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 4px; display: inline-block; margin-top: 0.8rem; font-weight: 600; font-family: var(--font-accent); letter-spacing: 0.05em; text-transform: uppercase;">⚡ EVALUACIÓN INICIAL GRATIS ACTIVADA (CLUB 33)</span>
+                </p>
+                <div class="hero-actions">
+                    <a href="#sfa-plataforma" class="btn btn-gold">INICIAR DIAGNÓSTICO GRATIS</a>
+                    <a href="#servicios" class="btn btn-outline">VER DOCUMENTACIÓN</a>
+                </div>
+            </div>
+
+        <!-- SINTONIZADOR ESPECTRAL Y DIAGNÓSTICO SFA -->
+        <section id="sfa-plataforma" class="content-section scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">INTERACTIVO</div>
+                <h2 class="section-heading">Sintonizador Espectral y Diagnóstico SFA</h2>
+                <p class="section-intro">
+                    Plataforma aislada de análisis predictivo. Cargue los datos de telemetría o use las simulaciones para calibrar.
+                    <br><br>
+                    <span style="font-size: 0.92rem; line-height: 1.6; display: inline-block; max-width: 800px; color: var(--color-text-light); border-left: 3px solid var(--color-primary-gold); padding-left: 1.2rem; text-align: left; margin: 1.5rem auto 0; font-family: var(--font-body);">
+                        <strong>Áurea Systems</strong> es una plataforma de diagnóstico predictivo que fusiona el análisis fractal de variables electromecánicas con un backend robusto y securizado en FastAPI y Next.js. El sistema cuenta con validación de tipos estricta por Pydantic, mitigación activa de vectores de ataque XSS y SQLi, control de flujo por Rate Limiting y pruebas unitarias automatizadas. Es una tecnología madura, segura y lista para su despliegue inmediato en infraestructuras corporativas.
+                    </span>
+                </p>
+
+                <!-- Platform Workspace Card -->
+                <div class="sfa-workspace-card">
+                    <!-- 1. PAYMENT BARRIER SECTION -->
+                    <div class="sfa-payment-barrier" id="sfa-payment-barrier">
+                        <div class="payment-barrier-header">
+                            <h3>🔐 Desbloquear Sintonizador de Datos SFA</h3>
+                            <p class="panel-desc">Seleccione el nivel de análisis requerido para su máquina y complete el pago seguro para habilitar el motor SFA.</p>
+                        </div>
+                        <!-- Banner Promocional: Club de Pioneros 33 -->
+                        <div class="pioneros-promo-banner" id="pioneros-promo-banner">
+                            <div class="promo-neon-badge">BETA EXCLUSIVO</div>
+                            <div class="promo-content">
+                                <h3>🚀 Club de Pioneros 33</h3>
+                                <h4 class="promo-subtitle">¡Únete al Club de Pioneros 33 y sé co-creador del futuro del mantenimiento!</h4>
+                                <p class="promo-text">
+                                    El Motor SFA está listo, pero sabemos que la verdadera maestría técnica la tienen ustedes en la planta. Buscamos a los 33 ingenieros y jefes de mantenimiento más visionarios para poner a prueba nuestro motor con sus propios datos reales.
+                                </p>
+                                <p class="promo-text-highlight">
+                                    Si eres de los primeros 33 en subir tu primer archivo CSV externo y compartirnos tu feedback técnico, <strong>te regalamos 3 MESES DE ACCESO TOTAL GRATIS</strong>. No solo obtienes la herramienta, te conviertes en parte del Consejo Técnico que guiará las próximas funcionalidades de Aurea Systems.
+                                </p>
+                                <div class="promo-counter-wrapper">
+                                    <span class="promo-counter-text">⏳ Quedan <strong id="promo-spots-card" class="spots-count">33</strong> de 33 lugares disponibles</span>
+                                </div>
+                                
+                                <button type="button" class="btn-pioneros-action" id="btn-pioneros-action">
+                                    ⚡ Cargar mi primer CSV y reclamar mis 3 meses
+                                </button>
+
+                                <!-- Formulario de Registro Club de Pioneros 33 -->
+                                <div id="club33-registration-form" style="display: none; width: 100%; max-width: 480px; margin: 1.5rem auto 0; padding: 1.5rem; background: rgba(0, 85, 255, 0.05); border: 1px solid rgba(0, 85, 255, 0.25); border-radius: 8px; text-align: left; box-sizing: border-box; box-shadow: 0 0 15px rgba(0, 85, 255, 0.1);">
+                                    <h4 style="color: #00d2ff; margin-top: 0; margin-bottom: 0.5rem; font-family: var(--font-display); font-size: 1.1rem; font-weight: bold;">📝 Registro Club de Pioneros 33</h4>
+                                    <p style="font-size: 0.82rem; color: var(--color-text-gray); margin-bottom: 1.2rem; font-family: var(--font-body); line-height: 1.4;">
+                                        Registra tu planta/ingeniero para asegurar uno de los 33 cupos limitados y obtener sus <strong>3 meses de acceso total gratis</strong>.
+                                    </p>
+                                    
+                                    <div class="form-group" style="margin-bottom: 1rem;">
+                                        <label for="promo-reg-name" style="display: block; font-size: 0.78rem; color: var(--color-text-gray); margin-bottom: 0.4rem; font-family: var(--font-body); font-weight: 500;">Nombre del Ingeniero</label>
+                                        <input type="text" id="promo-reg-name" placeholder="Ej. Ing. Carlos Mendoza" style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,85,255,0.25); border-radius: 4px; color: #fff; font-family: var(--font-body); font-size: 0.88rem; box-sizing: border-box; transition: border-color 0.2s;" required>
+                                    </div>
+                                    
+                                    <div class="form-group" style="margin-bottom: 1rem;">
+                                        <label for="promo-reg-email" style="display: block; font-size: 0.78rem; color: var(--color-text-gray); margin-bottom: 0.4rem; font-family: var(--font-body); font-weight: 500;">Correo Electrónico</label>
+                                        <input type="email" id="promo-reg-email" placeholder="carlos.mendoza@empresa.com" style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,85,255,0.25); border-radius: 4px; color: #fff; font-family: var(--font-body); font-size: 0.88rem; box-sizing: border-box; transition: border-color 0.2s;" required>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                                        <label for="promo-reg-company" style="display: block; font-size: 0.78rem; color: var(--color-text-gray); margin-bottom: 0.4rem; font-family: var(--font-body); font-weight: 500;">Empresa / Planta Industrial</label>
+                                        <input type="text" id="promo-reg-company" placeholder="Ej. Cementera del Norte S.A." style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,85,255,0.25); border-radius: 4px; color: #fff; font-family: var(--font-body); font-size: 0.88rem; box-sizing: border-box; transition: border-color 0.2s;" required>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                            <label for="promo-reg-key" style="font-size: 0.78rem; color: var(--color-text-gray); font-family: var(--font-body); font-weight: 500; margin: 0;">Clave de Acceso del Club</label>
+                                            <a href="mailto:mmrobeerto@gmail.com?subject=Solicitud%20de%20Clave%20-%20Club%20de%20Pioneros%2033&body=Hola%20Roberto%2C%20solicito%20la%20clave%20de%20acceso%20para%20el%20Club%20de%20Pioneros%2033." style="font-size: 0.75rem; color: #00d2ff; text-decoration: underline; font-family: var(--font-body);" target="_blank">Solicitar Clave</a>
+                                        </div>
+                                        <input type="text" id="promo-reg-key" placeholder="Introduce la clave de acceso" style="width: 100%; padding: 0.65rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,85,255,0.25); border-radius: 4px; color: #fff; font-family: var(--font-body); font-size: 0.88rem; box-sizing: border-box; transition: border-color 0.2s;" required>
+                                    </div>
+
+                                    <button type="button" id="btn-submit-club33" class="btn-activate-promo" style="display: block; width: 100%; background: linear-gradient(135deg, #0055ff, #00d2ff); color: #fff; font-weight: bold; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.92rem; text-shadow: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 0 10px rgba(0,85,255,0.2);">
+                                        ⚡ Registrarse y Activar 3 Meses Gratis (Cupo: <span id="promo-btn-spots">33</span>/33)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="payment-plans-grid">
+                            <!-- Plan Junior / Técnico Predictivo -->
+                            <div class="plan-card red" id="plan-junior" data-price="1500" data-name="Plan Junior / Técnico Predictivo">
+                                <div class="plan-badge red">JUNIOR</div>
+                                <h4>Plan Junior / Técnico Predictivo</h4>
+                                <div class="plan-price">$1,500 <span class="currency">MXN/Mes</span></div>
+                                <ul class="plan-features">
+                                    <li>✔ Capacidad: Hasta 3 máquinas o PLCs fijos al mes</li>
+                                    <li>✔ Diagnóstico predictivo de Vibración, Temperatura y Corriente</li>
+                                    <li>✔ Análisis espectral de armónicos y Salud SFA</li>
+                                    <li>✔ Descarga de reportes técnicos en PDF</li>
+                                    <li style="color: #ef4444; font-weight: bold; border-top: 1px dashed rgba(239,68,68,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">📉 Capacidad fija para uso personal o local</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Plan Consultor / Senior (Destacado por defecto) -->
+                            <div class="plan-card active turquoise" id="plan-consultor" data-price="20000" data-name="Plan Consultor / Senior">
+                                <div class="plan-badge turquoise">MÁS POPULAR</div>
+                                <h4>Plan Consultor / Senior</h4>
+                                <div class="plan-price">
+                                    $20,000 <span class="currency">MXN/Mes</span>
+                                    <span style="font-size: 0.75rem; display: block; opacity: 0.8; margin-top: 0.2rem; color: #00d2ff;">+$5,000 MXN/Mes por máquina extra</span>
+                                </div>
+                                <ul class="plan-features">
+                                    <li>✔ Capacidad Base: Hasta 20 máquinas o PLCs al mes</li>
+                                    <li>✔ Regla Flexible: Expande agregando máquinas individuales</li>
+                                    <li>✔ Diagnóstico predictivo completo y aislamiento de fallas críticas</li>
+                                    <li>✔ Reporte Técnico Certificado listo para auditorías</li>
+                                    <li style="color: #00d2ff; font-weight: bold; border-top: 1px dashed rgba(6,182,212,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">🏆 Ideal para ingenieros independientes y consultores</li>
+                                </ul>
+                            </div>
+
+                            <!-- Plan Gerente / Planta Completa -->
+                            <div class="plan-card gold" id="plan-gerente" data-price="45000" data-name="Plan Gerente / Planta Completa">
+                                <div class="plan-badge gold">PREMIUM</div>
+                                <h4>Plan Gerente / Planta Completa</h4>
+                                <div class="plan-price">$45,000 <span class="currency">MXN/Mes</span></div>
+                                <ul class="plan-features">
+                                    <li>✔ Capacidad: Máquinas, PLCs e infraestructura ILIMITADA</li>
+                                    <li>✔ Acceso para toda la planta y múltiples usuarios</li>
+                                    <li>✔ Aislamiento de fallas avanzadas en fluidos e hidráulica</li>
+                                    <li>✔ Soporte prioritario 24/7 y monitoreo continuo</li>
+                                    <li style="color: var(--color-primary-gold); font-weight: bold; border-top: 1px dashed rgba(197,168,128,0.2); padding-top: 0.5rem; margin-top: 0.5rem;">🏢 Jefes y Gerentes de Planta</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="paypal-checkout-box">
+                             <div id="paypal-button-container" class="paypal-buttons-container" style="display: none;"></div>
+                             
+                             <button type="button" class="btn-simulate-pay" id="btn-simulate-payment" style="display: none;">
+                                 <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px; margin-right: 4px; display: inline-block; vertical-align: middle; fill: currentColor;">
+                                     <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                                 </svg>
+                                 Simular Pago Rápido (Sandbox)
+                             </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. DIAGNOSTIC WORKSPACE (LOCKED INITIALLY) -->
+                    <div class="sfa-locked-container locked" id="sfa-workspace-wrapper">
+                        <!-- Locked Overlay Mask -->
+                        <div class="sfa-locked-overlay" id="sfa-locked-overlay">
+                            <div class="lock-message">
+                                <svg viewBox="0 0 24 24" class="lock-icon">
+                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                </svg>
+                                <h4>Sintonizador SFA Bloqueado</h4>
+                                <p>Por favor seleccione un plan y complete la transacción de pago arriba para habilitar la carga de datos.</p>
+                            </div>
+                        </div>
+
+                        <!-- Active License Banner (Hidden initially) -->
+                        <div class="sfa-license-banner" id="sfa-license-banner" style="display: none; justify-content: space-between; align-items: center; width: 100%; gap: 1rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span class="banner-icon">✓</span>
+                                <span class="banner-text">Licencia Activa: <strong id="lbl-lic-plan">--</strong> ($<span id="lbl-lic-amount">--</span> <span id="lbl-lic-currency">MXN</span>) - Referencia: <code id="lbl-lic-ref">--</code></span>
+                            </div>
+                            <span id="lbl-lic-remaining" style="background: rgba(197, 168, 128, 0.15); border: 1px solid var(--color-primary-gold); color: var(--color-primary-gold); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.05em; font-family: var(--font-accent); white-space: nowrap;">Análisis Restantes: --</span>
+                        </div>
+
+                        <!-- Paso 1: Configuración (Input) -->
+                        <div class="sfa-step-container" id="sfa-step-1-upload">
+                            <div class="sfa-workspace-grid">
+                            <!-- Left Panel: Data upload & Simulation buttons -->
+                            <div class="sfa-control-panel">
+                                 <h3>2. Cargar Datos del Sensor</h3>
+                                 <p class="panel-desc">Soporta archivos exportados de PLC en formato CSV.</p>
+                                 
+                                 <!-- Drag & Drop Dropzone -->
+                                 <div class="sfa-dropzone" id="sfa-dropzone">
+                                     <svg viewBox="0 0 24 24" class="dropzone-icon">
+                                         <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                                     </svg>
+                                     <p class="dropzone-text">Arrastra aquí tu archivo .csv de PLC o <span class="text-gold browse-link">haz clic para buscar</span></p>
+                                     <input type="file" id="sfa-file-input" accept=".csv" style="opacity: 0; position: absolute; width: 1px; height: 1px; z-index: -1;" disabled>
+                                 </div>
+
+                                 <!-- Descarga de Datos de Prueba -->
+                                 <div class="divider-text" style="margin-top: 1.5rem; margin-bottom: 0.75rem;">¿No tienes un archivo a la mano?</div>
+                                 <div style="margin-bottom: 1.5rem; text-align: center;">
+                                     <a href="sensor_motor_real.csv" download class="btn-activate-promo" style="display: block; width: 100%; max-width: 100%; margin: 0 auto; background: linear-gradient(135deg, var(--color-primary-gold), #b3925c); color: #000; font-weight: bold; padding: 0.85rem; border: none; border-radius: 4px; font-family: var(--font-accent); letter-spacing: 0.05em; text-transform: uppercase; text-decoration: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-align: center; box-sizing: border-box; line-height: 1.5;">
+                                         📥 Descargar Archivo CSV de Prueba para cargarlo manualmente
+                                     </a>
+                                 </div>
+
+                                 <!-- Tarjeta de Seguridad y Privacidad de Datos -->
+                                 <div class="security-disclaimer" style="margin-bottom: 1.5rem;">
+                                     <div class="security-disclaimer-content">
+                                         <span class="security-disclaimer-icon">🔒</span>
+                                         <span><strong>Seguridad de Datos:</strong> La telemetría cargada se procesa estrictamente en la memoria volátil de nuestros servidores seguros en Render y se elimina de inmediato. No almacenamos registros de su planta. Tu propiedad intelectual está protegida.</span>
+                                     </div>
+                                 </div>
+
+                                 <!-- Translator Configuration (Fricción Cero) -->
+                                 <div class="translator-selector-group" style="margin-bottom: 1.25rem;">
+                                     <label for="sfa-translator-profile" class="translator-label">
+                                         <svg viewBox="0 0 24 24" class="translator-icon">
+                                             <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                                         </svg>
+                                         Traductor de Telemetría (Fricción Cero)
+                                     </label>
+                                     <select id="sfa-translator-profile" class="sfa-select">
+                                         <option value="auto" selected>Detección Automática (Inteligente)</option>
+                                         <option value="siemens">Siemens PLC S7 Export</option>
+                                         <option value="allen_bradley">Allen Bradley CompactLogix</option>
+                                         <option value="generic_scada">SCADA Genérico de Planta</option>
+                                         <option value="raw">Sin Traductor (Cabeceras Estándar)</option>
+                                     </select>
+                                     <div class="translator-status-indicator" id="translator-status-indicator" style="display: none;">
+                                         <span class="status-dot"></span>
+                                         <span class="status-text" id="translator-status-text">Perfil detectado: Siemens PLC S7</span>
+                                     </div>
+                                 </div>
+
+                                 <p class="privacy-disclaimer">Al subir su archivo, usted acepta nuestra <a href="privacidad.html" target="_blank" class="text-gold" style="text-decoration: underline;">Política de Privacidad</a> y garantiza que los datos son propiedad de su empresa.</p>
+
+                                 <div class="divider-text" style="margin-top: 1.5rem; margin-bottom: 0.75rem;">O prueba con perfiles de maquinaria universal</div>
+
+                                 <!-- Mock Data Trigger Buttons -->
+                                 <div class="mock-buttons-group">
+                                     <button type="button" class="btn-mock-data btn-opt" data-type="optimal" disabled>
+                                         ⚙️ Motor Eléctrico
+                                     </button>
+                                     <button type="button" class="btn-mock-data btn-warn" data-type="misalignment" disabled>
+                                         💨 Compresor Industrial
+                                     </button>
+                                     <button type="button" class="btn-mock-data btn-crit" data-type="critical" disabled>
+                                         🔄 Husillo de CNC
+                                     </button>
+                                 </div>
+
+                                <!-- Lambda tuning slider -->
+                                <div class="lambda-tuning-box">
+                                    <div class="lambda-tuning-header">
+                                        <label for="lambda-slider">Sintonizar Escala Fractal (λ) <span class="tooltip-trigger" data-tooltip-text="Factor de escala matemático que describe la auto-similitud de la vibración mecánica. Un λ óptimo (1.618, la proporción áurea) maximiza la atenuación del ruido.">?</span>:</label>
+                                        <span class="lambda-value text-gold" id="lambda-display">1.618</span>
+                                    </div>
+                                    <input type="range" id="lambda-slider" min="0.5" max="2.5" step="0.001" value="1.618" class="slider" disabled>
+                                    <p class="lambda-desc">Ajusta la sintonía espectral del filtro SFA en base al factor de escala fractal (λ).</p>
+                                </div>
+
+                                <!-- Reference Tuning slider -->
+                                <div class="reference-tuning-box" style="margin-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1rem;">
+                                    <div class="reference-tuning-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                        <label for="reference-slider" style="font-family: var(--font-accent); font-size: 0.78rem; color: var(--color-text-light); letter-spacing: 0.05em; text-transform: uppercase;">Offset de Referencia (Cero) <span class="tooltip-trigger" data-tooltip-text="Permite ajustar el nivel base 'cero' de la vibración. Si sabe que su máquina vibra más en condiciones normales, aumente este valor para calibrar la herramienta.">?</span>:</label>
+                                        <span class="reference-value text-gold" id="reference-display" style="font-family: var(--font-accent); font-size: 0.85rem; font-weight: bold;">0.00 mm/s</span>
+                                    </div>
+                                    <input type="range" id="reference-slider" min="-0.2" max="0.5" step="0.01" value="0.00" class="slider" disabled>
+                                    <p class="reference-desc" style="font-size: 0.7rem; color: var(--color-text-gray); margin-top: 0.4rem; line-height: 1.4;">Ajusta el cero base restándolo de las lecturas físicas de vibración antes del análisis SFA.</p>
+                                </div>
+                            </div>
+
+                            <!-- Right Panel: Guía de Carga Rápida (Reemplaza empty-state) -->
+                            <div class="sfa-status-panel" id="sfa-status-panel">
+                                <div class="upload-guide-container">
+                                    <div class="guide-header">
+                                        <svg viewBox="0 0 24 24" class="guide-icon" style="width: 24px; height: 24px; fill: var(--color-primary-gold); margin-bottom: 0.5rem;">
+                                            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                        </svg>
+                                        <h4>Receptor Universal de Telemetría</h4>
+                                    </div>
+                                    <p class="guide-desc">El motor SFA cuenta con un **Receptor Universal Adaptativo** que analiza la firma espectral ($f_{dom}$) y el mapeador de sinónimos de PLC para identificar de forma autónoma el tipo de activo y calibrar sus límites de seguridad estadística ($\pm 2\sigma$ y $\pm 3\sigma$):</p>
+                                    
+                                    <div class="guide-variables-list" style="margin-top: 1rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                                        <div class="guide-var-item">
+                                            <span class="var-badge badge-time" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(99, 102, 241, 0.25);">Frecuencia Dominante (Auto-Sintonía)</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Identifica la firma espectral: <strong>Motor/Bomba Eléctrica</strong> ($20$ a $60\text{ Hz}$) o <strong>Husillo CNC/Cortador</strong> ($<20\text{ Hz}$), adaptando el tablero y los algoritmos automáticamente.</span>
+                                        </div>
+                                        <div class="guide-var-item">
+                                            <span class="var-badge badge-vib" style="background: rgba(16, 185, 129, 0.12); color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.25);">Variables Mecánicas (CNC / Motores)</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>vibracion</code>, <code>rpm</code>, <code>torque</code> y <code>desgaste_herramienta</code> (tool wear).</span>
+                                        </div>
+                                        <div class="guide-var-item">
+                                            <span class="var-badge badge-pres" style="background: rgba(59, 130, 246, 0.12); color: #60a5fa; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.25);">Variables de Fluidos (Hidráulica / Bombas)</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>presion</code> (bar/PSI), <code>flujo_caudal</code> (flow) y <code>nivel_tanque</code> (level).</span>
+                                        </div>
+                                        <div class="guide-var-item">
+                                            <span class="var-badge badge-temp" style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.25);">Variables Térmicas y Eléctricas</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>temperatura</code> (Kelvin/Celsius/Fahrenheit), <code>corriente</code> (A) y <code>voltaje</code> (V).</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="guide-preview-box">
+                                        <span class="preview-title">Formatos Admitidos (Siemens / AB / Fanuc):</span>
+                                        <pre class="preview-code" style="font-size: 0.7rem;"><code>tiempo, rpm, torque_nm, temp_c, corriente_a, desgaste_min
+tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </div> <!-- Cierre de sfa-step-1-upload -->
+
+                        <!-- Paso 2: Procesamiento (Caja Negra) -->
+                        <div class="sfa-step-container sfa-processing-step" id="sfa-step-2-processing" style="display: none;">
+                            <div class="processing-container">
+                                <div class="purification-animation-wrapper" style="position: relative; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center;">
+                                    <canvas id="purification-canvas" width="500" height="220" style="border: 1px solid rgba(197, 168, 128, 0.1); border-radius: 8px; background: rgba(10, 15, 30, 0.5); width: 100%; max-width: 500px; height: 220px; display: block;"></canvas>
+                                    <div class="sacred-geometry-glow" style="position: absolute; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                                        <svg viewBox="0 0 100 100" class="rotating-spiral" style="width: 70px; height: 70px; animation: spin 12s linear infinite;">
+                                            <path d="M 50,50 A 20,20 0 0,0 30,30 A 12,12 0 0,0 42,18 A 8,8 0 0,0 50,26 A 5,5 0 0,0 45,31" fill="none" stroke="var(--color-primary-gold)" stroke-width="2" style="filter: drop-shadow(0 0 8px var(--color-primary-gold));" />
+                                            <circle cx="50" cy="50" r="3" fill="var(--color-primary-gold)" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h3 class="processing-title" style="font-family: var(--font-headings); letter-spacing: 0.05em; color: var(--color-primary-gold); font-size: 1.3rem; margin-bottom: 0.5rem; text-align: center; text-transform: uppercase;">Ejecutando Purificación Geométrica</h3>
+                                <p class="processing-subtitle" id="sfa-processing-subtitle" style="color: var(--color-text-gray); font-size: 0.85rem; margin-bottom: 1.5rem; text-align: center; font-family: var(--font-accent);">Atenuando ruido fractal mediante filtro espectral SFA (Auto-Sintonía Espectral)</p>
+                                <div class="processing-progress-bar" style="width: 100%; max-width: 400px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin: 0 auto 0.5rem; border: 1px solid rgba(255,255,255,0.02);">
+                                    <div class="progress-fill" id="processing-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--color-primary-gold), #10b981); transition: width 0.1s linear; box-shadow: 0 0 10px var(--color-primary-gold);"></div>
+                                </div>
+                                <div class="processing-progress-percentage" id="processing-progress-percentage" style="text-align: center; font-family: var(--font-accent); color: var(--color-primary-gold); font-weight: bold; font-size: 0.9rem; margin-bottom: 1.5rem;">0%</div>
+                                <div class="processing-status-log" id="processing-status-log" style="width: 100%; max-width: 450px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 1rem; font-family: monospace; font-size: 0.75rem; color: #10b981; height: 100px; overflow-y: auto; margin: 0 auto; display: flex; flex-direction: column; gap: 0.4rem; text-align: left; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);">
+                                    <div class="status-log-line" style="opacity: 0.9;"><span style="color: #6366f1; margin-right: 0.5rem;">[SFA CORE]</span>Iniciando motor espectral...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Diagnóstico (Output - Dashboard) -->
+                        <div class="sfa-step-container" id="sfa-step-3-results" style="display: none;">
+                        <!-- Dashboard Results (Initially Hidden, shown dynamically) -->
+                        <div class="sfa-dashboard-results" id="sfa-dashboard-results" style="display: none;">
+                            <!-- Print-Only Professional Header with Company Logo -->
+                            <div class="sfa-print-header">
+                                <div class="print-logo-group">
+                                    <div class="logo-text-stacked">
+                                        <span class="logo-title">Áurea</span>
+                                        <span class="logo-subtitle">SYSTEMS</span>
+                                    </div>
+                                    <div class="logo-icon-wrapper">
+                                        <!-- Mathematically accurate Vertical Fibonacci Spiral SVG -->
+                                        <svg viewBox="0 0 34 55" class="logo-spiral-svg">
+                                            <rect x="0" y="0" width="34" height="34" class="grid-square" />
+                                            <rect x="0" y="34" width="21" height="21" class="grid-square" />
+                                            <rect x="21" y="42" width="13" height="13" class="grid-square" />
+                                            <rect x="26" y="34" width="8" height="8" class="grid-square" />
+                                            <rect x="21" y="34" width="5" height="5" class="grid-square" />
+                                            <rect x="21" y="39" width="3" height="3" class="grid-square" />
+                                            <rect x="24" y="40" width="2" height="2" class="grid-square" />
+                                            <rect x="24" y="39" width="1" height="1" class="grid-square" />
+                                            <rect x="25" y="39" width="1" height="1" class="grid-square" />
+                                            
+                                            <line x1="0" y1="0" x2="34" y2="34" class="grid-line" />
+                                            <line x1="34" y1="0" x2="0" y2="34" class="grid-line" />
+                                            <line x1="0" y1="34" x2="21" y2="55" class="grid-line" />
+                                            <line x1="21" y1="34" x2="0" y2="55" class="grid-line" />
+                                            
+                                            <line x1="26" y1="40" x2="0" y2="0" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="34" y2="0" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="34" y2="34" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="0" y2="34" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="0" y2="55" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="21" y2="55" class="grid-line-faint" />
+                                            <line x1="26" y1="40" x2="34" y2="55" class="grid-line-faint" />
+                                            
+                                            <path d="M 34,0 A 34,34 0 0,0 0,34 A 21,21 0 0,0 21,55 A 13,13 0 0,0 34,42 A 8,8 0 0,0 26,34 A 5,5 0 0,0 21,39 A 3,3 0 0,0 24,42 A 2,2 0 0,0 26,40" class="spiral-path" />
+                                            
+                                            <circle cx="0" cy="0" r="1.6" class="logo-cyan-dot" />
+                                        </svg>
+                                    </div>
+                                    <div class="logo-tagline">OPTIMIZACIÓN FRACTAL DE ALTA VELOCIDAD</div>
+                                </div>
+                                <div class="print-title-group">
+                                    <h2>INFORME TÉCNICO DE DIAGNÓSTICO</h2>
+                                    <span class="print-subtitle">TECNOLOGÍA DE ANÁLISIS DE TELEMETRÍA SFA</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Print-Only Traceability Metadata Block -->
+                            <div class="sfa-print-metadata">
+                                <div class="meta-row">
+                                    <div class="meta-col">
+                                        <span class="meta-label">ID DEL ACTIVO / EQUIPO:</span>
+                                        <span class="meta-value" id="print-meta-asset">--</span>
+                                    </div>
+                                    <div class="meta-col">
+                                        <span class="meta-label">NIVEL DE ANÁLISIS SFA:</span>
+                                        <span class="meta-value" id="print-meta-plan">--</span>
+                                    </div>
+                                </div>
+                                <div class="meta-row">
+                                    <div class="meta-col">
+                                        <span class="meta-label">ID DE TRANSACCIÓN:</span>
+                                        <span class="meta-value" id="print-meta-txid">--</span>
+                                    </div>
+                                    <div class="meta-col">
+                                        <span class="meta-label">FECHA Y HORA DE CARGA:</span>
+                                        <span class="meta-value" id="print-meta-date">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="sfa-divider">
+                            
+                            <div class="results-top-actions no-print" style="margin-bottom: 1.5rem; display: flex; justify-content: flex-start;">
+                                <button type="button" class="btn btn-outline btn-small" id="btn-back-to-upload" style="display: inline-flex; align-items: center; gap: 6px; padding: 0.5rem 1rem; border-color: rgba(197, 168, 128, 0.4); color: var(--color-primary-gold); font-size: 0.8rem; background: rgba(197,168,128,0.02);">
+                                    <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;">
+                                        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                                    </svg>
+                                    Realizar Nuevo Diagnóstico
+                                </button>
+                            </div>
+
+                            <div class="sfa-dashboard-header">
+                                <div class="dashboard-title-group">
+                                    <h3>Panel de Diagnóstico Espectral SFA</h3>
+                                    <p class="text-gray" id="sfa-analysis-meta">Archivo analizado el: --/--/----</p>
+                                </div>
+                                <!-- Health Badge -->
+                                <div class="sfa-health-badge-wrapper" id="sfa-health-badge-container">
+                                    <span class="health-label">ÍNDICE DE SALUD SFA <span class="tooltip-trigger" data-tooltip-text="Porcentaje de salud electromecánica derivado del filtrado digital de vibraciones. Un valor mayor a 90% indica funcionamiento óptimo; entre 80-90% requiere mantenimiento preventivo; menor a 80% requiere intervención inmediata.">?</span>:</span>
+                                    <span class="health-percentage" id="sfa-health-display">95%</span>
+                                </div>
+                                
+                                <!-- Tablero de Planificación de Mantenimiento -->
+                                <div class="sfa-maintenance-bar-wrapper" id="sfa-maintenance-bar-container" data-tooltip-text="Nivel de severidad: Óptimo. Tiempo estimado de intervención: No requiere.">
+                                    <div class="sfa-maintenance-bar-fill" id="sfa-maintenance-fill" style="width: 95%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Stats grid -->
+                            <div class="sfa-stats-grid">
+                                <div class="stat-card" id="card-freq">
+                                    <h4>Frecuencia de Sintonía <span class="tooltip-trigger" data-tooltip-text="Frecuencia fundamental de oscilación mecánica de la máquina multiplicada por el factor fractal λ. Aísla y purifica armónicos específicos de fatiga.">?</span></h4>
+                                    <p class="stat-value text-gold" id="stat-freq">-- Hz</p>
+                                    <span class="stat-lbl">(f<sub>base</sub> × λ)</span>
+                                </div>
+                                <div class="stat-card" id="card-vib">
+                                    <h4>Vibración Promedio (RMS)</h4>
+                                    <p class="stat-value" id="stat-vib">-- mm/s</p>
+                                    <span class="stat-lbl" id="stat-lbl-vib">Umbral: &lt; 4.5 mm/s</span>
+                                </div>
+                                <div class="stat-card" id="card-temp">
+                                    <h4>Temperatura Máxima</h4>
+                                    <p class="stat-value" id="stat-temp">-- °C</p>
+                                    <span class="stat-lbl" id="stat-lbl-temp">Límite: 75.0 °C</span>
+                                </div>
+                                <div class="stat-card" id="card-pres">
+                                    <h4>Fluctuación Presión</h4>
+                                    <p class="stat-value" id="stat-pres">-- bar</p>
+                                    <span class="stat-lbl" id="stat-lbl-pres">Estable: &lt; 1.50 bar</span>
+                                </div>
+                                <div class="stat-card" id="card-current">
+                                    <h4>Consumo de Corriente</h4>
+                                    <p class="stat-value" id="stat-current">-- A</p>
+                                    <span class="stat-lbl" id="stat-lbl-current">Límite: 35.0 A</span>
+                                </div>
+                                <div class="stat-card" id="card-rpm" style="display: none;">
+                                    <h4>Velocidad Rotación</h4>
+                                    <p class="stat-value" id="stat-rpm">-- RPM</p>
+                                    <span class="stat-lbl" id="stat-lbl-rpm">Límite: -- RPM</span>
+                                </div>
+                                <div class="stat-card" id="card-torque" style="display: none;">
+                                    <h4>Torque del Husillo</h4>
+                                    <p class="stat-value" id="stat-torque">-- Nm</p>
+                                    <span class="stat-lbl" id="stat-lbl-torque">Límite: -- Nm</span>
+                                </div>
+                                <div class="stat-card" id="card-flow" style="display: none;">
+                                    <h4>Flujo / Caudal</h4>
+                                    <p class="stat-value" id="stat-flow">-- LPM</p>
+                                    <span class="stat-lbl" id="stat-lbl-flow">Límite: -- LPM</span>
+                                </div>
+                                <div class="stat-card" id="card-level" style="display: none;">
+                                    <h4>Nivel de Fluido</h4>
+                                    <p class="stat-value" id="stat-level">-- %</p>
+                                    <span class="stat-lbl" id="stat-lbl-level">Límite: -- %</span>
+                                </div>
+                                <div class="stat-card" id="card-voltage" style="display: none;">
+                                    <h4>Voltaje de Bus</h4>
+                                    <p class="stat-value" id="stat-voltage">-- V</p>
+                                    <span class="stat-lbl" id="stat-lbl-voltage">Límite: -- V</span>
+                                </div>
+                                <div class="stat-card" id="card-wear" style="display: none;">
+                                    <h4>Desgaste Herramienta</h4>
+                                    <p class="stat-value" id="stat-wear">-- min</p>
+                                    <span class="stat-lbl" id="stat-lbl-wear">Límite: -- min</span>
+                                </div>
+                            </div>
+
+                            <!-- Chart row -->
+                            <div class="sfa-chart-container">
+                                <div class="chart-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                                    <h4 id="sfa-chart-title">Visualización de Señal Purificada Espectral</h4>
+                                    <div class="chart-tabs no-print" style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.2rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <button type="button" class="chart-tab-btn active" id="tab-btn-spectral" style="background: rgba(197, 168, 128, 0.1); border: 1px solid var(--color-primary-gold); color: var(--color-primary-gold); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-accent); font-weight: bold; cursor: pointer; transition: all 0.3s;">Espectro SFA</button>
+                                        <button type="button" class="chart-tab-btn" id="tab-btn-degradation" style="background: transparent; border: 1px solid transparent; color: var(--color-text-gray); padding: 0.3rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-family: var(--font-accent); font-weight: bold; cursor: pointer; transition: all 0.3s;">Degradación Proyectada</button>
+                                    </div>
+                                </div>
+                                <div class="canvas-wrapper" style="position: relative;">
+                                    <canvas id="sfa-chart-canvas" class="sfa-chart-canvas"></canvas>
+                                    <canvas id="degradation-chart-canvas" class="sfa-chart-canvas" style="display: none;"></canvas>
+                                </div>
+                                <!-- Degradación projection text box below canvas -->
+                                <div id="degradation-projection-alert" class="degradation-projection-alert no-print" style="display: none; margin-top: 1rem; border: 1px dashed rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.03); padding: 0.8rem; border-radius: 6px; font-size: 0.8rem; color: var(--color-text-light); text-align: left; font-family: var(--font-main); align-items: center; gap: 0.5rem;">
+                                    <span style="color: #f59e0b; font-weight: bold;">📈 Pronóstico SFA:</span>
+                                    <span id="degradation-alert-text">Cargando proyección...</span>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Current Alert Box -->
+                            <div id="sfa-current-alert-box" class="current-alert-box" style="display: none;">
+                                <div class="alert-icon-wrapper">
+                                    <span id="sfa-current-alert-dot" class="alert-icon-dot pulsing-orange"></span>
+                                </div>
+                                <div class="alert-content">
+                                    <strong class="alert-title">Alerta de Consumo Eléctrico</strong>
+                                    <p class="alert-desc" id="sfa-current-alert-text">--</p>
+                                </div>
+                            </div>
+
+                            <!-- Diagnosis details & recommendations -->
+                            <div class="sfa-diagnosis-grid">
+                                <div class="diagnosis-text-card">
+                                    <h4><span class="icon-indicator"></span> Diagnóstico Espectral SFA</h4>
+                                    <p id="sfa-diagnosis-text">
+                                        --
+                                    </p>
+                                </div>
+                                <div class="recommendations-card" id="sfa-recommendations-card">
+                                    <h4>Acciones de Mantenimiento Recomendadas</h4>
+                                    <ul id="sfa-recommendations-list" class="rec-list">
+                                        <li>--</li>
+                                    </ul>
+                                    <button type="button" class="btn-pdf-accion no-print" id="btn-pdf-action" style="margin-top: 1rem; width: 100%;">
+                                        <svg viewBox="0 0 24 24" class="btn-icon" style="width: 14px; height: 14px; fill: currentColor; margin-right: 6px; display: inline-block; vertical-align: middle;">
+                                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                        </svg>
+                                        Generar PDF de Acción
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Certification and Validation Block -->
+                            <div class="sfa-validation-footer">
+                                <div class="sfa-certification-seal">
+                                    <div class="seal-badge">SFA</div>
+                                    <div class="seal-content">
+                                        <span class="seal-title">CERTIFICACIÓN DE SEÑAL SFA</span>
+                                        <p class="seal-desc">Filtro Espectral SFA calibrado a frecuencia base de <span id="seal-freq">7.25</span> Hz con factor fractal matemático &lambda; = 1.618. Procesamiento de ruido crudo ejecutado mediante algoritmo de purificación geométrica sin interferencia en los sistemas físicos.</p>
+                                    </div>
+                                </div>
+                                <div class="sfa-signature-block">
+                                    <span class="signature-title">VALIDACIÓN Y FIRMA DIGITAL</span>
+                                    <div class="signature-box">
+                                        <div class="sig-lines">
+                                            <span class="sig-line">VALIDADO POR AUTOMATIZACIÓN CORE</span>
+                                            <span class="sig-line bold">AUREA SYSTEMS V8.7</span>
+                                        </div>
+                                        <div class="sig-status">
+                                            <span class="status-indicator-dot pulsing"></span>
+                                            ESTADO DEL NÚCLEO: CALIBRADO
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action buttons for reports -->
+                            <div class="sfa-report-actions">
+                                <button type="button" class="btn btn-gold" id="btn-download-report">
+                                    <svg viewBox="0 0 24 24" class="btn-icon">
+                                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                    </svg> Descargar Reporte (.TXT)
+                                </button>
+                                <button type="button" class="btn btn-outline" id="btn-print-report">
+                                    <svg viewBox="0 0 24 24" class="btn-icon">
+                                        <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
+                                    </svg> Imprimir Reporte / PDF
+                                </button>
+                                <a href="motor_scada.py" download class="btn btn-outline" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <svg viewBox="0 0 24 24" class="btn-icon" style="width: 16px; height: 16px; fill: currentColor;">
+                                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                                    </svg> Script de Escritorio (Python)
+                                </a>
+                            </div>
+                            
+                            <!-- Feedback System -->
+                            <div class="sfa-feedback-section" id="sfa-feedback-card">
+                                <h3 class="feedback-title">
+                                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor; display: inline-block; vertical-align: middle;">
+                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                    </svg> Calibración de Núcleo y Retroalimentación
+                                </h3>
+                                <p class="feedback-subtitle">Ayúdanos a perfeccionar el motor de Sintonización Fractal de Armónicos.</p>
+                                
+                                <div class="feedback-grid">
+                                    <div class="feedback-item">
+                                        <label class="feedback-label">¿El diagnóstico fue acertado?</label>
+                                        <div class="accuracy-toggle">
+                                            <button type="button" class="btn-toggle active" data-value="si" id="btn-accuracy-yes">
+                                                <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Sí
+                                            </button>
+                                            <button type="button" class="btn-toggle" data-value="no" id="btn-accuracy-no">
+                                                <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> No
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="feedback-item">
+                                        <label class="feedback-label">Calificación del Diagnóstico</label>
+                                        <div class="star-rating" id="feedback-stars">
+                                            <span class="star active" data-rating="1">&#9733;</span>
+                                            <span class="star active" data-rating="2">&#9733;</span>
+                                            <span class="star active" data-rating="3">&#9733;</span>
+                                            <span class="star active" data-rating="4">&#9733;</span>
+                                            <span class="star active" data-rating="5">&#9733;</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="feedback-item full-width">
+                                        <label class="feedback-label" for="feedback-comments">Comentarios y Observaciones</label>
+                                        <textarea id="feedback-comments" class="feedback-textarea" placeholder="Describe el comportamiento de tu máquina, holguras mecánicas o cualquier observación del espectro..." rows="3"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="feedback-submit-section">
+                                    <p class="feedback-disclaimer">
+                                        Al enviar este comentario, confirmas que estás evaluando una versión de prueba y que tus observaciones nos ayudarán a calibrar el núcleo de Áurea Systems.
+                                    </p>
+                                    <button type="button" class="btn btn-gold" id="btn-submit-feedback">
+                                        Enviar Retroalimentación ⚡
+                                    </button>
+                                </div>
+                                
+                                <div id="feedback-success-message" class="feedback-success-toast" style="display: none;">
+                                    <svg class="success-icon" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                    </svg>
+                                    <span>Retroalimentación enviada con éxito. ¡Gracias por calibrar el núcleo!</span>
+                                </div>
+                            </div>
+                        </div>
+                        </div> <!-- Closing of sfa-step-3-results -->
+                    </div> <!-- Closing of sfa-workspace-wrapper -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN NUEVA: EL MOTOR SFA EN ACCIÓN (LÍNEA DE PROCESAMIENTO FLUX) -->
+        <section id="caso-practico" class="caso-practico-section content-section alt-bg scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">FLUJO SPECTRAL</div>
+                <h2 class="section-heading">📊 El Motor SFA en Acción: De Datos Crudos a Instrucciones Claras</h2>
+                <p class="section-intro" style="max-width: 800px; margin: 0 auto 3rem auto; text-align: center;">
+                    Vea cómo nuestra plataforma procesa el ruido físico y lo convierte en decisiones operativas claras antes de adquirir una suscripción.
+                </p>
+                
+                <div class="sfa-process-timeline">
+                    <!-- Paso 1: Entrada de Datos -->
+                    <div class="sfa-process-step">
+                        <div class="sfa-step-icon">
+                            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: none; stroke: var(--color-primary-gold); stroke-width: 1.5; filter: drop-shadow(0 0 4px rgba(197, 168, 128, 0.2));">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12" stroke="var(--color-primary-gold)" stroke-width="1.5" stroke-linecap="round"/>
+                                <polyline points="9 15 12 12 15 15" stroke="var(--color-primary-gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <span class="sfa-step-title">Entrada de Datos (El Problema)</span>
+                        <h3 class="sfa-step-subtitle">Ficheros Crudos de PLC</h3>
+                        
+                        <div class="sfa-mini-visual">
+                            <div class="visual-raw-csv">
+                                <div class="csv-row-sim header">
+                                    <span>Vib(mm/s)</span><span>Temp(°C)</span><span>Pres(bar)</span>
+                                </div>
+                                <div class="csv-row-sim">
+                                    <span class="c-red">1.84 mm/s</span><span class="c-gray">78.5 °C</span><span class="c-gray">4.5 bar</span>
+                                </div>
+                                <div class="csv-row-sim">
+                                    <span class="c-red">2.12 mm/s</span><span class="c-gray">78.8 °C</span><span class="c-gray">4.4 bar</span>
+                                </div>
+                                <div class="csv-row-sim">
+                                    <span class="c-red">1.95 mm/s</span><span class="c-gray">79.2 °C</span><span class="c-gray">4.2 bar</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="sfa-step-desc">Sábanas de miles de filas con ruido electromagnético de planta, indescifrables a simple vista en Excel.</p>
+                    </div>
+                    
+                    <!-- Conector 1 -->
+                    <div class="sfa-process-connector">
+                        <svg viewBox="0 0 24 24" class="sfa-connector-svg">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Paso 2: El Motor Spectral SFA -->
+                    <div class="sfa-process-step">
+                        <div class="sfa-step-icon" style="height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+                            <!-- Micro Golden Spiral Icon -->
+                            <svg viewBox="0 0 34 55" style="width: 26px; height: 42px; filter: drop-shadow(0 0 4px var(--color-primary-gold));">
+                                <path d="M 34,0 A 34,34 0 0,0 0,34 A 21,21 0 0,0 21,55 A 13,13 0 0,0 34,42 A 8,8 0 0,0 26,34 A 5,5 0 0,0 21,39 A 3,3 0 0,0 24,42 A 2,2 0 0,0 26,40" style="fill: none; stroke: var(--color-primary-gold); stroke-width: 2.5;" />
+                            </svg>
+                        </div>
+                        <span class="sfa-step-title">Motor Spectral SFA (La Solución)</span>
+                        <h3 class="sfa-step-subtitle">Sintonización Fractal</h3>
+                        
+                        <div class="sfa-mini-visual">
+                            <svg viewBox="0 0 200 100" class="visual-oscilloscope">
+                                <!-- Grid Lines -->
+                                <line x1="0" y1="50" x2="200" y2="50" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3"/>
+                                <line x1="100" y1="0" x2="100" y2="100" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3"/>
+                                <!-- Noise Wave (faint red) -->
+                                <path d="M 0 50 Q 15 20 30 75 T 60 40 T 90 80 T 120 30 T 150 70 T 180 35 T 200 50" fill="none" class="osci-wave-noise" />
+                                <path d="M 0 45 Q 10 75 25 35 T 50 65 T 75 25 T 100 75 T 125 45 T 150 85 T 175 35 T 200 45" fill="none" class="osci-wave-noise" />
+                                <!-- Purified Golden Wave at 7.25 Hz -->
+                                <path d="M 0 50 Q 25 15 50 50 T 100 50 T 150 50 T 200 50" fill="none" class="osci-wave-clean" />
+                                <!-- Highlight frequency peak indicator -->
+                                <circle cx="50" cy="15" r="4" fill="#fff" />
+                                <text x="50" y="32" fill="var(--color-primary-gold)" font-size="8" font-family="var(--font-accent)" text-anchor="middle" font-weight="bold">7.25 Hz</text>
+                            </svg>
+                        </div>
+                        
+                        <p class="sfa-step-desc">El algoritmo aísla las micro-oscilaciones periódicas cíclicas, calcula el estrés mecánico y filtra el ruido fractal (fbase = 7.25 Hz).</p>
+                    </div>
+                    
+                    <!-- Conector 2 -->
+                    <div class="sfa-process-connector">
+                        <svg viewBox="0 0 24 24" class="sfa-connector-svg">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    
+                    <!-- Paso 3: Diagnóstico Final -->
+                    <div class="sfa-process-step">
+                        <div class="sfa-step-icon">
+                            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: none; stroke: var(--color-primary-gold); stroke-width: 1.5; filter: drop-shadow(0 0 4px rgba(197, 168, 128, 0.2));">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" fill="rgba(10,10,15,0.8)" stroke="var(--color-primary-gold)" stroke-width="1.5"/>
+                                <path d="M9 14h6M9 18h4M9 10h6" stroke="var(--color-primary-gold)" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span class="sfa-step-title">Diagnóstico Final (El Resultado)</span>
+                        <h3 class="sfa-step-subtitle">Reporte Técnico Claro</h3>
+                        
+                        <div class="sfa-mini-visual">
+                            <div class="visual-mini-report">
+                                <div class="mini-health-circle-wrapper">
+                                    <svg class="mini-health-svg">
+                                        <circle cx="30" cy="30" r="25" class="mini-health-bg" />
+                                        <circle cx="30" cy="30" r="25" class="mini-health-fill" />
+                                    </svg>
+                                    <div class="mini-health-text">44%</div>
+                                </div>
+                                <div class="mini-orders-list">
+                                    <div class="mini-order-item">
+                                        <span>🔧 Lubricar Cojinetes</span>
+                                    </div>
+                                    <div class="mini-order-item">
+                                        <span>⚙️ Alinear Rotor</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="sfa-step-desc">El motor calcula la severidad de fatiga y redacta automáticamente las órdenes de trabajo preventivas y de lubricación en segundos.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TECNOLOGÍA SFA Y CASOS DE USO -->
+        <section id="servicios" class="content-section alt-bg scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">TECNOLOGÍA</div>
+                <h2 class="section-heading">Motor SFA en Plantas Industriales</h2>
+                <p class="section-intro">
+                    Procesamos ráfagas continuas de telemetría de sensores y Controladores Lógicos Programables (PLCs) para predecir fallas mediante análisis espectral y filtros de atenuación de ruido fractal.
+                </p>
+
+                <!-- 3 Layers of Architecture -->
+                <div class="architecture-flow">
+                    <h3 class="flow-title">Arquitectura de Conexión de Datos</h3>
+                    <div class="flow-grid">
+                        <div class="flow-step">
+                            <div class="step-num">Capa 1</div>
+                            <h4>Captura (Sensores)</h4>
+                            <p>Variables físicas capturadas en tiempo real en motores y bombas mediante sensores analógicos e inteligentes (protocolos IO-Link, HART).</p>
+                        </div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="flow-step">
+                            <div class="step-num">Capa 2</div>
+                            <h4>Concentración (PLCs)</h4>
+                            <p>PLCs de planta (Allen-Bradley, Siemens, Omron) empaquetan registros y los transmiten por buses industriales (Modbus TCP/IP, OPC UA, MQTT).</p>
+                        </div>
+                        <div class="flow-arrow">➔</div>
+                        <div class="flow-step">
+                            <div class="step-num">Capa 3</div>
+                            <h4>Procesamiento SFA <span class="tooltip-trigger" data-tooltip-text="Algoritmo que descompone señales temporales en componentes auto-similares para identificar fatigas mecánicas imperceptibles para Fourier standard.">?</span></h4>
+                            <p>Nuestro motor analiza el torrente de datos crudos aplicando atenuación de ruido fractal para diagnosticar la salud de la maquinaria.</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- El simulador logístico ha sido removido de la interfaz para enfoque exclusivo en SCADA -->
+                <h3 class="table-section-title">Matriz de Variables de Sensores y Respuestas SFA</h3>
+                <div class="table-responsive-wrapper">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo de Sensor</th>
+                                <th>Variable de Registro en PLC</th>
+                                <th>Frecuencia Analizada</th>
+                                <th>Acción Correctiva / Predictiva SFA</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-bold text-white">Acelerómetros (Vibración)</td>
+                                <td>Entrada Analógica Rápida</td>
+                                <td><span class="badge badge-high">Alta (kHz)</span></td>
+                                <td>Detección de micro-fisuras en rodamientos y holguras mecánicas.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-white">Tacómetros / Encoders (RPM)</td>
+                                <td>Entrada de Pulsos / Canal HSC</td>
+                                <td><span class="badge badge-medium">Media (Hz)</span></td>
+                                <td>Seguimiento de velocidad de husillo CNC, patinamiento y sobrecarga.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-white">Transmisores de Presión</td>
+                                <td>Registro Modbus / Palabra IW</td>
+                                <td><span class="badge badge-medium">Media (Hz)</span></td>
+                                <td>Identificación de picos transitorios, cavitación y golpes de ariete.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-white">Sensores de Flujo / Caudal</td>
+                                <td>Señal analógica 4-20mA / VFD</td>
+                                <td><span class="badge badge-low">Baja (Ciclos/min)</span></td>
+                                <td>Monitoreo y balance de caudal de salida en sistemas de bombeo.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-white">Sensores de Corriente (CTs)</td>
+                                <td>Datos de Variador vía OPC UA</td>
+                                <td><span class="badge badge-medium">50 / 60 Hz + Armónicos</span></td>
+                                <td>Diagnóstico de fallas en barras del rotor y desequilibrio de fases.</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-white">Termocoples / RTD (Temp)</td>
+                                <td>Bloque de Datos Común (DB)</td>
+                                <td><span class="badge badge-low">Baja (Ciclos/min)</span></td>
+                                <td>Modelado de fatiga térmica y deriva de calibración del sensor.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ECOSISTEMA DUAL CONTAINER -->
+            <div id="ecosistema" class="ecosistema-section scroll-reveal">
+                <!-- Floating status label seen in screenshot -->
+                <div class="hero-status-badge">
+                    <span class="status-indicator-dot pulsing"></span>
+                    <span class="status-text">Núcleo: Calibrado | Ecuación 3 Activa</span>
+                </div>
+
+                <h2 class="section-title">ECOSISTEMA DUAL</h2>
+                <p style="color: var(--color-text-gray); font-size: 0.88rem; max-width: 600px; margin: -1.2rem auto 2.5rem; font-family: var(--font-accent); letter-spacing: 0.05em; line-height: 1.6;">
+                    Diagnóstico predictivo industrial y acción social. <a href="#sfa-plataforma" class="text-gold" style="text-decoration: underline; font-weight: 600; transition: color 0.3s;" onmouseover="this.style.color='var(--color-gold-hover)'" onmouseout="this.style.color='var(--color-primary-gold)'">Pruebe gratis el motor Club 33</a>.
+                </p>
+                
+                <div class="ecosistema-grid">
+                    <!-- Left Card: Software Avanzado -->
+                    <div class="ecosistema-card card-commercial">
+                        <div class="card-glow"></div>
+                        <h3 class="card-title">SOFTWARE AVANZADO<br><span class="card-subtitle-type">(COMERCIAL)</span></h3>
+                        <ul class="card-list">
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Diagnóstico SCADA</span>
+                            </li>
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-1.47-1.99-2.35-4.43-2.35-7.07 0-6.63 5.37-12 12-12s12 5.37 12 12c0 2.64-.88 5.08-2.35 7.07l-1.62-1.79C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9zm0 4c-2.76 0-5 2.24-5 5 0 1.18.41 2.26 1.09 3.11l1.45-1.6C9.25 13.06 9 12.56 9 12c0-1.66 1.34-3 3-3s3 1.34 3 3c0 .56-.25 1.06-.64 1.51l1.45 1.6C16.59 14.26 17 13.18 17 12c0-2.76-2.24-5-5-5zm0 3c-1.1 0-2 .9-2 2 0 .34.08.66.23.94l1.37-1.51c-.04-.04-.08-.09-.08-.15.01-.27.23-.48.5-.48.27 0 .49.21.5.48-.02.06-.06.11-.08.15l1.37 1.51c.15-.28.23-.6.23-.94 0-1.1-.9-2-2-2z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Monitoreo de Sensores</span>
+                            </li>
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3-.5-3-3s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Industria 4.0</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Right Card: Fundación Áurea -->
+                    <div class="ecosistema-card card-social">
+                        <div class="card-glow"></div>
+                        <h3 class="card-title">FUNDACIÓN ÁUREA<br><span class="card-subtitle-type">(IMPACTO SOCIAL)</span></h3>
+                        <ul class="card-list">
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper icon-social">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Monitoreo Comunitario</span>
+                            </li>
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper icon-social">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Eficiencia Energética</span>
+                            </li>
+                            <li class="card-list-item">
+                                <span class="item-icon-wrapper icon-social">
+                                    <svg viewBox="0 0 24 24" class="item-icon">
+                                        <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.89 12.5L12 15.82l6.11-3.32L12 9.18 5.89 12.5z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-text">Academia Áurea</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MISIÓN Y FILOSOFÍA -->
+        <section id="mision" class="content-section alt-bg scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">FILOSOFÍA</div>
+                <h2 class="section-heading">Nuestra Misión</h2>
+                <div class="content-grid">
+                    <div class="text-block">
+                        <p class="lead-text">
+                            En Áurea Systems, creemos que el universo se rige por patrones matemáticos y proporciones armónicas. Nuestra misión es identificar estas estructuras subyacentes para resolver los problemas operativos más complejos de la sociedad y la industria.
+                        </p>
+                        <p>
+                            Utilizando la geometría sagrada y algoritmos avanzados inspirados en la naturaleza, canalizamos la eficiencia matemática para monitorear el desgaste físico, optimizar recursos computacionales y equilibrar flujos financieros de manera sostenible y limpia.
+                        </p>
+                    </div>
+                    <div class="visual-block">
+                        <div class="geometric-shape shape-cube">
+                            <div class="face front"></div>
+                            <div class="face back"></div>
+                            <div class="face left"></div>
+                            <div class="face right"></div>
+                            <div class="face top"></div>
+                            <div class="face bottom"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISIÓN Y VALORES -->
+        <section id="vision" class="content-section scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">FUTURO</div>
+                <h2 class="section-heading">Nuestra Visión y Valores</h2>
+                <div class="content-grid grid-reverse">
+                    <div class="text-block">
+                        <p class="lead-text">
+                            Aspiramos a ser el referente mundial en computación armónica, demostrando que el crecimiento comercial y el impacto social son complementarios.
+                        </p>
+                        <p>
+                            Buscamos un futuro donde los sistemas de información operen en perfecta consonancia con el entorno, minimizando el desperdicio energético, democratizando el acceso a la educación tecnológica y respondiendo con precisión ante crisis humanitarias mundiales.
+                        </p>
+                    </div>
+                    <div class="visual-block">
+                        <div class="geometric-shape shape-octahedron">
+                            <div class="triangle t1"></div>
+                            <div class="triangle t2"></div>
+                            <div class="triangle t3"></div>
+                            <div class="triangle t4"></div>
+                            <div class="triangle t5"></div>
+                            <div class="triangle t6"></div>
+                            <div class="triangle t7"></div>
+                            <div class="triangle t8"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="valores-grid" style="margin-top: 5rem;">
+                    <div class="valor-card">
+                        <div class="valor-header">
+                            <span class="valor-num text-gold">01</span>
+                            <h3>Economía Analítica</h3>
+                        </div>
+                        <p>Resolvemos la complejidad con la mínima cantidad de recursos informáticos y operativos. Honramos el código lineal en un solo hilo: la verdadera inteligencia es ligera y no requiere de fuerza bruta ni desperdicio energético.</p>
+                    </div>
+                    <div class="valor-card">
+                        <div class="valor-header">
+                            <span class="valor-num text-gold">02</span>
+                            <h3>Enfoque Estoico</h3>
+                        </div>
+                        <p>Operamos bajo la fría precisión de nuestro algoritmo. El núcleo humano aprende a ignorar la estática, el pánico del mercado y las fluctuaciones externas para concentrarse únicamente en el control directo.</p>
+                    </div>
+                    <div class="valor-card">
+                        <div class="valor-header">
+                            <span class="valor-num text-gold">03</span>
+                            <h3>Propósito Consecuente</h3>
+                        </div>
+                        <p>El éxito de nuestras licencias comerciales es un medio, no un fin. La riqueza pertenece al desarrollo social; medimos nuestro éxito en infraestructura civil protegida, mentes inspiradas y tecnologías de diagnóstico limpio, no en capital acumulado.</p>
+                    </div>
+                    <div class="valor-card">
+                        <div class="valor-header">
+                            <span class="valor-num text-gold">04</span>
+                            <h3>Armonía Geométrica</h3>
+                        </div>
+                        <p>Respetamos las proporciones intrínsecas de la naturaleza (Proporción Áurea y la sucesión de Fibonacci) como guías maestras. Si un proceso de ingeniería altera el orden natural del entorno, es inmediatamente descartado.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN NUEVA: COMPATIBILIDAD ELECTROMECÁNICA UNIVERSAL -->
+        <section id="compatibilidad" class="compatibilidad-section content-section scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">INTEGRACIÓN</div>
+                <h2 class="section-heading">⚙️ Compatibilidad Electromecánica Universal</h2>
+                <p class="section-intro" style="max-width: 800px; margin: 0 auto 3rem auto; text-align: center;">
+                    Nuestro motor procesa señales analógicas estándar (4-20 mA, -10V a +10V) de cualquier marca de PLC (Siemens, Allen-Bradley, Schneider) monitoreando variables universales de la industria:
+                </p>
+                
+                <div class="compatibilidad-grid">
+                    <!-- Mecánica -->
+                    <div class="compatibilidad-card">
+                        <div class="compatibilidad-card-icon">🔧</div>
+                        <h3>Mecánica</h3>
+                        <p>Vibración Promedio (RMS / mm/s) y holguras estructurales de la máquina.</p>
+                    </div>
+                    
+                    <!-- Eléctrica -->
+                    <div class="compatibilidad-card">
+                        <div class="compatibilidad-card-icon">⚡</div>
+                        <h3>Eléctrica</h3>
+                        <p>Consumo de Corriente (Amperaje) y picos de carga eléctrica en el motor.</p>
+                    </div>
+                    
+                    <!-- Térmica -->
+                    <div class="compatibilidad-card">
+                        <div class="compatibilidad-card-icon">🌡️</div>
+                        <h3>Térmica</h3>
+                        <p>Degradación por Temperatura (°C) y fatiga térmica de aislamientos.</p>
+                    </div>
+                    
+                    <!-- Fluidos -->
+                    <div class="compatibilidad-card">
+                        <div class="compatibilidad-card-icon">💧</div>
+                        <h3>Fluidos</h3>
+                        <p>Fluctuación de Presión (bar / PSI), cavitación y flujo del sistema.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FUNDACIÓN ÁUREA SYSTEMS -->
+        <section id="fundacion" class="content-section scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">IMPACTO</div>
+                <h2 class="section-heading">Los Tres Pilares de la Fundación</h2>
+                <p class="section-intro">
+                    Financiada directamente por las utilidades de nuestra división de software comercial, la Fundación Áurea Systems traduce la precisión matemática en auxilio humanitario directo.
+                </p>
+                <div class="fundacion-pillars-grid">
+                    <div class="pillar-card">
+                        <div class="pillar-icon-box">
+                            <span class="pillar-letter text-gold">A</span>
+                        </div>
+                        <h3>Monitoreo Espectral Comunitario</h3>
+                        <p>Donación e instalación de sistemas de alerta temprana basados en micro-sensores de bajo costo para predecir fallas catastróficas en redes de agua potable, bombas hidráulicas comunitarias y plantas de tratamiento en sectores vulnerables.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="pillar-icon-box">
+                            <span class="pillar-letter text-gold">B</span>
+                        </div>
+                        <h3>Eficiencia Energética de Recursos Comunes</h3>
+                        <p>Donación de auditorías de espectro de frecuencia y análisis de vibraciones en sensores para infraestructura civil desprotegida, como orfanatos, asilos y hospitales públicos. Reducimos sus costos de operación eléctrica para desviar esos recursos a la atención directa.</p>
+                    </div>
+                    <div class="pillar-card">
+                        <div class="pillar-icon-box">
+                            <span class="pillar-letter text-gold">C</span>
+                        </div>
+                        <h3>Academia Áurea (Democratización)</h3>
+                        <p>Creación de semilleros de educación lógica independientes para jóvenes de bajos recursos. Enseñamos ciencia y programación desde la intuición, demostrando que la relación matemática con la naturaleza es accesible para cualquiera.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ACADEMIA SECTION -->
+        <section id="academia" class="content-section alt-bg scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">CONOCIMIENTO</div>
+                <h2 class="section-heading">Academia Áurea</h2>
+                <div class="content-grid-centered">
+                    <div class="text-block text-center-block">
+                        <p class="lead-text">
+                            Educamos a los optimizadores del futuro combinando rigor científico con responsabilidad ética.
+                        </p>
+                        <p>
+                            A través de nuestro semillero de educación lógica, enseñamos programación, matemáticas de optimización y algoritmos fractales. Los estudiantes de bajos recursos reciben becas completas y acceden a oportunidades laborales en proyectos prácticos de la Fundación y de la división de desarrollo de Áurea Systems.
+                        </p>
+                        <a href="#contacto" class="btn btn-gold btn-small">Solicitar Ingreso / Beca</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACTO SECTION -->
+        <section id="contacto" class="content-section scroll-reveal">
+            <div class="section-container">
+                <div class="section-badge">CONEXIÓN</div>
+                <h2 class="section-heading">Ponte en Contacto</h2>
+                <p class="section-intro">
+                    ¿Quieres integrar el motor SFA en tu planta industrial o colaborar con las iniciativas humanitarias de la Fundación? Escríbenos.
+                </p>
+                <div class="contact-wrapper">
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Nombre</label>
+                                <input type="text" id="name" required placeholder="Tu nombre completo">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Correo Electrónico</label>
+                                <input type="email" id="email" required placeholder="correo@ejemplo.com">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Asunto</label>
+                            <input type="text" id="subject" required placeholder="¿En qué podemos ayudarte?">
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Mensaje</label>
+                            <textarea id="message" rows="5" required placeholder="Escribe tu mensaje detalladamente..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-gold btn-submit">Enviar Mensaje</button>
+                    </form>
+                </div>
+            </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                <span class="text-gold font-montserrat font-bold">ÁUREA</span> SYSTEMS
+            </div>
+            <div class="footer-links-group">
+                <p class="footer-copy">&copy; 2026 Áurea Systems. Todos los derechos reservados. "La estática del mundo se disuelve cuando sintonizamos la frecuencia correcta."</p>
+                <a href="privacidad.html" class="footer-link">POLÍTICA DE PRIVACIDAD</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/app.js?v=3.0.1"></script>
+</body>
+</html>

@@ -214,5 +214,40 @@ class TestSfaProcessing(unittest.TestCase):
         self.assertGreaterEqual(limits["warningTemp"], 75.0)
         self.assertGreaterEqual(limits["warningCurrent"], 35.0)
 
+    def test_backend_adaptive_mode(self):
+        """Test asset classification and synonyms based on f_base/dominant frequency"""
+        # Case A: f_base >= 20.0 Hz -> Motor Eléctrico / Bomba Rotativa (FLUID_HYDRAULIC)
+        csv_lines = ["time,vibration,temperature,pressure,current,flow,level,voltage"]
+        for i in range(100):
+            t = i * 0.01
+            val = 1.0 * math.sin(2.0 * math.pi * 25.0 * t)
+            csv_lines.append(f"{t:.2f},{val:.4f},50.0,5.5,11.0,60.0,85.0,240.0")
+        csv_text = "\n".join(csv_lines) + "\n"
+        result = procesar_bloque_armonico(csv_text=csv_text, lambda_val=1.0, offset_val=0.0)
+        results = result["results"]
+        self.assertEqual(results["detectedMode"], "FLUID_HYDRAULIC")
+        self.assertEqual(results["assetTypeName"], "Motor Eléctrico / Bomba Rotativa")
+        self.assertTrue(results["variables_present"]["flow"])
+        self.assertTrue(results["variables_present"]["level"])
+        self.assertTrue(results["variables_present"]["voltage"])
+        self.assertIn("warningFlow", results["limits"])
+
+        # Case B: f_base < 20.0 Hz -> Husillo CNC / Cortador (CNC_MOTOR)
+        csv_lines = ["time,vibration,temperature,current,rpm,torque,tool_wear"]
+        for i in range(100):
+            t = i * 0.01
+            val = 1.0 * math.sin(2.0 * math.pi * 7.25 * t)
+            csv_lines.append(f"{t:.2f},{val:.4f},50.0,11.0,1500.0,40.0,50.0")
+        csv_text = "\n".join(csv_lines) + "\n"
+        result = procesar_bloque_armonico(csv_text=csv_text, lambda_val=1.0, offset_val=0.0)
+        results = result["results"]
+        self.assertEqual(results["detectedMode"], "CNC_MOTOR")
+        self.assertEqual(results["assetTypeName"], "Husillo CNC / Cortador")
+        self.assertTrue(results["variables_present"]["rpm"])
+        self.assertTrue(results["variables_present"]["torque"])
+        self.assertTrue(results["variables_present"]["tool_wear"])
+        self.assertFalse(results["variables_present"]["pressure"])
+        self.assertIn("warningRpm", results["limits"])
+
 if __name__ == "__main__":
     unittest.main()
