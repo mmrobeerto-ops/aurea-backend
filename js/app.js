@@ -3196,132 +3196,142 @@ document.addEventListener('DOMContentLoaded', () => {
             const lblVoltage = document.getElementById('stat-lbl-voltage');
             if (lblVoltage) lblVoltage.textContent = isApp('voltage') ? `Límite: ${limitWarningVoltage.toFixed(1)} V` : 'Límite: N/A';
 
+            // Safe class list adder
+            const addElClass = (id, cls) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add(cls);
+            };
+            const statObj = results.stats || {};
+
             // Check vibration threshold
             if (isApp('vibration')) {
-                if (results.stats.rmsVib > limitDangerVib) {
-                    document.getElementById('stat-vib').classList.add('text-red');
-                } else if (results.stats.rmsVib > limitWarningVib) {
-                    document.getElementById('stat-vib').classList.add('text-orange');
+                const val = statObj.rmsVib !== undefined ? statObj.rmsVib : statObj.avgVib;
+                if (val > limitDangerVib) {
+                    addElClass('stat-vib', 'text-red');
+                } else if (val > limitWarningVib) {
+                    addElClass('stat-vib', 'text-orange');
                 } else {
-                    document.getElementById('stat-vib').classList.add('text-blue');
+                    addElClass('stat-vib', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-vib').classList.add('text-gray');
+                addElClass('stat-vib', 'text-gray');
             }
 
             // Check temperature threshold
             if (isApp('temperature')) {
-                if (results.stats.maxTemp > limitDangerTemp) {
-                    document.getElementById('stat-temp').classList.add('text-red');
-                } else if (results.stats.maxTemp > limitWarningTemp) {
-                    document.getElementById('stat-temp').classList.add('text-orange');
+                const val = statObj.maxTemp !== undefined ? statObj.maxTemp : statObj.maxTempRaw;
+                if (val > limitDangerTemp) {
+                    addElClass('stat-temp', 'text-red');
+                } else if (val > limitWarningTemp) {
+                    addElClass('stat-temp', 'text-orange');
                 } else {
-                    document.getElementById('stat-temp').classList.add('text-blue');
+                    addElClass('stat-temp', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-temp').classList.add('text-gray');
+                addElClass('stat-temp', 'text-gray');
             }
 
             // Check pressure threshold (warn at 1.5 bar)
             if (isApp('pressure')) {
                 if (presDiffVal > 1.5) {
-                    document.getElementById('stat-pres').classList.add('text-red');
+                    addElClass('stat-pres', 'text-red');
                 } else {
-                    document.getElementById('stat-pres').classList.add('text-blue');
+                    addElClass('stat-pres', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-pres').classList.add('text-gray');
+                addElClass('stat-pres', 'text-gray');
             }
 
             // Check current threshold
             if (isApp('current')) {
-                if (results.stats.maxCurrentRaw > limitDangerCurrent) {
-                    document.getElementById('stat-current').classList.add('text-red');
-                } else if (results.stats.maxCurrentRaw > limitWarningCurrent) {
-                    document.getElementById('stat-current').classList.add('text-orange');
+                const val = statObj.maxCurrentRaw !== undefined ? statObj.maxCurrentRaw : statObj.maxCurrent;
+                if (val > limitDangerCurrent) {
+                    addElClass('stat-current', 'text-red');
+                } else if (val > limitWarningCurrent) {
+                    addElClass('stat-current', 'text-orange');
                 } else {
-                    document.getElementById('stat-current').classList.add('text-blue');
+                    addElClass('stat-current', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-current').classList.add('text-gray');
+                addElClass('stat-current', 'text-gray');
             }
 
             // Check RPM threshold
             if (isApp('rpm')) {
-                if (results.stats.maxRpm > limitDangerRpm) {
-                    document.getElementById('stat-rpm').classList.add('text-red');
-                } else if (results.stats.maxRpm > limitWarningRpm) {
-                    document.getElementById('stat-rpm').classList.add('text-orange');
+                if (statObj.maxRpm > limitDangerRpm) {
+                    addElClass('stat-rpm', 'text-red');
+                } else if (statObj.maxRpm > limitWarningRpm) {
+                    addElClass('stat-rpm', 'text-orange');
                 } else {
-                    document.getElementById('stat-rpm').classList.add('text-blue');
+                    addElClass('stat-rpm', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-rpm').classList.add('text-gray');
+                addElClass('stat-rpm', 'text-gray');
             }
 
             // Check Torque threshold
             if (isApp('torque')) {
-                if (results.stats.maxTorque > limitDangerTorque) {
-                    document.getElementById('stat-torque').classList.add('text-red');
-                } else if (results.stats.maxTorque > limitWarningTorque) {
-                    document.getElementById('stat-torque').classList.add('text-orange');
+                if (statObj.maxTorque > limitDangerTorque) {
+                    addElClass('stat-torque', 'text-red');
+                } else if (statObj.maxTorque > limitWarningTorque) {
+                    addElClass('stat-torque', 'text-orange');
                 } else {
-                    document.getElementById('stat-torque').classList.add('text-blue');
+                    addElClass('stat-torque', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-torque').classList.add('text-gray');
+                addElClass('stat-torque', 'text-gray');
             }
 
             // Check Wear threshold
             if (isApp('tool_wear')) {
-                if (results.stats.maxWear > limitDangerWear) {
-                    document.getElementById('stat-wear').classList.add('text-red');
-                } else if (results.stats.maxWear > limitWarningWear) {
-                    document.getElementById('stat-wear').classList.add('text-orange');
+                if (statObj.maxWear > limitDangerWear) {
+                    addElClass('stat-wear', 'text-red');
+                } else if (statObj.maxWear > limitWarningWear) {
+                    addElClass('stat-wear', 'text-orange');
                 } else {
-                    document.getElementById('stat-wear').classList.add('text-blue');
+                    addElClass('stat-wear', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-wear').classList.add('text-gray');
+                addElClass('stat-wear', 'text-gray');
             }
 
             // Check Flow threshold
             if (isApp('flow')) {
-                if (results.stats.maxFlow > limitDangerFlow) {
-                    document.getElementById('stat-flow').classList.add('text-red');
-                } else if (results.stats.maxFlow > limitWarningFlow) {
-                    document.getElementById('stat-flow').classList.add('text-orange');
+                if (statObj.maxFlow > limitDangerFlow) {
+                    addElClass('stat-flow', 'text-red');
+                } else if (statObj.maxFlow > limitWarningFlow) {
+                    addElClass('stat-flow', 'text-orange');
                 } else {
-                    document.getElementById('stat-flow').classList.add('text-blue');
+                    addElClass('stat-flow', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-flow').classList.add('text-gray');
+                addElClass('stat-flow', 'text-gray');
             }
 
             // Check Level threshold
             if (isApp('level')) {
-                if (results.stats.maxLevel > limitDangerLevel) {
-                    document.getElementById('stat-level').classList.add('text-red');
-                } else if (results.stats.maxLevel > limitWarningLevel) {
-                    document.getElementById('stat-level').classList.add('text-orange');
+                if (statObj.maxLevel > limitDangerLevel) {
+                    addElClass('stat-level', 'text-red');
+                } else if (statObj.maxLevel > limitWarningLevel) {
+                    addElClass('stat-level', 'text-orange');
                 } else {
-                    document.getElementById('stat-level').classList.add('text-blue');
+                    addElClass('stat-level', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-level').classList.add('text-gray');
+                addElClass('stat-level', 'text-gray');
             }
 
             // Check Voltage threshold
             if (isApp('voltage')) {
-                if (results.stats.maxVoltage > limitDangerVoltage) {
-                    document.getElementById('stat-voltage').classList.add('text-red');
-                } else if (results.stats.maxVoltage > limitWarningVoltage) {
-                    document.getElementById('stat-voltage').classList.add('text-orange');
+                if (statObj.maxVoltage > limitDangerVoltage) {
+                    addElClass('stat-voltage', 'text-red');
+                } else if (statObj.maxVoltage > limitWarningVoltage) {
+                    addElClass('stat-voltage', 'text-orange');
                 } else {
-                    document.getElementById('stat-voltage').classList.add('text-blue');
+                    addElClass('stat-voltage', 'text-blue');
                 }
             } else {
-                document.getElementById('stat-voltage').classList.add('text-gray');
+                addElClass('stat-voltage', 'text-gray');
             }
 
             // Recalculate stats grid columns & show/hide cards
