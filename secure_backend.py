@@ -999,7 +999,7 @@ def _procesar_un_activo_sfa(
         # --- PASO 5: Captura del Pico Absorbedor (Max) y Criterio de Disparo ---
         max_val = max(raw_values)
         
-        if max_val > limite_sfa:
+        if round(max_val, 4) > round(limite_sfa, 4):
             status_variable = "❌ Crítico"
             universal_alerts.append(
                 f"🚨 CRÍTICO: Exceso detectado en {col_name} (Máx: {max_val:.2f} | Límite SFA: {limite_sfa:.2f})"
