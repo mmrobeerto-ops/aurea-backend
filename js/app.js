@@ -666,18 +666,59 @@ class SFAEngine {
         const padRight = (str, len) => str.toString().padEnd(len, ' ');
         const rows = [];
         
-        const varsConfig = [
-            { key: 'vibration', name: 'Vibración Promedio (RMS)', val: s.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
-            { key: 'temperature', name: 'Temperatura Máxima', val: s.maxTempRaw || s.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: this.tempUnit || '°C', show: varsPresent.temperature },
-            { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
-            { key: 'current', name: 'Consumo Eléctrico', val: s.maxCurrentRaw || s.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
-            { key: 'rpm', name: 'Velocidad de Rotación', val: s.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
-            { key: 'torque', name: 'Torque del Husillo', val: s.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
-            { key: 'tool_wear', name: 'Desgaste Herramienta', val: s.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
-            { key: 'flow', name: 'Flujo / Caudal', val: s.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
-            { key: 'level', name: 'Nivel de Fluido', val: s.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
-            { key: 'voltage', name: 'Voltaje de Bus', val: s.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
-        ];
+        let varsConfig = [];
+        if (this.results.universal_columns) {
+            this.results.universal_columns.forEach(col => {
+                let matchedKey = col.name.toLowerCase();
+                if (matchedKey.includes('vib')) matchedKey = 'vibration';
+                else if (matchedKey.includes('temp')) matchedKey = 'temperature';
+                else if (matchedKey.includes('pres')) matchedKey = 'pressure';
+                else if (matchedKey.includes('curr') || matchedKey.includes('corr')) matchedKey = 'current';
+                else if (matchedKey.includes('rpm') || matchedKey.includes('speed')) matchedKey = 'rpm';
+                else if (matchedKey.includes('torq')) matchedKey = 'torque';
+                else if (matchedKey.includes('wear') || matchedKey.includes('desgaste')) matchedKey = 'tool_wear';
+                else if (matchedKey.includes('flow') || matchedKey.includes('caudal')) matchedKey = 'flow';
+                else if (matchedKey.includes('level') || matchedKey.includes('nivel')) matchedKey = 'level';
+                else if (matchedKey.includes('volt')) matchedKey = 'voltage';
+                else matchedKey = col.name;
+                
+                let displayUnit = '';
+                const nameLower = col.name.toLowerCase();
+                if (nameLower.includes('temp')) displayUnit = this.tempUnit || '°C';
+                else if (nameLower.includes('pres')) displayUnit = this.pressureUnit || 'bar';
+                else if (nameLower.includes('vib')) displayUnit = 'mm/s';
+                else if (nameLower.includes('curr') || nameLower.includes('corr')) displayUnit = 'A';
+                else if (nameLower.includes('volt')) displayUnit = 'V';
+                else if (nameLower.includes('rpm') || nameLower.includes('speed')) displayUnit = 'RPM';
+                else if (nameLower.includes('torq')) displayUnit = 'Nm';
+                else if (nameLower.includes('wear') || nameLower.includes('desgaste')) displayUnit = 'min';
+                else if (nameLower.includes('flow') || nameLower.includes('caudal')) displayUnit = 'LPM';
+                else if (nameLower.includes('level') || nameLower.includes('nivel')) displayUnit = '%';
+                
+                varsConfig.push({
+                    key: matchedKey,
+                    name: col.name,
+                    val: col.max,
+                    limit: col.limit_sfa,
+                    danger: col.limit_sfa,
+                    unit: displayUnit,
+                    show: true
+                });
+            });
+        } else {
+            varsConfig = [
+                { key: 'vibration', name: 'Vibración Promedio (RMS)', val: s.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
+                { key: 'temperature', name: 'Temperatura Máxima', val: s.maxTempRaw || s.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: this.tempUnit || '°C', show: varsPresent.temperature },
+                { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
+                { key: 'current', name: 'Consumo Eléctrico', val: s.maxCurrentRaw || s.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
+                { key: 'rpm', name: 'Velocidad de Rotación', val: s.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
+                { key: 'torque', name: 'Torque del Husillo', val: s.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
+                { key: 'tool_wear', name: 'Desgaste Herramienta', val: s.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
+                { key: 'flow', name: 'Flujo / Caudal', val: s.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
+                { key: 'level', name: 'Nivel de Fluido', val: s.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
+                { key: 'voltage', name: 'Voltaje de Bus', val: s.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
+            ];
+        }
 
         varsConfig.forEach(v => {
             if (v.show) {
@@ -3021,54 +3062,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Stats values
             const isApp = (key) => !results.variables_applicability || results.variables_applicability[key] !== 'not_applicable';
-            document.getElementById('stat-freq').textContent = `${results.targetFreq.toFixed(2)} Hz`;
-            const sealFreqEl = document.getElementById('seal-freq');
-            if (sealFreqEl) {
-                sealFreqEl.textContent = results.targetFreq.toFixed(2);
+            
+            const setElText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = text;
+            };
+            const safeFixed = (val, dec) => {
+                if (val === undefined || val === null || isNaN(val)) return '--';
+                return val.toFixed(dec);
+            };
+
+            if (results.targetFreq !== undefined) {
+                setElText('stat-freq', `${safeFixed(results.targetFreq, 2)} Hz`);
+                const sealFreqEl = document.getElementById('seal-freq');
+                if (sealFreqEl) {
+                    sealFreqEl.textContent = safeFixed(results.targetFreq, 2);
+                }
             }
             
-            if (varsPresent.vibration) {
-                document.getElementById('stat-vib').textContent = isApp('vibration') ? `${results.stats.rmsVib.toFixed(3)} mm/s` : 'N/A';
+            if (varsPresent.vibration && results.stats) {
+                const val = results.stats.rmsVib !== undefined ? results.stats.rmsVib : results.stats.avgVib;
+                setElText('stat-vib', isApp('vibration') && val !== undefined ? `${safeFixed(val, 3)} mm/s` : 'N/A');
             }
-            if (varsPresent.temperature) {
-                document.getElementById('stat-temp').textContent = isApp('temperature') ? `${results.stats.maxTempRaw.toFixed(1)} ${results.tempUnit || '°C'}` : 'N/A';
+            if (varsPresent.temperature && results.stats) {
+                const val = results.stats.maxTempRaw !== undefined ? results.stats.maxTempRaw : results.stats.maxTemp;
+                setElText('stat-temp', isApp('temperature') && val !== undefined ? `${safeFixed(val, 1)} ${results.tempUnit || '°C'}` : 'N/A');
             }
             
-            // Standardize display: convert to bar if it was psi and show both
-            const presDiffVal = results.stats.maxPres - results.stats.minPres;
-            if (varsPresent.pressure) {
+            if (varsPresent.pressure && results.stats) {
+                const maxP = results.stats.maxPres !== undefined ? results.stats.maxPres : 0;
+                const minP = results.stats.minPres !== undefined ? results.stats.minPres : 0;
+                const presDiffVal = maxP - minP;
                 if (!isApp('pressure')) {
-                    document.getElementById('stat-pres').textContent = 'N/A';
+                    setElText('stat-pres', 'N/A');
                 } else if (results.pressureUnit && results.pressureUnit.toLowerCase() !== 'bar') {
-                    const rawDiff = results.stats.maxPresRaw - results.stats.minPresRaw;
-                    document.getElementById('stat-pres').textContent = `${presDiffVal.toFixed(2)} bar (${rawDiff.toFixed(2)} ${results.pressureUnit})`;
+                    const maxPRaw = results.stats.maxPresRaw !== undefined ? results.stats.maxPresRaw : 0;
+                    const minPRaw = results.stats.minPresRaw !== undefined ? results.stats.minPresRaw : 0;
+                    const rawDiff = maxPRaw - minPRaw;
+                    setElText('stat-pres', `${safeFixed(presDiffVal, 2)} bar (${safeFixed(rawDiff, 2)} ${results.pressureUnit})`);
                 } else {
-                    document.getElementById('stat-pres').textContent = `${presDiffVal.toFixed(2)} bar`;
+                    setElText('stat-pres', `${safeFixed(presDiffVal, 2)} bar`);
                 }
             }
 
-            if (varsPresent.current) {
-                document.getElementById('stat-current').textContent = isApp('current') ? `${results.stats.maxCurrentRaw.toFixed(1)} A` : 'N/A';
+            if (varsPresent.current && results.stats) {
+                const val = results.stats.maxCurrentRaw !== undefined ? results.stats.maxCurrentRaw : results.stats.maxCurrent;
+                setElText('stat-current', isApp('current') && val !== undefined ? `${safeFixed(val, 1)} A` : 'N/A');
             }
 
             // Update new variables values if present
-            if (varsPresent.rpm) {
-                document.getElementById('stat-rpm').textContent = isApp('rpm') ? `${results.stats.maxRpm.toFixed(0)} RPM` : 'N/A';
+            if (varsPresent.rpm && results.stats) {
+                const val = results.stats.maxRpm;
+                setElText('stat-rpm', isApp('rpm') && val !== undefined ? `${safeFixed(val, 0)} RPM` : 'N/A');
             }
-            if (varsPresent.torque) {
-                document.getElementById('stat-torque').textContent = isApp('torque') ? `${results.stats.maxTorque.toFixed(1)} Nm` : 'N/A';
+            if (varsPresent.torque && results.stats) {
+                const val = results.stats.maxTorque;
+                setElText('stat-torque', isApp('torque') && val !== undefined ? `${safeFixed(val, 1)} Nm` : 'N/A');
             }
-            if (varsPresent.tool_wear) {
-                document.getElementById('stat-wear').textContent = isApp('tool_wear') ? `${results.stats.maxWear.toFixed(1)} min` : 'N/A';
+            if (varsPresent.tool_wear && results.stats) {
+                const val = results.stats.maxWear;
+                setElText('stat-wear', isApp('tool_wear') && val !== undefined ? `${safeFixed(val, 1)} min` : 'N/A');
             }
-            if (varsPresent.flow) {
-                document.getElementById('stat-flow').textContent = isApp('flow') ? `${results.stats.maxFlow.toFixed(1)} LPM` : 'N/A';
+            if (varsPresent.flow && results.stats) {
+                const val = results.stats.maxFlow;
+                setElText('stat-flow', isApp('flow') && val !== undefined ? `${safeFixed(val, 1)} LPM` : 'N/A');
             }
-            if (varsPresent.level) {
-                document.getElementById('stat-level').textContent = isApp('level') ? `${results.stats.maxLevel.toFixed(1)} %` : 'N/A';
+            if (varsPresent.level && results.stats) {
+                const val = results.stats.maxLevel;
+                setElText('stat-level', isApp('level') && val !== undefined ? `${safeFixed(val, 1)} %` : 'N/A');
             }
-            if (varsPresent.voltage) {
-                document.getElementById('stat-voltage').textContent = isApp('voltage') ? `${results.stats.maxVoltage.toFixed(1)} V` : 'N/A';
+            if (varsPresent.voltage && results.stats) {
+                const val = results.stats.maxVoltage;
+                setElText('stat-voltage', isApp('voltage') && val !== undefined ? `${safeFixed(val, 1)} V` : 'N/A');
             }
 
             // Reset colors
@@ -3482,47 +3547,109 @@ document.addEventListener('DOMContentLoaded', () => {
                     rationalePlanLabel.textContent = reportPlan;
                 }
                 
-                let varsConfig = [];
                 if (results.universal_columns) {
                     results.universal_columns.forEach(col => {
-                        let matchedKey = col.name.toLowerCase();
-                        if (matchedKey.includes('vib')) matchedKey = 'vibration';
-                        else if (matchedKey.includes('temp')) matchedKey = 'temperature';
-                        else if (matchedKey.includes('pres')) matchedKey = 'pressure';
-                        else if (matchedKey.includes('curr') || matchedKey.includes('corr')) matchedKey = 'current';
-                        else if (matchedKey.includes('rpm') || matchedKey.includes('speed')) matchedKey = 'rpm';
-                        else if (matchedKey.includes('torq')) matchedKey = 'torque';
-                        else if (matchedKey.includes('wear') || matchedKey.includes('desgaste')) matchedKey = 'tool_wear';
-                        else if (matchedKey.includes('flow') || matchedKey.includes('caudal')) matchedKey = 'flow';
-                        else if (matchedKey.includes('level') || matchedKey.includes('nivel')) matchedKey = 'level';
-                        else if (matchedKey.includes('volt')) matchedKey = 'voltage';
-                        else matchedKey = col.name;
-                        
                         let displayUnit = '';
+                        let formatPrecision = 1;
                         const nameLower = col.name.toLowerCase();
-                        if (nameLower.includes('temp')) displayUnit = results.tempUnit || '°C';
-                        else if (nameLower.includes('pres')) displayUnit = results.pressureUnit || 'bar';
-                        else if (nameLower.includes('vib')) displayUnit = 'mm/s';
-                        else if (nameLower.includes('curr') || nameLower.includes('corr')) displayUnit = 'A';
-                        else if (nameLower.includes('volt')) displayUnit = 'V';
-                        else if (nameLower.includes('rpm') || nameLower.includes('speed')) displayUnit = 'RPM';
-                        else if (nameLower.includes('torq')) displayUnit = 'Nm';
-                        else if (nameLower.includes('wear') || nameLower.includes('desgaste')) displayUnit = 'min';
-                        else if (nameLower.includes('flow') || nameLower.includes('caudal')) displayUnit = 'LPM';
-                        else if (nameLower.includes('level') || nameLower.includes('nivel')) displayUnit = '%';
+                        if (nameLower.includes('temp')) {
+                            displayUnit = results.tempUnit || '°C';
+                        } else if (nameLower.includes('pres')) {
+                            displayUnit = results.pressureUnit || 'bar';
+                        } else if (nameLower.includes('vib')) {
+                            displayUnit = 'mm/s';
+                            formatPrecision = 3;
+                        } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
+                            displayUnit = 'A';
+                        } else if (nameLower.includes('volt')) {
+                            displayUnit = 'V';
+                        } else if (nameLower.includes('rpm') || nameLower.includes('speed')) {
+                            displayUnit = 'RPM';
+                            formatPrecision = 0;
+                        } else if (nameLower.includes('torq')) {
+                            displayUnit = 'Nm';
+                        } else if (nameLower.includes('wear') || nameLower.includes('desgaste')) {
+                            displayUnit = 'min';
+                        } else if (nameLower.includes('flow') || nameLower.includes('caudal')) {
+                            displayUnit = 'LPM';
+                        } else if (nameLower.includes('level') || nameLower.includes('nivel')) {
+                            displayUnit = '%';
+                        }
                         
-                        varsConfig.push({
-                            key: matchedKey,
-                            name: col.name,
-                            val: col.max,
-                            limit: col.limit_sfa,
-                            danger: col.limit_sfa,
-                            unit: displayUnit,
-                            show: true
-                        });
+                        const isCritical = col.status === '❌ Crítico';
+                        const statusText = isCritical ? '❌ Crítico' : '🟢 Óptimo';
+                        const conditionClass = isCritical ? 'text-red' : 'text-blue';
+                        const valStr = `${col.max.toFixed(formatPrecision)} ${displayUnit}`;
+                        const limitStr = `${col.limit_sfa.toFixed(formatPrecision)} ${displayUnit}`;
+                        
+                        let desc = '';
+                        const lambda = window.SFA.lambda ? window.SFA.lambda.toFixed(3) : '1.618';
+                        const fBase = results.targetFreq ? results.targetFreq.toFixed(2) : '17.75';
+                        
+                        if (reportPlan.includes("Gerente") || reportPlan.includes("Planta Completa")) {
+                            if (nameLower.includes('vib')) {
+                                if (!isCritical) desc = `Salud mecánica del 100%. Sin riesgos para la continuidad de la producción. Desgaste mínimo que proyecta alargar la vida útil del activo.`;
+                                else desc = `Vibración destructiva de ${valStr} superando el límite estadístico de ${limitStr}. Riesgo inminente de rotura física. Requiere intervención del equipo de guardia.`;
+                            } else if (nameLower.includes('temp')) {
+                                if (!isCritical) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil de los lubricantes.`;
+                                else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación del lubricante. Se requiere revisión preventiva.`;
+                            } else if (nameLower.includes('pres')) {
+                                if (!isCritical) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza hidráulica y evita daños en sellos mecánicos.`;
+                                else desc = `Presión inestable con oscilación de ${valStr} superando el límite dinámico de ${limitStr}. Riesgo elevado de fugas e inestabilidad en actuadores.`;
+                            } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
+                                if (!isCritical) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica en parámetros nominales de diseño.`;
+                                else desc = `Corriente de ${valStr} en sobrecarga crítica (límite SFA: ${limitStr}). Riesgo extremo de quemar bobinados o rotor bloqueado.`;
+                            } else {
+                                if (!isCritical) {
+                                    desc = `El parámetro operativo de ${col.name} se mantiene estable en ${valStr}. Cumple con los criterios de diseño y garantiza la continuidad operativa sin pérdidas por paro.`;
+                                } else {
+                                    desc = `El parámetro de ${col.name} registra un valor de ${valStr} que supera su umbral de tolerancia estadística SFA (${limitStr}). Riesgo moderado-alto de afectación al rendimiento global de la planta.`;
+                                }
+                            }
+                        } else if (reportPlan.includes("Consultor") || reportPlan.includes("Senior")) {
+                            if (nameLower.includes('vib')) {
+                                if (!isCritical) desc = `La vibración RMS de ${valStr} se mantiene estable. El filtro espectral SFA (λ = ${lambda}) atenuó el ruido estructural estructural bajo el límite +2σ (${limitStr}).`;
+                                else desc = `La vibración RMS de ${valStr} excede el umbral estadístico +2σ SFA (${limitStr}). El espectro acusa desalineación angular o desbalanceo mecánico.`;
+                            } else if (nameLower.includes('temp')) {
+                                if (!isCritical) desc = `Temperatura de ${valStr} nominal. Disipación de calor correcta sin derivas térmicas significativas en el devanado.`;
+                                else desc = `Temperatura máxima de ${valStr} excede el límite de diseño +2σ de ${limitStr}. Correlación con incremento de fricción o sobrecarga.`;
+                            } else if (nameLower.includes('pres')) {
+                                if (!isCritical) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de cavitación.`;
+                                else desc = `Fluctuación de presión de ${valStr} supera el umbral dinámico +2σ de ${limitStr}. Transitorios rápidos sugieren desgaste en reguladora.`;
+                            } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
+                                if (!isCritical) desc = `Consumo eléctrico de ${valStr}. La firma de corriente SFA no muestra modulaciones de carga, validando la integridad del estator y rotor.`;
+                                else desc = `Corriente de ${valStr} excede el límite nominal SFA de ${limitStr}. La potencia reactiva se eleva debido a fricción mecánica.`;
+                            } else {
+                                if (!isCritical) {
+                                    desc = `El análisis espectral SFA en f_base (${fBase} Hz) y factor λ (${lambda}) confirma comportamiento estable para ${col.name}. El valor de ${valStr} se mantiene por debajo de la barrera de tolerancia estadística +2σ (${limitStr}).`;
+                                } else {
+                                    desc = `Desviación estadística crítica para ${col.name}. El valor registrado de ${valStr} excede la frontera dinámica +2σ de control de procesos (${limitStr}), indicando una micro-oscilación de fatiga en desarrollo.`;
+                                }
+                            }
+                        } else {
+                            if (!isCritical) {
+                                desc = `Medición de ${col.name} en rango óptimo. Condición estable.`;
+                            } else {
+                                desc = `Exceso detectado en ${col.name} (${valStr} superando el límite dinámico de ${limitStr}). Requiere revisión de mantenimiento.`;
+                            }
+                        }
+                        
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'sfa-rationale-item';
+                        itemDiv.innerHTML = `
+                            <div class="sfa-rationale-item-header">
+                                <span class="sfa-rationale-item-title">${col.name}</span>
+                                <span class="sfa-rationale-item-status ${conditionClass}">${statusText}</span>
+                            </div>
+                            <div class="sfa-rationale-item-meta">
+                                Valor registrado: <strong>${valStr}</strong> | Umbral seguro: &lt; ${limitStr}
+                            </div>
+                            <p class="sfa-rationale-item-desc">${desc}</p>
+                        `;
+                        rationaleContent.appendChild(itemDiv);
                     });
                 } else {
-                    varsConfig = [
+                    const varsConfig = [
                         { key: 'vibration', name: 'Vibración Promedio (RMS)', val: results.stats.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
                         { key: 'temperature', name: 'Temperatura Máxima', val: results.stats.maxTempRaw || results.stats.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: results.tempUnit || '°C', show: varsPresent.temperature },
                         { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
@@ -3534,27 +3661,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         { key: 'level', name: 'Nivel de Fluido', val: results.stats.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
                         { key: 'voltage', name: 'Voltaje de Bus', val: results.stats.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
                     ];
+                    
+                    varsConfig.forEach(v => {
+                        if (v.show) {
+                            const rationale = window.SFA.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, results);
+                            
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'sfa-rationale-item';
+                            itemDiv.innerHTML = `
+                                <div class="sfa-rationale-item-header">
+                                    <span class="sfa-rationale-item-title">${v.name}</span>
+                                    <span class="sfa-rationale-item-status ${rationale.conditionClass}">${rationale.status}</span>
+                                </div>
+                                <div class="sfa-rationale-item-meta">
+                                    Valor registrado: <strong>${rationale.valStr}</strong> | Umbral seguro: &lt; ${rationale.limitStr}
+                                </div>
+                                <p class="sfa-rationale-item-desc">${rationale.desc}</p>
+                            `;
+                            rationaleContent.appendChild(itemDiv);
+                        }
+                    });
                 }
-                
-                varsConfig.forEach(v => {
-                    if (v.show) {
-                        const rationale = window.SFA.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, results);
-                        
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'sfa-rationale-item';
-                        itemDiv.innerHTML = `
-                            <div class="sfa-rationale-item-header">
-                                <span class="sfa-rationale-item-title">${v.name}</span>
-                                <span class="sfa-rationale-item-status ${rationale.conditionClass}">${rationale.status}</span>
-                            </div>
-                            <div class="sfa-rationale-item-meta">
-                                Valor registrado: <strong>${rationale.valStr}</strong> | Umbral seguro: &lt; ${rationale.limitStr}
-                            </div>
-                            <p class="sfa-rationale-item-desc">${rationale.desc}</p>
-                        `;
-                        rationaleContent.appendChild(itemDiv);
-                    }
-                });
             }
 
             // Update print titles dynamically based on plan type
