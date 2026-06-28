@@ -2384,8 +2384,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             file.name,
                             file.size,
                             results.detectedProfileName || "Sin Traductor (Cabeceras Estándar)",
-                            window.SFA.data.length,
-                            results.stats.avgCurrentRaw,
+                            (window.SFA.data ? window.SFA.data.length : 0),
+                            ((results.stats && results.stats.avgCurrentRaw !== undefined) ? results.stats.avgCurrentRaw : 0.0),
                             results.healthScore
                         );
 
@@ -2449,8 +2449,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Run virtual telemetry console logger for mock data after animation
                         runSimulationLogs(
                             button.textContent.trim(),
-                            simulation.data.length,
-                            simulation.results.stats.avgCurrentRaw,
+                            (simulation.data ? simulation.data.length : 0),
+                            ((simulation.results.stats && simulation.results.stats.avgCurrentRaw !== undefined) ? simulation.results.stats.avgCurrentRaw : 0.0),
                             simulation.results.healthScore
                         );
                     });
@@ -3484,19 +3484,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentAlertBox = document.getElementById('sfa-current-alert-box');
             const currentAlertText = document.getElementById('sfa-current-alert-text');
             const currentAlertDot = document.getElementById('sfa-current-alert-dot');
-            const avgCurrentRawVal = results.stats.avgCurrentRaw;
+            const avgCurrentRawVal = (results.stats && results.stats.avgCurrentRaw !== undefined) ? results.stats.avgCurrentRaw : undefined;
 
             if (currentAlertBox && currentAlertText && currentAlertDot) {
-                if (avgCurrentRawVal > limitWarningCurrent) {
+                if (avgCurrentRawVal !== undefined && avgCurrentRawVal > limitWarningCurrent) {
                     currentAlertBox.style.display = 'flex';
                     if (results.severityClass === 'danger') {
                         currentAlertBox.className = 'current-alert-box danger';
                         currentAlertDot.className = 'alert-icon-dot pulsing-red';
-                        currentAlertText.innerHTML = `Alerta Crítica: El consumo de corriente elevado (<strong>${avgCurrentRawVal.toFixed(1)} A</strong>) sugiere fricción mecánica severa o sobrecarga. Inspeccionar lubricación de rodamientos de inmediato.`;
+                        currentAlertText.innerHTML = `Alerta Crítica: El consumo de corriente elevado (<strong>${safeFixed(avgCurrentRawVal, 1)} A</strong>) sugiere fricción mecánica severa o sobrecarga. Inspeccionar lubricación de rodamientos de inmediato.`;
                     } else {
                         currentAlertBox.className = 'current-alert-box';
                         currentAlertDot.className = 'alert-icon-dot pulsing-orange';
-                        currentAlertText.innerHTML = `Alerta: El consumo de corriente elevado (<strong>${avgCurrentRawVal.toFixed(1)} A</strong>) sugiere fricción mecánica. Inspeccionar lubricación de rodamientos.`;
+                        currentAlertText.innerHTML = `Alerta: El consumo de corriente elevado (<strong>${safeFixed(avgCurrentRawVal, 1)} A</strong>) sugiere fricción mecánica. Inspeccionar lubricación de rodamientos.`;
                     }
                 } else {
                     currentAlertBox.style.display = 'none';
@@ -3665,17 +3665,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         rationaleContent.appendChild(itemDiv);
                     });
                 } else {
+                    const stats = results.stats || {};
                     const varsConfig = [
-                        { key: 'vibration', name: 'Vibración Promedio (RMS)', val: results.stats.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
-                        { key: 'temperature', name: 'Temperatura Máxima', val: results.stats.maxTempRaw || results.stats.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: results.tempUnit || '°C', show: varsPresent.temperature },
+                        { key: 'vibration', name: 'Vibración Promedio (RMS)', val: stats.rmsVib, limit: limitWarningVib, danger: limitDangerVib, unit: 'mm/s', show: varsPresent.vibration },
+                        { key: 'temperature', name: 'Temperatura Máxima', val: stats.maxTempRaw || stats.maxTemp || 0.0, limit: limitWarningTemp, danger: limitDangerTemp, unit: results.tempUnit || '°C', show: varsPresent.temperature },
                         { key: 'pressure', name: 'Fluctuación de Presión', val: presDiffVal, limit: 1.5, danger: 2.5, unit: 'bar', show: varsPresent.pressure },
-                        { key: 'current', name: 'Consumo Eléctrico', val: results.stats.maxCurrentRaw || results.stats.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
-                        { key: 'rpm', name: 'Velocidad de Rotación', val: results.stats.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
-                        { key: 'torque', name: 'Torque del Husillo', val: results.stats.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
-                        { key: 'tool_wear', name: 'Desgaste Herramienta', val: results.stats.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
-                        { key: 'flow', name: 'Flujo / Caudal', val: results.stats.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
-                        { key: 'level', name: 'Nivel de Fluido', val: results.stats.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
-                        { key: 'voltage', name: 'Voltaje de Bus', val: results.stats.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
+                        { key: 'current', name: 'Consumo Eléctrico', val: stats.maxCurrentRaw || stats.maxCurrent || 0.0, limit: limitWarningCurrent, danger: limitDangerCurrent, unit: 'A', show: varsPresent.current },
+                        { key: 'rpm', name: 'Velocidad de Rotación', val: stats.maxRpm, limit: limitWarningRpm, danger: limitDangerRpm, unit: 'RPM', show: varsPresent.rpm },
+                        { key: 'torque', name: 'Torque del Husillo', val: stats.maxTorque, limit: limitWarningTorque, danger: limitDangerTorque, unit: 'Nm', show: varsPresent.torque },
+                        { key: 'tool_wear', name: 'Desgaste Herramienta', val: stats.maxWear, limit: limitWarningWear, danger: limitDangerWear, unit: 'min', show: varsPresent.tool_wear },
+                        { key: 'flow', name: 'Flujo / Caudal', val: stats.maxFlow, limit: limitWarningFlow, danger: limitDangerFlow, unit: 'LPM', show: varsPresent.flow },
+                        { key: 'level', name: 'Nivel de Fluido', val: stats.maxLevel, limit: limitWarningLevel, danger: limitDangerLevel, unit: '%', show: varsPresent.level },
+                        { key: 'voltage', name: 'Voltaje de Bus', val: stats.maxVoltage, limit: limitWarningVoltage, danger: limitDangerVoltage, unit: 'V', show: varsPresent.voltage }
                     ];
                     
                     varsConfig.forEach(v => {
