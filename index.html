@@ -586,6 +586,14 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                                     <h3>Panel de Diagnóstico Espectral SFA</h3>
                                     <p class="text-gray" id="sfa-analysis-meta">Archivo analizado el: --/--/----</p>
                                     <p class="text-gray" id="sfa-variables-tolerance" style="margin-top: 0.25rem; font-size: 0.85rem; display: none;">Variables evaluadas en Tolerancia: -- / --</p>
+                                    
+                                    <!-- Asset Selector Container -->
+                                    <div id="asset-selector-container" style="margin-top: 0.75rem; display: none; align-items: center; gap: 0.75rem;">
+                                        <label for="asset-select" style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500;">Seleccionar Activo:</label>
+                                        <select id="asset-select" class="form-control" style="background: rgba(30, 30, 30, 0.75); border: 1px solid rgba(197, 168, 128, 0.3); color: #fff; padding: 0.35rem 0.75rem; border-radius: 4px; font-size: 0.85rem; outline: none; cursor: pointer; min-width: 180px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                                            <!-- Dynamic options -->
+                                        </select>
+                                    </div>
                                 </div>
                                 <!-- Health Badge -->
                                 <div class="sfa-health-badge-wrapper" id="sfa-health-badge-container">
