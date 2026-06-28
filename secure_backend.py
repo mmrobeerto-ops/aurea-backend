@@ -999,10 +999,24 @@ def _procesar_un_activo_sfa(
         # --- PASO 5: Captura del Pico Absorbedor (Max) y Criterio de Disparo ---
         max_val = max(raw_values)
         
-        if round(max_val, 4) > round(limite_sfa, 4):
+        # Determinar precisión de redondeo según tipo de variable
+        col_lower = col_name.lower()
+        if 'vib' in col_lower:
+            prec = 3
+        elif 'pres' in col_lower:
+            prec = 2
+        elif 'rpm' in col_lower or 'speed' in col_lower:
+            prec = 0
+        else:
+            prec = 1
+            
+        max_val_rounded = round(max_val, prec)
+        limit_rounded = round(limite_sfa, prec)
+        
+        if max_val_rounded > limit_rounded:
             status_variable = "❌ Crítico"
             universal_alerts.append(
-                f"🚨 CRÍTICO: Exceso detectado en {col_name} (Máx: {max_val:.2f} | Límite SFA: {limite_sfa:.2f})"
+                f"🚨 CRÍTICO: Exceso detectado en {col_name} (Máx: {max_val_rounded} | Límite SFA: {limit_rounded})"
             )
         else:
             status_variable = "🟢 Óptimo"
@@ -1012,8 +1026,8 @@ def _procesar_un_activo_sfa(
             "name": col_name,
             "mean": round(mean_clean, 4),
             "std": round(std_clean, 4),
-            "limit_sfa": round(limite_sfa, 4),
-            "max": round(max_val, 4),
+            "limit_sfa": limit_rounded,
+            "max": max_val_rounded,
             "status": status_variable
         })
         

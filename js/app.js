@@ -263,7 +263,7 @@ class SFAEngine {
      * Render the chart on the HTML5 Canvas
      */
     drawChart(canvasElement) {
-        if (!canvasElement || !this.data || !this.results) return;
+        if (!canvasElement || !this.data || this.data.length === 0 || !this.results) return;
 
         const ctx = canvasElement.getContext('2d');
         let parentWidth = canvasElement.parentElement ? canvasElement.parentElement.clientWidth : 0;
@@ -308,18 +308,24 @@ class SFAEngine {
         }
 
         // Find min/max values for scaling
-        const tMin = this.data[0].time;
-        const tMax = this.data[this.data.length - 1].time;
+        const tMin = this.data[0] ? (this.data[0].time || 0.0) : 0.0;
+        const tMax = this.data[this.data.length - 1] ? (this.data[this.data.length - 1].time || 1.0) : 1.0;
         
         let vMin = Infinity;
         let vMax = -Infinity;
         this.data.forEach((d, idx) => {
-            if (d.vibration < vMin) vMin = d.vibration;
-            if (d.vibration > vMax) vMax = d.vibration;
-            const pure = (this.results.purifiedSignal && this.results.purifiedSignal.length > idx) ? this.results.purifiedSignal[idx] : d.vibration;
+            const val = typeof d.vibration === 'number' && !isNaN(d.vibration) ? d.vibration : 0.0;
+            if (val < vMin) vMin = val;
+            if (val > vMax) vMax = val;
+            const pure = (this.results.purifiedSignal && this.results.purifiedSignal.length > idx && typeof this.results.purifiedSignal[idx] === 'number') ? this.results.purifiedSignal[idx] : val;
             if (pure < vMin) vMin = pure;
             if (pure > vMax) vMax = pure;
         });
+
+        if (vMin === Infinity || vMax === -Infinity || isNaN(vMin) || isNaN(vMax)) {
+            vMin = 0.0;
+            vMax = 1.0;
+        }
 
         // Add 10% padding to y-axis limits, safeguarding division by zero if vMax == vMin
         let yRange = vMax - vMin;
