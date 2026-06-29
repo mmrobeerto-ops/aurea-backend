@@ -150,51 +150,23 @@ class SFAEngine {
                         csvText += `${t},${vibVal.toFixed(4)},${rpm.toFixed(0)},${torque.toFixed(1)}\n`;
                     }
                 }
-            } else if (type === 'hidraulicos') {
-                lambdaVal = 1.91;
-                // Cargar datos reales de prueba_ab_750.csv y mapear a presión
-                try {
-                    const response = await fetch('./prueba_ab_750.csv');
-                    if (!response.ok) throw new Error("Fetch failed");
-                    const text = await response.text();
-                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            } else if (type === 'cnc') {
+                lambdaVal = 0.725;
+                csvText = "time,vibration,rpm,torque,tool_wear\n";
+                for (let i = 0; i < 300; i++) {
+                    const t = (i * 0.01).toFixed(2);
+                    const rpm = 18000.0 + 500.0 * Math.sin(2 * Math.PI * 0.5 * t) + 25.0 * (Math.random() - 0.5);
+                    const torque = 12.5 + 2.5 * Math.sin(2 * Math.PI * 0.5 * t) + 0.3 * (Math.random() - 0.5);
+                    const tool_wear = (12.0 + 0.5 * parseFloat(t)).toFixed(1);
                     
-                    const headers = lines[0].split(',');
-                    const presIdx = headers.findIndex(h => h.toLowerCase().includes('pres') || h.toLowerCase().includes('discharge'));
+                    const angle = 2 * Math.PI * 300 * parseFloat(t); // High frequency CNC spindle rotation (300 Hz)
+                    let vibVal = 0.08 * Math.sin(angle);
+                    vibVal += 0.04 * Math.sin(2 * angle) * (torque / 10.0);
+                    vibVal += 0.005 * (Math.random() - 0.5);
                     
-                    if (presIdx !== -1) {
-                        csvText = "time,pressure,flow,level\n";
-                        const startLine = 10;
-                        const endLine = Math.min(lines.length, startLine + 300);
-                        
-                        for (let i = startLine; i < endLine; i++) {
-                            const cols = lines[i].split(',');
-                            const t = ((i - startLine) * 0.01).toFixed(2);
-                            const rawPres = parseFloat(cols[presIdx]) || 65.0;
-                            const barPres = rawPres * 0.0689476; // Convertir a bar
-                            
-                            // Sintetizar flujo y nivel hidráulicos realistas correlacionados
-                            const flow = 58.4 - 4.5 * Math.sin(2 * Math.PI * 0.8 * parseFloat(t)) + 0.6 * (Math.random() - 0.5);
-                            const level = 84.2 - 0.2 * parseFloat(t) + 0.15 * (Math.random() - 0.5);
-                            
-                            csvText += `${t},${barPres.toFixed(2)},${flow.toFixed(1)},${level.toFixed(1)}\n`;
-                        }
-                    } else {
-                        throw new Error("Pressure column not found in local AB CSV");
-                    }
-                } catch (e) {
-                    console.log("Fallback to high-fidelity hydraulic simulation:", e);
-                    csvText = "time,pressure,flow,level\n";
-                    for (let i = 0; i < 300; i++) {
-                        const t = (i * 0.01).toFixed(2);
-                        const pressure = 6.2 + 1.85 * Math.sin(2 * Math.PI * 0.8 * t) + 0.15 * (Math.random() - 0.5);
-                        const flow = 55.4 + 5.2 * Math.sin(2 * Math.PI * 0.8 * t) + 0.4 * (Math.random() - 0.5);
-                        const level = 82.5 - 0.3 * t + 0.1 * (Math.random() - 0.5);
-                        
-                        csvText += `${t},${pressure.toFixed(2)},${flow.toFixed(1)},${level.toFixed(1)}\n`;
-                    }
+                    csvText += `${t},${vibVal.toFixed(4)},${rpm.toFixed(0)},${torque.toFixed(1)},${tool_wear}\n`;
                 }
-            } else if (type === 'electricos') {
+            } else if (type === 'ensamble') {
                 lambdaVal = 1.25;
                 // Cargar de prueba_siemens_300.csv
                 try {
@@ -242,12 +214,27 @@ class SFAEngine {
                         csvText += `${t},${current.toFixed(2)},${voltage.toFixed(1)},${temperature.toFixed(1)}\n`;
                     }
                 }
-            } else {
-                lambdaVal = 1.618;
-                csvText = "time,vibration,temperature,pressure,current\n";
+            } else if (type === 'robotica') {
+                lambdaVal = 1.15;
+                csvText = "time,vibration,temperature,voltage,current\n";
                 for (let i = 0; i < 300; i++) {
                     const t = (i * 0.01).toFixed(2);
-                    csvText += `${t},0.15,42.5,6.2,12.0\n`;
+                    const current = 4.5 + 1.2 * Math.sin(2 * Math.PI * 1.5 * t) + 0.1 * (Math.random() - 0.5);
+                    const temperature = 48.5 + 2.5 * parseFloat(t) + 0.2 * (Math.random() - 0.5);
+                    const voltage = 24.0 - 0.5 * current + 0.1 * (Math.random() - 0.5);
+                    
+                    const angle = 2 * Math.PI * 45 * parseFloat(t);
+                    let vibVal = 0.15 * Math.sin(angle);
+                    vibVal += 0.05 * (Math.random() - 0.5);
+                    
+                    csvText += `${t},${vibVal.toFixed(4)},${temperature.toFixed(1)},${voltage.toFixed(1)},${current.toFixed(2)}\n`;
+                }
+            } else {
+                lambdaVal = 1.618;
+                csvText = "time,vibration,temperature,voltage,current\n";
+                for (let i = 0; i < 300; i++) {
+                    const t = (i * 0.01).toFixed(2);
+                    csvText += `${t},0.15,42.5,24.0,4.5\n`;
                 }
             }
         } catch (e) {
@@ -443,10 +430,10 @@ class SFAEngine {
         const isWarning = (varKey === 'pressure') ? (val > 1.5 && val <= 2.5) : (val > limit && val <= dangerLimit);
         const isCritical = (varKey === 'pressure') ? (val > 2.5) : (val > dangerLimit);
         
-        let status = '🟢 Óptimo';
+        let status = '🟢 PROCESO ESTABLE (BANDA NOMINAL)';
         let conditionClass = 'text-blue';
         if (isCritical) {
-            status = '❌ Crítico';
+            status = '🔴 FUERA DE CONTROL ESTADÍSTICO';
             conditionClass = 'text-red';
         } else if (isWarning) {
             status = '⚠️ Advertencia';
@@ -474,8 +461,8 @@ class SFAEngine {
                 if (isOptimal) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil del lubricante de rodamientos.`;
                 else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación térmica del lubricante y el aislamiento del motor. Se requiere revisión preventiva de refrigeración para evitar daños mayores.`;
             } else if (varKey === 'pressure') {
-                if (isOptimal) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza hidráulica y evita daños en retenes o sellos mecánicos.`;
-                else desc = `Presión inestable con oscilación de ${valStr} (máx 1.5 bar). Afecta la calidad de la pieza de trabajo y daña sellos hidráulicos, incrementando el riesgo de fugas de aceite.`;
+                if (isOptimal) desc = `Presión de refrigeración estable de ${valStr}. Garantiza el enfriamiento continuo del husillo CNC y evita derivas térmicas.`;
+                else desc = `Presión de refrigeración inestable de ${valStr} (límite ${limitStr}). Acelera el calentamiento de las guías y eleva el riesgo de paros de línea preventivos.`;
             } else if (varKey === 'current') {
                 if (isOptimal) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica y el consumo de energía en parámetros nominales de diseño.`;
                 else if (isWarning) desc = `Corriente elevada de ${valStr} incrementa costos de energía y sugiere sobreesfuerzo mecánico ligero en la transmisión.`;
@@ -490,11 +477,11 @@ class SFAEngine {
                 if (isOptimal) desc = `Desgaste de herramienta controlado en ${valStr}. Máxima tasa de remoción de viruta sin afectar acabado superficial.`;
                 else desc = `Desgaste excesivo de herramienta en ${valStr}. Disminuye la calidad geométrica del producto y eleva el riesgo de rotura de insertos en proceso.`;
             } else if (varKey === 'flow') {
-                if (isOptimal) desc = `Caudal de fluido estable de ${valStr}. Asegura la velocidad nominal de actuadores y previene caídas de presión en ciclo.`;
-                else desc = `Fluctuación de caudal de ${valStr}. Inestabilidad en la bomba principal de fluidos, riesgo de cavitación y pérdidas de velocidad en línea.`;
+                if (isOptimal) desc = `Flujo de líquido refrigerante de ${valStr} nominal. Asegura la disipación térmica del motor de husillo y previene sobrecalentamientos.`;
+                else desc = `Fluctuación de caudal de refrigeración de ${valStr}. Inestabilidad en la bomba de recirculación de refrigerante de husillo.`;
             } else if (varKey === 'level') {
-                if (isOptimal) desc = `Nivel de fluido correcto al ${valStr}. Reserva hidráulica suficiente para el ciclo operativo completo.`;
-                else desc = `Nivel de fluido fuera de límites (${valStr}). Riesgo de paro automático por sensores de seguridad o cavitación con daño destructivo.`;
+                if (isOptimal) desc = `Nivel de fluido refrigerante correcto al ${valStr}. Reserva de fluido suficiente para el ciclo operativo continuo de maquinado.`;
+                else desc = `Nivel de fluido refrigerante fuera de límites (${valStr}). Riesgo de paro automático por sensores de seguridad de nivel bajo.`;
             } else if (varKey === 'voltage') {
                 if (isOptimal) desc = `Tensión de red estable de ${valStr}. Garantiza la protección de componentes electrónicos y PLCs contra fluctuaciones.`;
                 else desc = `Tensión de red inestable en ${valStr}. Riesgo elevado de daño en variadores de frecuencia y tarjetas analógicas del PLC.`;
@@ -508,8 +495,8 @@ class SFAEngine {
                 if (isOptimal) desc = `La temperatura máxima registrada de ${valStr} se mantiene nominal. Disipación de calor correcta sin derivas térmicas significativas en el devanado.`;
                 else desc = `Temperatura máxima de ${valStr} excede el límite de diseño de ${limitStr}. Correlación del 85% con incremento de corriente o degradación de rodamientos.`;
             } else if (varKey === 'pressure') {
-                if (isOptimal) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de pulsaciones de bomba o picos de cavitación hidráulica.`;
-                else desc = `La fluctuación de presión de ${valStr} supera el umbral máximo de 1.50 bar. El análisis de transitorios rápidos indica fluctuación de carga o desgaste en válvula reguladora de presión.`;
+                if (isOptimal) desc = `Fluctuación de presión de refrigeración controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de transitorios inestables.`;
+                else desc = `La fluctuación de presión de refrigerante de ${valStr} supera el umbral máximo de 1.50 bar. El análisis de transitorios rápidos indica fluctuación de carga térmica.`;
             } else if (varKey === 'current') {
                 if (isOptimal) desc = `Consumo eléctrico de ${valStr}. La firma de corriente SFA no muestra modulaciones de carga, validando la integridad del estator y rotor del motor.`;
                 else if (isWarning) desc = `Corriente de ${valStr} excede el límite nominal de ${limitStr}. La potencia reactiva se eleva debido a fricción mecánica axial en rodamientos.`;
@@ -524,11 +511,11 @@ class SFAEngine {
                 if (isOptimal) desc = `Desgaste de herramienta de ${valStr}. La señal espectral SFA no registra frecuencias de rozamiento abrasivo severo.`;
                 else desc = `Desgaste de herramienta de ${valStr} indica pérdida de geometría de corte y micro-fracturas por fatiga de material.`;
             } else if (varKey === 'flow') {
-                if (isOptimal) desc = `Caudal nominal de ${valStr}. La atenuación SFA confirma estabilidad en los perfiles de flujo laminados sin turbulencias severas.`;
-                else desc = `Caudal inestable de ${valStr}. Turbulencia hidráulica excesiva, compatible con aireación de fluido o malfuncionamiento de bomba.`;
+                if (isOptimal) desc = `Flujo de refrigeración nominal de ${valStr}. La atenuación SFA confirma estabilidad en los perfiles de flujo sin turbulencias.`;
+                else desc = `Caudal inestable de refrigerante de ${valStr}. Inestabilidad en la línea de recirculación del sistema de enfriamiento del husillo.`;
             } else if (varKey === 'level') {
-                if (isOptimal) desc = `Nivel de fluido estable de ${valStr}. Estabilidad hidrostática nominal del depósito de aceite.`;
-                else desc = `Nivel de fluido de ${valStr} fuera de especificación. Desviación del punto de consigna en el controlador analógico del PLC.`;
+                if (isOptimal) desc = `Nivel de refrigerante estable de ${valStr}. Estabilidad del depósito de enfriamiento del husillo.`;
+                else desc = `Nivel de refrigerante de ${valStr} fuera de especificación. Desviación detectada por el sensor analógico del PLC.`;
             } else if (varKey === 'voltage') {
                 if (isOptimal) desc = `Voltaje de alimentación de ${valStr}. La fluctuación armónica total de la red eléctrica se sitúa por debajo del 1.5%.`;
                 else desc = `Voltaje de bus de ${valStr} supera el límite de ${limitStr}. Presencia de picos transitorios por conmutación en red.`;
@@ -542,12 +529,12 @@ class SFAEngine {
                 if (isOptimal) desc = `Temperatura de ${valStr} normal (límite ${limitStr}). Sistema de refrigeración opera correctamente.`;
                 else desc = `Temperatura de ${valStr} excede el límite de ${limitStr} por ${diffStr}. Revisar ventilación y estado de lubricante.`;
             } else if (varKey === 'pressure') {
-                if (isOptimal) desc = `Presión estable con fluctuación de ${valStr} (dentro de tolerancia de 1.50 bar). Flujo hidráulico correcto.`;
-                else desc = `Presión inestable de ${valStr} supera tolerancia de 1.50 bar. Posible burbuja de aire en línea o fallo de válvula de presión.`;
+                if (isOptimal) desc = `Presión de refrigeración de ${valStr} estable. Enfriamiento nominal.`;
+                else desc = `Presión de refrigerante inestable de ${valStr}. Verificar nivel de refrigeración.`;
             } else if (varKey === 'current') {
                 if (isOptimal) desc = `Consumo eléctrico de ${valStr} bajo el límite seguro de ${limitStr}. Carga estable del motor.`;
                 else if (isWarning) desc = `Consumo eléctrico de ${valStr} supera el límite seguro de ${limitStr}. Corriente elevada por fricción o sobrecarga ligera.`;
-                else desc = `Corriente peligrosa de ${valStr} supera el límite crítico de ${dangerLimitStr}. Riesgo de sobrecalentamiento eléctrico. Revisar bobinados.`;
+                else desc = `Corriente de ${valStr} supera el límite crítico de ${dangerLimitStr}. Riesgo de sobrecalentamiento eléctrico. Revisar bobinados.`;
             } else if (varKey === 'rpm') {
                 if (isOptimal) desc = `Rotación de ${valStr} estable bajo el límite seguro de ${limitStr}.`;
                 else desc = `Rotación de ${valStr} supera el límite de ${limitStr}. Posible pérdida de acoplamiento de carga física.`;
@@ -558,11 +545,11 @@ class SFAEngine {
                 if (isOptimal) desc = `Desgaste de herramienta en ${valStr}. Vida útil restante adecuada.`;
                 else desc = `Desgaste de herramienta de ${valStr} supera límite de ${limitStr}. Se recomienda cambio de herramienta de corte.`;
             } else if (varKey === 'flow') {
-                if (isOptimal) desc = `Caudal de fluido de ${valStr} nominal. Flujo hidráulico adecuado.`;
-                else desc = `Caudal de fluido de ${valStr} excede límite de ${limitStr}. Verificar posibles obstrucciones o fugas de fluido en válvulas.`;
+                if (isOptimal) desc = `Flujo de refrigerante de ${valStr} nominal.`;
+                else desc = `Flujo de refrigerante de ${valStr} fuera de tolerancia. Revisar tubería de retorno.`;
             } else if (varKey === 'level') {
-                if (isOptimal) desc = `Nivel de fluido en depósito al ${valStr} (correcto).`;
-                else desc = `Nivel de fluido de ${valStr} fuera de tolerancia (límite ${limitStr}). Rellenar o vaciar según corresponda.`;
+                if (isOptimal) desc = `Nivel de refrigerante al ${valStr} (correcto).`;
+                else desc = `Nivel de refrigerante fuera de límites (${valStr}). Rellenar depósito de refrigeración.`;
             } else if (varKey === 'voltage') {
                 if (isOptimal) desc = `Voltaje eléctrico en ${valStr} nominal y estable. Suministro correcto.`;
                 else desc = `Voltaje eléctrico de ${valStr} inestable (límite ${limitStr}). Verificar suministro de red o regulador.`;
@@ -571,20 +558,20 @@ class SFAEngine {
 
         if (!desc) {
             if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
-                if (status.includes("Óptimo") || status.includes("🟢")) {
+                if (status.includes("ESTABLE") || status.includes("🟢")) {
                     desc = `El parámetro operativo de ${varKey} se mantiene estable en ${valStr}. Cumple con los criterios de diseño y garantiza la continuidad operativa sin pérdidas por paro.`;
                 } else {
                     desc = `El parámetro de ${varKey} registra un valor de ${valStr} que supera su umbral de tolerancia estadística SFA (${limitStr}). Riesgo moderado-alto de afectación al rendimiento global de la planta. Se recomienda planificar intervención.`;
                 }
             } else if (planName.includes("Consultor") || planName.includes("Senior")) {
-                if (status.includes("Óptimo") || status.includes("🟢")) {
+                if (status.includes("ESTABLE") || status.includes("🟢")) {
                     desc = `El análisis espectral SFA en f_base (${fBase} Hz) y factor λ (${lambda}) confirma comportamiento estable para ${varKey}. El valor de ${valStr} se mantiene por debajo de la barrera de tolerancia estadística +2σ (${limitStr}).`;
                 } else {
                     desc = `Desviación estadística crítica para ${varKey}. El valor registrado de ${valStr} excede la frontera dinámica +2σ de control de procesos (${limitStr}), indicando una micro-oscilación de fatiga en desarrollo.`;
                 }
             } else {
-                if (status.includes("Óptimo") || status.includes("🟢")) {
-                    desc = `Medición de ${varKey} en rango óptimo. Condición estable.`;
+                if (status.includes("ESTABLE") || status.includes("🟢")) {
+                    desc = `Medición de ${varKey} en rango óptimo. Condición stable.`;
                 } else {
                     desc = `Exceso detectado en ${varKey} (${valStr} superando el límite dinámico de ${limitStr}). Requiere revisión de mantenimiento.`;
                 }
@@ -629,13 +616,13 @@ class SFAEngine {
 
         // Estatus general de salud
         let healthEmoji = '🟢';
-        let healthText = 'ÓPTIMO - OPERACIÓN NOMINAL';
+        let healthText = 'PROCESO ESTABLE (BANDA NOMINAL)';
         if (this.results.severityClass === 'danger') {
             healthEmoji = '🔴';
-            healthText = 'CRÍTICO - RIESGO DE FALLA INMINENTE';
+            healthText = 'FUERA DE CONTROL ESTADÍSTICO';
         } else if (this.results.severityClass === 'warning') {
             healthEmoji = '🟡';
-            healthText = 'ADVERTENCIA - REQUIERE INSPECCIÓN';
+            healthText = 'ADVERTENCIA - DESVIACIÓN PREVENTIVA';
         }
 
         const limits = this.results.limits || {};
@@ -729,7 +716,7 @@ class SFAEngine {
         varsConfig.forEach(v => {
             if (v.show) {
                 const rationale = this.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, this.results);
-                const line = `${padRight(v.name, 24)}| ${padRight(rationale.valStr, 12)}| ${padRight(rationale.limitStr, 10)}| ${rationale.status} - ${rationale.desc}`;
+                const line = `${padRight(v.name, 24)}| ${padRight(rationale.valStr, 12)}| ${padRight(rationale.limitStr, 10)}| ${padRight(rationale.status, 38)}| ${rationale.desc}`;
                 rows.push(line);
             }
         });
@@ -756,7 +743,7 @@ INFORMACIÓN DE LICENCIA Y AUDITORÍA COMERCIAL:
 --------------------------------------------------------------------------`;
         }
 
-        const severityText = this.results.severity_text || (this.results.severityClass === 'danger' ? '🔴 CRÍTICO (Riesgo de Falla Inminente)' : (this.results.severityClass === 'warning' ? '🟡 ADVERTENCIA (Requiere Intervención Preventiva)' : '🟢 ÓPTIMO (Operación Nominal Seguro)'));
+        const severityText = this.results.severity_text || (this.results.severityClass === 'danger' ? '🔴 FUERA DE CONTROL ESTADÍSTICO' : (this.results.severityClass === 'warning' ? '🟡 ADVERTENCIA (Desviación Preventiva)' : '🟢 PROCESO ESTABLE (BANDA NOMINAL)'));
         const toleranceText = (this.results.green_count !== undefined && this.results.total_evaluated !== undefined) ? `${this.results.green_count} / ${this.results.total_evaluated}` : '-- / --';
 
         if (isGerente) {
@@ -826,10 +813,9 @@ ${rows.join('\n')}
 
 4. DICTAMEN DE FALLAS MECÁNICAS E INTEGRIDAD
 Causas Probables identificadas por el motor de diagnóstico espectral:
-${this.results.severityClass === 'healthy' ? '- Ninguna anomalía detectada. Operación segura.' : (this.results.detectedMode === 'CNC_MOTOR' ? `- Desalineación o desgaste de rodamientos en acoplamientos del husillo.
-- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.` : `- Cavitación hidráulica o fluctuación inestable del flujo de salida.
-- Desalineación o desgaste de rodamientos en acoplamientos del rotor.
-- Ruido eléctrico transitorio o pérdida de apantallamiento en sensores analógicos de PLC.`)}
+${this.results.severityClass === 'healthy' ? '- Ninguna anomalía detectada. Operación segura.' : `- Desalineación o desgaste de rodamientos en acoplamientos de husillo o rotor.
+- Inestabilidad térmica o sobrecorriente en estatores de línea de ensamble.
+- Desgaste excesivo de herramienta o fatiga en robótica.`}
 
 5. ACCIONES DE MANTENIMIENTO E INGENIERÍA DE CAMPO
 ${this.results.recommendations.map((rec, i) => `${i + 1}. [ ] ${rec}`).join('\n')}
@@ -3043,11 +3029,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (maintenanceContainer) {
                 let tooltipText = '';
                 if (results.severityClass === 'healthy') {
-                    tooltipText = 'Nivel de severidad: Óptimo (Operación Nominal Seguro). Tiempo estimado de intervención: No requiere.';
+                    tooltipText = 'Nivel de severidad: Proceso Estable (Banda Nominal). Tiempo estimado de intervención: No requiere.';
                 } else if (results.severityClass === 'warning') {
                     tooltipText = 'Nivel de severidad: Advertencia (Requiere Intervención Preventiva). Tiempo estimado de intervención: 72 horas.';
                 } else {
-                    tooltipText = 'Nivel de severidad: Crítico (Riesgo de Falla Inminente). Tiempo estimado de intervención: Inmediato / Paro Preventivo.';
+                    tooltipText = 'Nivel de severidad: Fuera de Control Estadístico. Tiempo estimado de intervención: Inmediato / Paro Preventivo.';
                 }
                 maintenanceContainer.setAttribute('data-tooltip-text', tooltipText);
             }
@@ -3363,7 +3349,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         card.className = 'stat-card';
                         card.id = `card-univ-${col.name.replace(/\s+/g, '_')}`;
                         
-                        const isCritical = col.status === '❌ Crítico';
+                        const isCritical = col.status.includes('FUERA DE CONTROL');
                         const valClass = isCritical ? 'text-red' : 'text-blue';
                         
                         let displayUnit = '';
@@ -3472,7 +3458,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (toleranceEl) {
                 if (results.universal_columns) {
                     const total = results.universal_columns.length;
-                    const green = results.universal_columns.filter(c => c.status === '🟢 Óptimo').length;
+                    const green = results.universal_columns.filter(c => c.status.includes('ESTABLE')).length;
                     toleranceEl.textContent = `Variables en Tolerancia: ${green} / ${total}`;
                     toleranceEl.style.display = 'block';
                 } else {
@@ -3563,6 +3549,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     rationalePlanLabel.textContent = reportPlan;
                 }
                 
+                const table = document.createElement('table');
+                table.className = 'sfa-report-table';
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Sensor</th>
+                            <th>Máx Registrado</th>
+                            <th>Límite Dinámico SFA (μ + 2σ)</th>
+                            <th>Estatus SPC</th>
+                            <th>Análisis Espectral y Racional Técnico</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `;
+                const tbody = table.querySelector('tbody');
+
                 if (results.universal_columns) {
                     results.universal_columns.forEach(col => {
                         let displayUnit = '';
@@ -3592,8 +3594,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             displayUnit = '%';
                         }
                         
-                        const isCritical = col.status === '❌ Crítico';
-                        const statusText = isCritical ? '❌ Crítico' : '🟢 Óptimo';
+                        const isCritical = col.status.includes('FUERA DE CONTROL');
+                        const statusText = isCritical ? '🔴 FUERA DE CONTROL ESTADÍSTICO' : '🟢 PROCESO ESTABLE (BANDA NOMINAL)';
                         const conditionClass = isCritical ? 'text-red' : 'text-blue';
                         const valStr = `${col.max.toFixed(formatPrecision)} ${displayUnit}`;
                         const limitStr = `${col.limit_sfa.toFixed(formatPrecision)} ${displayUnit}`;
@@ -3610,8 +3612,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (!isCritical) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil de los lubricantes.`;
                                 else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación del lubricante. Se requiere revisión preventiva.`;
                             } else if (nameLower.includes('pres')) {
-                                if (!isCritical) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza hidráulica y evita daños en sellos mecánicos.`;
-                                else desc = `Presión inestable con oscilación de ${valStr} superando el límite dinámico de ${limitStr}. Riesgo elevado de fugas e inestabilidad en actuadores.`;
+                                if (!isCritical) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza y evita daños en sellos mecánicos.`;
+                                else desc = `Presión inestable con oscilación de ${valStr} superando el límite dinámico de ${limitStr}. Riesgo de fugas e inestabilidad en actuadores.`;
                             } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
                                 if (!isCritical) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica en parámetros nominales de diseño.`;
                                 else desc = `Corriente de ${valStr} en sobrecarga crítica (límite SFA: ${limitStr}). Riesgo extremo de quemar bobinados o rotor bloqueado.`;
@@ -3624,14 +3626,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         } else if (reportPlan.includes("Consultor") || reportPlan.includes("Senior")) {
                             if (nameLower.includes('vib')) {
-                                if (!isCritical) desc = `La vibración RMS de ${valStr} se mantiene estable. El filtro espectral SFA (λ = ${lambda}) atenuó el ruido estructural estructural bajo el límite +2σ (${limitStr}).`;
+                                if (!isCritical) desc = `La vibración RMS de ${valStr} se mantiene estable. El filtro espectral SFA (λ = ${lambda}) atenuó el ruido estructural bajo el límite +2σ (${limitStr}).`;
                                 else desc = `La vibración RMS de ${valStr} excede el umbral estadístico +2σ SFA (${limitStr}). El espectro acusa desalineación angular o desbalanceo mecánico.`;
                             } else if (nameLower.includes('temp')) {
                                 if (!isCritical) desc = `Temperatura de ${valStr} nominal. Disipación de calor correcta sin derivas térmicas significativas en el devanado.`;
                                 else desc = `Temperatura máxima de ${valStr} excede el límite de diseño +2σ de ${limitStr}. Correlación con incremento de fricción o sobrecarga.`;
                             } else if (nameLower.includes('pres')) {
-                                if (!isCritical) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de cavitación.`;
-                                else desc = `Fluctuación de presión de ${valStr} supera el umbral dinámico +2σ de ${limitStr}. Transitorios rápidos sugieren desgaste en reguladora.`;
+                                if (!isCritical) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de transitorios inestables.`;
+                                else desc = `Fluctuación de presión de ${valStr} supera el umbral dinámico +2σ de ${limitStr}. Transitorios rápidos sugieren desgaste en regulador.`;
                             } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
                                 if (!isCritical) desc = `Consumo eléctrico de ${valStr}. La firma de corriente SFA no muestra modulaciones de carga, validando la integridad del estator y rotor.`;
                                 else desc = `Corriente de ${valStr} excede el límite nominal SFA de ${limitStr}. La potencia reactiva se eleva debido a fricción mecánica.`;
@@ -3650,19 +3652,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                         
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'sfa-rationale-item';
-                        itemDiv.innerHTML = `
-                            <div class="sfa-rationale-item-header">
-                                <span class="sfa-rationale-item-title">${col.name}</span>
-                                <span class="sfa-rationale-item-status ${conditionClass}">${statusText}</span>
-                            </div>
-                            <div class="sfa-rationale-item-meta">
-                                Valor registrado: <strong>${valStr}</strong> | Umbral seguro: &lt; ${limitStr}
-                            </div>
-                            <p class="sfa-rationale-item-desc">${desc}</p>
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${col.name}</strong></td>
+                            <td>${valStr}</td>
+                            <td>${limitStr}</td>
+                            <td><span class="spc-status-badge ${conditionClass}">${statusText}</span></td>
+                            <td class="sfa-rationale-desc-cell">${desc}</td>
                         `;
-                        rationaleContent.appendChild(itemDiv);
+                        tbody.appendChild(tr);
                     });
                 } else {
                     const stats = results.stats || {};
@@ -3683,17 +3681,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (v.show) {
                             const rationale = window.SFA.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, results);
                             
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = 'sfa-rationale-item';
-                            itemDiv.innerHTML = `
-                                <div class="sfa-rationale-item-header">
-                                    <span class="sfa-rationale-item-title">${v.name}</span>
-                                    <span class="sfa-rationale-item-status ${rationale.conditionClass}">${rationale.status}</span>
-                                </div>
-                                <div class="sfa-rationale-item-meta">
-                                    Valor registrado: <strong>${rationale.valStr}</strong> | Umbral seguro: &lt; ${rationale.limitStr}
-                                </div>
-                                <p class="sfa-rationale-item-desc">${rationale.desc}</p>
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><strong>${v.name}</strong></td>
+                                <td>${rationale.valStr}</td>
+                                <td>${rationale.limitStr}</td>
+                                <td><span class="spc-status-badge ${rationale.conditionClass}">${rationale.status}</span></td>
+                                <td class="sfa-rationale-desc-cell">${rationale.desc}</td>
                             `;
                             rationaleContent.appendChild(itemDiv);
                         }

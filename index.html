@@ -152,7 +152,7 @@
                     <span class="text-gold font-bold">DIAGNÓSTICO ESPECTRAL AUTOMATIZADO</span>
                 </h1>
                 <p class="hero-subtitle">
-                    Conecte la telemetría de sus activos críticos sin configuraciones rígidas. Procese registros analógicos crudos de cualquier PLC y marca. El Motor SFA auto-clasifica el tipo de activo mediante análisis de frecuencia fundamental, identifica los sensores instrumentados en tiempo real y genera reportes técnicos con acciones de mantenimiento exactas en segundos.<br>
+                    Monitoreo Espectral Universal SFA para Husillos CNC y Motores en Líneas de Ensamble Automotriz. Reduzca a cero los paros de línea imprevistos mediante Control Estadístico de Procesos Dinámico.<br>
                     <span class="hero-promo-badge" style="font-size: 0.82rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 4px; display: inline-block; margin-top: 0.8rem; font-weight: 600; font-family: var(--font-accent); letter-spacing: 0.05em; text-transform: uppercase;">⚡ EVALUACIÓN INICIAL GRATIS ACTIVADA (CLUB 33)</span>
                 </p>
                 <div class="hero-actions">
@@ -388,18 +388,18 @@
 
                                  <div class="divider-text" style="margin-top: 1.5rem; margin-bottom: 0.75rem;">O prueba con perfiles de maquinaria universal</div>
 
-                                 <!-- Mock Data Trigger Buttons -->
-                                 <div class="mock-buttons-group">
-                                      <button type="button" class="btn-mock-data btn-opt" data-type="automotriz" disabled>
-                                          🚗 Automotriz
-                                      </button>
-                                      <button type="button" class="btn-mock-data btn-warn" data-type="hidraulicos" disabled>
-                                          🛢️ Hidráulicos
-                                      </button>
-                                      <button type="button" class="btn-mock-data btn-crit" data-type="electricos" disabled>
-                                          ⚡ Eléctricos
-                                      </button>
-                                 </div>
+                                  <!-- Mock Data Trigger Buttons -->
+                                  <div class="mock-buttons-group">
+                                       <button type="button" class="btn-mock-data btn-opt" data-type="automotriz" disabled>
+                                           🚗 Línea Ensamble
+                                       </button>
+                                       <button type="button" class="btn-mock-data btn-warn" data-type="cnc" disabled>
+                                           ⚙️ Husillo CNC
+                                       </button>
+                                       <button type="button" class="btn-mock-data btn-crit" data-type="robotica" disabled>
+                                           🤖 Junta Robótica
+                                       </button>
+                                  </div>
 
                                 <!-- Lambda tuning slider -->
                                 <div class="lambda-tuning-box">
@@ -436,15 +436,15 @@
                                     <div class="guide-variables-list" style="margin-top: 1rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.6rem;">
                                         <div class="guide-var-item">
                                             <span class="var-badge badge-time" style="background: rgba(99, 102, 241, 0.12); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(99, 102, 241, 0.25);">Frecuencia Dominante (Auto-Sintonía)</span>
-                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Identifica la firma espectral: <strong>Motor/Bomba Eléctrica</strong> (20 a 60 Hz) o <strong>Husillo CNC/Cortador</strong> (menor a 20 Hz), adaptando el tablero y los algoritmos automáticamente.</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Identifica la firma espectral: <strong>Línea de Ensamble (Motor)</strong> (20 a 60 Hz) o <strong>Husillo CNC/Cortador</strong> (menor a 20 Hz), adaptando el tablero y los algoritmos automáticamente.</span>
                                         </div>
                                         <div class="guide-var-item">
                                             <span class="var-badge badge-vib" style="background: rgba(16, 185, 129, 0.12); color: #34d399; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.25);">Variables Mecánicas (CNC / Motores)</span>
                                             <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>vibracion</code>, <code>rpm</code>, <code>torque</code> y <code>desgaste_herramienta</code> (tool wear).</span>
                                         </div>
                                         <div class="guide-var-item">
-                                            <span class="var-badge badge-pres" style="background: rgba(59, 130, 246, 0.12); color: #60a5fa; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.25);">Variables de Fluidos (Hidráulica / Bombas)</span>
-                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>presion</code> (bar/PSI), <code>flujo_caudal</code> (flow) y <code>nivel_tanque</code> (level).</span>
+                                            <span class="var-badge badge-pres" style="background: rgba(59, 130, 246, 0.12); color: #60a5fa; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(59, 130, 246, 0.25);">Variables Cinemáticas (Robótica / Ejes)</span>
+                                            <span class="var-desc" style="font-size: 0.75rem; color: var(--color-text-gray); display: block; margin-top: 0.2rem;">Mapea <code>posicion</code>, <code>velocidad_angular</code> y <code>aceleracion_lineal</code>.</span>
                                         </div>
                                         <div class="guide-var-item">
                                             <span class="var-badge badge-temp" style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.25);">Variables Térmicas y Eléctricas</span>
@@ -975,7 +975,7 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                         <div class="flow-step">
                             <div class="step-num">Capa 1</div>
                             <h4>Captura (Sensores)</h4>
-                            <p>Variables físicas capturadas en tiempo real en motores y bombas mediante sensores analógicos e inteligentes (protocolos IO-Link, HART).</p>
+                            <p>Variables físicas capturadas en tiempo real en motores y husillos CNC mediante sensores analógicos e inteligentes (protocolos IO-Link, HART).</p>
                         </div>
                         <div class="flow-arrow">➔</div>
                         <div class="flow-step">
@@ -1019,16 +1019,16 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                                 <td>Seguimiento de velocidad de husillo CNC, patinamiento y sobrecarga.</td>
                             </tr>
                             <tr>
-                                <td class="font-bold text-white">Transmisores de Presión</td>
+                                <td class="font-bold text-white">Encoders de Posición</td>
                                 <td>Registro Modbus / Palabra IW</td>
-                                <td><span class="badge badge-medium">Media (Hz)</span></td>
-                                <td>Identificación de picos transitorios, cavitación y golpes de ariete.</td>
+                                <td><span class="badge badge-high">Alta (kHz)</span></td>
+                                <td>Monitoreo cinemático, holgura de engranajes y repetibilidad en robótica.</td>
                             </tr>
                             <tr>
-                                <td class="font-bold text-white">Sensores de Flujo / Caudal</td>
+                                <td class="font-bold text-white">Sensores de Desgaste (Láser)</td>
                                 <td>Señal analógica 4-20mA / VFD</td>
                                 <td><span class="badge badge-low">Baja (Ciclos/min)</span></td>
-                                <td>Monitoreo y balance de caudal de salida en sistemas de bombeo.</td>
+                                <td>Control de degradación de filo y micro-fricción en husillo CNC.</td>
                             </tr>
                             <tr>
                                 <td class="font-bold text-white">Sensores de Corriente (CTs)</td>
@@ -1249,11 +1249,11 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                         <p>Degradación por Temperatura (°C) y fatiga térmica de aislamientos.</p>
                     </div>
                     
-                    <!-- Fluidos -->
+                    <!-- Robótica / Cinemática -->
                     <div class="compatibilidad-card">
-                        <div class="compatibilidad-card-icon">💧</div>
-                        <h3>Fluidos</h3>
-                        <p>Fluctuación de Presión (bar / PSI), cavitación y flujo del sistema.</p>
+                        <div class="compatibilidad-card-icon">🤖</div>
+                        <h3>Cinemática</h3>
+                        <p>Desgaste de herramienta (min), velocidad angular y posicionamiento en robótica.</p>
                     </div>
                 </div>
             </div>
@@ -1273,7 +1273,7 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
                             <span class="pillar-letter text-gold">A</span>
                         </div>
                         <h3>Monitoreo Espectral Comunitario</h3>
-                        <p>Donación e instalación de sistemas de alerta temprana basados en micro-sensores de bajo costo para predecir fallas catastróficas en redes de agua potable, bombas hidráulicas comunitarias y plantas de tratamiento en sectores vulnerables.</p>
+                        <p>Donación e instalación de sistemas de alerta temprana basados en micro-sensores de bajo costo para predecir fallas catastróficas en motores eléctricos de pozos de agua y sistemas de bombeo civil en sectores vulnerables.</p>
                     </div>
                     <div class="pillar-card">
                         <div class="pillar-icon-box">
