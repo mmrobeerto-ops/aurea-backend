@@ -5479,6 +5479,201 @@ footer {
 }
 
 .spc-status-badge.text-orange {
+.sfa-rationale-item-status {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.sfa-rationale-item-meta {
+    font-size: 0.8rem;
+    color: var(--color-text-gray);
+    margin-bottom: 0.25rem;
+}
+.sfa-rationale-item-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--color-text-light);
+}
+
+@media print {
+    .sfa-rationale-section {
+        background: transparent !important;
+        border: 1px solid #ddd !important;
+        color: #000000 !important;
+        margin-top: 20px !important;
+        padding: 15px !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+    }
+    .sfa-rationale-section h4 {
+        color: #000000 !important;
+        border-bottom: 1px solid #ccc !important;
+    }
+    .sfa-rationale-item {
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 1px dashed #eee !important;
+        border-radius: 0 !important;
+        padding: 8px 0 !important;
+        page-break-inside: avoid !important;
+    }
+    .sfa-rationale-item-title {
+        color: #000000 !important;
+        font-size: 10pt !important;
+    }
+    .sfa-rationale-item-meta {
+        color: #555555 !important;
+        font-size: 8.5pt !important;
+    }
+    .sfa-rationale-item-desc {
+        color: #222222 !important;
+        font-size: 9.5pt !important;
+    }
+}
+
+/* Dynamic Premium Background System */
+.sfa-dynamic-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* Place below all content */
+    overflow: hidden;
+    pointer-events: none;
+    background: radial-gradient(circle at center, rgba(1, 2, 4, 0.95) 0%, rgba(0, 0, 0, 1.0) 100%);
+}
+
+.sfa-dynamic-bg-container::before {
+    content: '';
+    position: absolute;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+    background-image: url('../img/bg_gold_particles.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: slowZoomPan 45s infinite alternate ease-in-out;
+    z-index: -2;
+    opacity: 0.1;
+}
+
+@keyframes slowZoomPan {
+    0% {
+        transform: scale(1) translate(0, 0);
+    }
+    50% {
+        transform: scale(1.06) translate(1%, -1%);
+    }
+    100% {
+        transform: scale(1) translate(0, 0);
+    }
+}
+
+/* Floating Spark Particles */
+.sfa-bg-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.sfa-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background-color: var(--color-primary-gold);
+    border-radius: 50%;
+    opacity: 0.25;
+    box-shadow: 0 0 4px var(--color-primary-gold);
+    animation: floatParticle 15s infinite linear;
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(105vh) translateX(0) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.4;
+    }
+    90% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateY(-5vh) translateX(20px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* SFA Report Table styling */
+.sfa-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(30, 30, 45, 0.25);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.sfa-report-table th {
+    background: rgba(197, 168, 128, 0.08);
+    color: var(--color-primary-gold);
+    font-family: var(--font-accent);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(197, 168, 128, 0.15);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+}
+
+.sfa-report-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    vertical-align: middle;
+}
+
+.sfa-report-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.spc-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.spc-status-badge.text-blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.spc-status-badge.text-red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.spc-status-badge.text-orange {
     background: rgba(245, 158, 11, 0.12);
     color: #fbbf24;
     border: 1px solid rgba(245, 158, 11, 0.25);
@@ -5488,4 +5683,31 @@ footer {
     font-size: 0.82rem;
     color: var(--color-text-gray);
     line-height: 1.4;
+}
+
+/* Nuevos estilos de botón de plan comercial */
+.plan-select-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover .plan-select-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.plan-card.active .plan-select-btn {
+    background: linear-gradient(135deg, var(--color-primary-gold), #b3925c);
+    border-color: var(--color-primary-gold);
+    color: #000;
+    box-shadow: 0 0 10px rgba(197, 168, 128, 0.3);
 }

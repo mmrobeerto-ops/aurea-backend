@@ -421,6 +421,71 @@ def db_clear_registros():
         except Exception:
             pass
 
+USAGE_FILE = "usage.json"
+
+def db_load_usage() -> dict:
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS usage (
+                        license_key VARCHAR(255) PRIMARY KEY,
+                        count INTEGER DEFAULT 0
+                    )
+                """)
+                conn.commit()
+                cursor.execute("SELECT license_key, count FROM usage")
+                rows = cursor.fetchall()
+                cursor.close()
+                conn.close()
+                return {row[0]: row[1] for row in rows}
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al cargar uso de PostgreSQL: {e}")
+            
+    if os.path.exists(USAGE_FILE):
+        try:
+            with open(USAGE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def db_increment_usage(license_key: str):
+    if DATABASE_URL:
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS usage (
+                        license_key VARCHAR(255) PRIMARY KEY,
+                        count INTEGER DEFAULT 0
+                    )
+                """)
+                conn.commit()
+                cursor.execute("""
+                    INSERT INTO usage (license_key, count)
+                    VALUES (%s, 1)
+                    ON CONFLICT (license_key) DO UPDATE
+                    SET count = usage.count + 1
+                """, (license_key,))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                return
+        except Exception as e:
+            print(f"[DATABASE ERROR] Error al incrementar uso en PostgreSQL: {e}")
+            
+    usage = db_load_usage()
+    usage[license_key] = usage.get(license_key, 0) + 1
+    try:
+        with open(USAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(usage, f, indent=4)
+    except Exception as e:
+        print(f"[ERROR] No se pudo guardar usage.json: {e}")
+
 def load_devices() -> dict:
     if DATABASE_URL:
         try:
@@ -619,7 +684,7 @@ def get_license_plan_limit(license_key: str) -> int:
             return 3
         elif prefix == "CON":
             return 20
-        elif prefix == "GER":
+        elif prefix == "GER" or prefix == "RET":
             return 9999
             
     # Formato antiguo o fallback de base de datos registros.json (4 partes)
@@ -635,7 +700,7 @@ def get_license_plan_limit(license_key: str) -> int:
             return 20
         elif "club de pioneros" in plan_lower:
             return 3
-        elif "gerente" in plan_lower or "planta" in plan_lower:
+        elif "gerente" in plan_lower or "planta" in plan_lower or "reto" in plan_lower or "aurea33" in plan_lower:
             return 9999
             
     # Si la llave es válida pero no existe en registros.json (ej. tras un reinicio de Render),
@@ -702,8 +767,8 @@ def generate_license_key(plan: str) -> str:
         prefix = "JUN"
     elif "consultor" in plan_lower or "senior" in plan_lower:
         prefix = "CON"
-    elif "club de pioneros" in plan_lower:
-        prefix = "PIO"
+    elif "reto" in plan_lower or "spc" in plan_lower or "aurea33" in plan_lower:
+        prefix = "RET"
     elif "gerente" in plan_lower or "planta" in plan_lower:
         prefix = "GER"
     else:
@@ -765,14 +830,15 @@ async def create_registro(record: RegistrationRecord, background_tasks: Backgrou
     import datetime
     
     # Validar clave de invitación para el Club de Pioneros 33
-    if record.plan == "Club de Pioneros 33":
-        expected_key = os.getenv("PIONEROS_ACCESS_KEY", "aurea33")
+    # Validar clave de invitación para el Reto SPC Automotriz
+    if record.plan in ["Club de Pioneros 33", "Reto SPC Automotriz"]:
+        expected_key = os.getenv("PIONEROS_ACCESS_KEY", "AUREA33")
         clean_provided = (record.access_key or "").replace(" ", "").upper()
         clean_expected = expected_key.replace(" ", "").upper()
         if clean_provided != clean_expected:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Clave de invitación incorrecta. Solicítela por correo a mmrobeerto@gmail.com."
+                detail="Clave de invitación incorrecta para el Reto SPC Automotriz."
             )
             
     license_key = generate_license_key(record.plan)
@@ -811,7 +877,7 @@ async def get_registros(token: Optional[str] = None):
 @app.get("/api/registros/public-count")
 async def get_registros_count():
     registros = db_load_registros()
-    pioneros_count = sum(1 for r in registros if r.get("plan") == "Club de Pioneros 33")
+    pioneros_count = sum(1 for r in registros if r.get("plan") in ["Club de Pioneros 33", "Reto SPC Automotriz"])
     remaining_spots = max(0, 33 - pioneros_count)
     return {"registered": pioneros_count, "remaining": remaining_spots}
 
@@ -2471,6 +2537,13 @@ async def procesar_sfa_endpoint(
         if x_sfa_key and x_sfa_key.startswith("SFA-MEM-"):
             sensor_id = extract_sensor_id_from_csv(csv_text)
             validate_device_limit(x_sfa_key, sensor_id)
+            if "-RET-" in x_sfa_key:
+                usage = db_load_usage()
+                if usage.get(x_sfa_key, 0) >= 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="LÍMITE_PROMO_EXCEDIDO: Has agotado tu análisis gratuito del Reto SPC Automotriz."
+                    )
             
         try:
             res = procesar_bloque_armonico(
@@ -2479,6 +2552,9 @@ async def procesar_sfa_endpoint(
                 offset_val=0.0,
                 profile_key="auto"
             )
+            
+            if x_sfa_key and "-RET-" in x_sfa_key:
+                db_increment_usage(x_sfa_key)
             
             # Format output specifically for the curl test
             return {
@@ -2514,6 +2590,13 @@ async def procesar_sfa_endpoint(
         if x_sfa_key and x_sfa_key.startswith("SFA-MEM-"):
             sensor_id = extract_sensor_id_from_csv(req_data.csv_text)
             validate_device_limit(x_sfa_key, sensor_id)
+            if "-RET-" in x_sfa_key:
+                usage = db_load_usage()
+                if usage.get(x_sfa_key, 0) >= 1:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="LÍMITE_PROMO_EXCEDIDO: Has agotado tu análisis gratuito del Reto SPC Automotriz."
+                    )
             
         try:
             res = procesar_bloque_armonico(
@@ -2522,6 +2605,10 @@ async def procesar_sfa_endpoint(
                 offset_val=req_data.offset_val,
                 profile_key=req_data.profile_key
             )
+            
+            if x_sfa_key and "-RET-" in x_sfa_key:
+                db_increment_usage(x_sfa_key)
+                
             return res
         except ValueError as val_err:
             raise HTTPException(

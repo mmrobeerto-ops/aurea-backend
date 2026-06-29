@@ -277,5 +277,51 @@ class TestMachineSlotLimiting(unittest.TestCase):
         self.assertEqual(res.status_code, 403)
         self.assertIn("LÍMITE_MÁQUINAS_EXCEDIDO", res.json()["detail"])
 
+    def test_reto_spc_limit(self):
+        """
+        Prueba que el plan Reto SPC Automotriz permita exactamente 1 análisis y bloquee el segundo.
+        """
+        # 1. Registrar usuario con Plan Reto SPC Automotriz y clave AUREA33
+        payload_ok = {
+            "name": "Ingeniero Reto",
+            "email": "reto@empresa.com",
+            "company": "Planta Automotriz",
+            "plan": "Reto SPC Automotriz",
+            "access_key": "AUREA33"
+        }
+        res = self.client.post("/api/registros", json=payload_ok)
+        self.assertEqual(res.status_code, 200)
+        reto_key = res.json()["license_key"]
+        self.assertTrue("-RET-" in reto_key)
+
+        # 2. Primer análisis - debe tener éxito
+        csv_content_1 = "timestamp,vibration,temperature,pressure,current,sensor_id\n0,0.1,40,5,10,sensor-1\n1,0.2,42,5.1,10.5,sensor-1"
+        res_analysis_1 = self.client.post(
+            "/api/procesar-sfa",
+            headers={"X-SFA-Key": reto_key},
+            json={
+                "csv_text": csv_content_1,
+                "lambda_val": 1.618,
+                "offset_val": 0.0,
+                "profile_key": "auto"
+            }
+        )
+        self.assertEqual(res_analysis_1.status_code, 200)
+
+        # 3. Segundo análisis - debe fallar con 403 y LÍMITE_PROMO_EXCEDIDO
+        csv_content_2 = "timestamp,vibration,temperature,pressure,current,sensor_id\n0,0.15,41,5,10.1,sensor-1\n1,0.25,43,5.2,10.6,sensor-1"
+        res_analysis_2 = self.client.post(
+            "/api/procesar-sfa",
+            headers={"X-SFA-Key": reto_key},
+            json={
+                "csv_text": csv_content_2,
+                "lambda_val": 1.618,
+                "offset_val": 0.0,
+                "profile_key": "auto"
+            }
+        )
+        self.assertEqual(res_analysis_2.status_code, 403)
+        self.assertIn("LÍMITE_PROMO_EXCEDIDO", res_analysis_2.json()["detail"])
+
 if __name__ == "__main__":
     unittest.main()

@@ -1649,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const planCards = document.querySelectorAll('.plan-card');
     const btnSimulatePayment = document.getElementById('btn-simulate-payment');
     const btnActivatePromo = document.getElementById('btn-activate-promo');
-    const activePlan = { name: 'Plan Consultor / Senior', price: 20000 };
+    const activePlan = { name: 'Licencia SFA Senior', price: 1499 };
 
     if (dropzone && fileInput && lambdaSlider) {
         
@@ -1715,58 +1715,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // Promo spots remaining (localStorage persisted)
-        let promoSpots = parseInt(localStorage.getItem('aurea_promo_spots'));
-        if (isNaN(promoSpots)) {
-            promoSpots = 33;
-            localStorage.setItem('aurea_promo_spots', promoSpots);
-        }
-
-        const updatePromoSpotsUI = () => {
-            const promoSpotsCard = document.getElementById('promo-spots-card');
-            const promoBtnSpots = document.getElementById('promo-btn-spots');
-            if (promoSpotsCard) promoSpotsCard.textContent = promoSpots;
-            if (promoBtnSpots) promoBtnSpots.textContent = promoSpots;
-
-            // If no spots remaining, disable the promo card and its button
-            const planPromo = document.getElementById('plan-club33');
-            const btnSubmitClub33 = document.getElementById('btn-submit-club33');
-            if (promoSpots <= 0) {
-                if (planPromo) {
-                    planPromo.classList.add('disabled');
-                    planPromo.style.pointerEvents = 'none';
-                    planPromo.style.opacity = '0.5';
-                    const badge = planPromo.querySelector('.plan-badge');
-                    if (badge) {
-                        badge.textContent = 'AGOTADO';
-                        badge.style.background = '#6b7280';
-                    }
-                }
-                if (btnSubmitClub33) {
-                    btnSubmitClub33.disabled = true;
-                    btnSubmitClub33.style.background = '#6b7280';
-                    btnSubmitClub33.style.color = '#fff';
-                    btnSubmitClub33.textContent = 'Registro Agotado';
-                }
-            }
-        };
-
-        const fetchPromoSpots = async () => {
-            try {
-                const baseUrl = getRegistrosApiUrl().replace('/registros', '');
-                const response = await fetch(`${baseUrl}/registros/public-count`);
-                if (response.ok) {
-                    const data = await response.json();
-                    promoSpots = data.remaining;
-                    updatePromoSpotsUI();
-                }
-            } catch (e) {
-                console.error("Error al obtener cupos de promoción del servidor:", e);
-            }
-        };
-
-        // Initialize spots UI
-        updatePromoSpotsUI();
-        fetchPromoSpots();
+        const updatePromoSpotsUI = () => {};
+        const fetchPromoSpots = async () => {};
 
         // Update Remaining Credits in Active License Banner
         const updateCreditsUI = () => {
@@ -1817,7 +1767,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     formClub33.style.display = 'block';
                     formClub33.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     
-                    activePlan.name = 'Club de Pioneros 33';
+                    activePlan.name = 'Reto SPC Automotriz';
                     activePlan.price = 0;
                     
                     planCards.forEach(c => c.classList.remove('active'));
@@ -1921,7 +1871,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        // Evento para enviar registro de Club 33
+        // Evento para enviar registro del Reto SPC
         const btnSubmitClub33 = document.getElementById('btn-submit-club33');
         if (btnSubmitClub33) {
             btnSubmitClub33.addEventListener('click', async () => {
@@ -1937,39 +1887,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyVal = companyInput.value.trim();
                 const keyVal = keyInput.value.trim();
                 
-                if (!nameVal || !emailVal || !companyVal || !keyVal) {
-                    alert("Por favor rellene todos los campos para registrarse, incluyendo la clave de acceso.");
+                if (!nameVal || !emailVal || !companyVal) {
+                    alert("Por favor rellene los campos Nombre, Correo y Empresa para registrarse.");
                     return;
                 }
                 
-                if (promoSpots <= 0) {
-                    alert("Lo sentimos, los cupos para la promoción Club 33 se han agotado.");
+                if (!keyVal) {
+                    alert("Por favor introduce el código de invitación AUREA33 para activar tu análisis gratuito.");
                     return;
                 }
-
+                
                 btnSubmitClub33.disabled = true;
                 btnSubmitClub33.textContent = "⏳ Registrando...";
-
+ 
                 let regResult;
                 try {
                     // Registrar en API
-                    regResult = await submitRegistration(nameVal, emailVal, companyVal, "Club de Pioneros 33", keyVal);
+                    regResult = await submitRegistration(nameVal, emailVal, companyVal, "Reto SPC Automotriz", keyVal);
                 } catch (error) {
                     btnSubmitClub33.disabled = false;
-                    btnSubmitClub33.innerHTML = `⚡ Registrarse y Activar 3 Meses Gratis (Cupo: <span id="promo-btn-spots">${promoSpots}</span>/33)`;
+                    btnSubmitClub33.textContent = "⚡ Registrarse y Activar Análisis Gratis";
                     alert(error.message || "Error al realizar el registro. Inténtelo de nuevo.");
                     return;
                 }
-
-                // Descontar cupo (solo si el registro es exitoso)
-                promoSpots--;
-                localStorage.setItem('aurea_promo_spots', promoSpots);
-                updatePromoSpotsUI();
-                fetchPromoSpots();
-
+ 
                 btnSubmitClub33.disabled = false;
-                btnSubmitClub33.innerHTML = `⚡ Registrarse y Activar 3 Meses Gratis (Cupo: <span id="promo-btn-spots">${promoSpots}</span>/33)`;
-
+                btnSubmitClub33.textContent = "⚡ Registrarse y Activar Análisis Gratis";
+ 
                 // Guardar datos del registro en localStorage para fines de trazabilidad local
                 const regData = {
                     name: nameVal,
@@ -2078,8 +2022,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let remainingCredits = 1;
             let expiresAt = null;
 
-            if (planName.includes("Club 33") || planName.includes("3 Meses Gratis") || planName.includes("Promocional") || planName.includes("Pioneros")) {
-                remainingCredits = 9999; // Acceso ilimitado por 3 meses
+            if (planName.includes("Reto") || planName.includes("SPC")) {
+                remainingCredits = 1; // 1 single diagnostic run
+            } else if (planName.includes("Club 33") || planName.includes("3 Meses Gratis") || planName.includes("Promocional") || planName.includes("Pioneros")) {
+                remainingCredits = 9999; // Acceso ilimitado por 3 meses (legacy fallback)
                 const d = new Date();
                 d.setMonth(d.getMonth() + 3);
                 expiresAt = d.getTime();
@@ -2147,13 +2093,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (lblLicRef) lblLicRef.textContent = txId;
             const lblLicCurrency = document.getElementById('lbl-lic-currency');
             if (lblLicCurrency) {
-                if (planName.includes("Club 33") || planName.includes("Pioneros")) {
-                    lblLicCurrency.textContent = "USD";
-                } else {
-                    lblLicCurrency.textContent = "MXN";
-                }
+                lblLicCurrency.textContent = "USD";
             }
             if (licenseBanner) licenseBanner.style.display = 'flex';
+
+            // Toggle visibility of Python integration script download button
+            const btnDownloadPython = document.getElementById('btn-download-python');
+            if (btnDownloadPython) {
+                if (planName.includes("Gerente") || planName.includes("Reto") || planName.includes("SPC")) {
+                    btnDownloadPython.style.display = 'inline-flex';
+                } else {
+                    btnDownloadPython.style.display = 'none';
+                }
+            }
 
             updateCreditsUI();
 
@@ -2172,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set data attributes for media print layout
             if (resultsPanel) {
                 const priceVal = parseFloat(price);
-                const currency = (planName.includes("Junior") || planName.includes("Consultor") || planName.includes("Gerente") || priceVal > 1000) ? 'MXN' : 'USD';
+                const currency = 'USD';
                 const formattedPrice = `$${priceVal.toLocaleString()} ${currency}`;
                 
                 resultsPanel.setAttribute('data-plan', planName);
@@ -2532,6 +2484,77 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const btnDownloadPython = document.getElementById('btn-download-python');
+        if (btnDownloadPython) {
+            btnDownloadPython.addEventListener('click', () => {
+                const licenseKey = window.SFA.license ? window.SFA.license.txId : 'SFA-MEM-GER-MOCK-MOCK';
+                
+                const pythonCode = `import requests
+import json
+import sys
+
+# Configuración de API de SFA Predictivo
+API_URL = "https://aurea-backend-eq8d.onrender.com/api/procesar-sfa"
+LICENSE_KEY = "${licenseKey}"
+
+def main():
+    if len(sys.argv) < 2:
+        print("Uso: python script.py <path_to_csv>")
+        print("Ejemplo: python script.py ai4i2020.csv")
+        sys.exit(1)
+        
+    csv_path = sys.argv[1]
+    
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            csv_content = f.read()
+    except Exception as e:
+        print(f"Error al leer archivo: {e}")
+        sys.exit(1)
+        
+    headers = {
+        "X-SFA-Key": LICENSE_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "csv_text": csv_content,
+        "lambda_val": 1.618,
+        "offset_val": 0.0,
+        "profile_key": "auto"
+    }
+    
+    print(f"Enviando archivo {csv_path} al motor SFA...")
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload)
+        if response.status_code == 200:
+            result = response.json()
+            print("\n=== DIAGNÓSTICO SFA COMPLETO ===")
+            print(f"Estatus de Salud: {result['results']['healthScore']}%")
+            print(f"Estatus del Proceso: {result['results']['globalStatus']}")
+            print("\n--- Sensor | Estatus ---")
+            for col in result['results']['columns']:
+                print(f"{col['name']}: {col['status']}")
+            print("================================")
+        else:
+            print(f"Error en el servidor ({response.status_code}): {response.text}")
+    except Exception as e:
+        print(f"Error de conexión: {e}")
+
+if __name__ == '__main__':
+    main()
+`;
+
+                const blob = new Blob([pythonCode], { type: 'text/plain;charset=utf-8' });
+                const element = document.createElement('a');
+                element.href = URL.createObjectURL(blob);
+                element.download = `sfa_integration_${licenseKey.substring(0, 15).replace(/:/g, '_')}.py`;
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+            });
+        }
+
 
         const reportFormatSelect = document.getElementById('sfa-report-format-select');
         if (reportFormatSelect) {
@@ -2680,9 +2703,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show machine limit warning modal (PLG Flow)
+        // Show machine limit warning modal (PLG Flow)
         const showMachineLimitModal = (message) => {
             const existingModal = document.getElementById('machine-limit-modal');
             if (existingModal) existingModal.remove();
+
+            const isPromo = message.includes("LÍMITE_PROMO_EXCEDIDO");
+            const title = isPromo ? "Límite del Reto SPC Excedido" : "Límite de Slots Excedido";
+            const subtext = isPromo 
+                ? "Has agotado tu análisis de diagnóstico gratuito del Reto SPC Automotriz. Para continuar evaluando activos de forma ilimitada, actualiza a una de nuestras licencias."
+                : "Has analizado tus máquinas asignadas para este plan. Para conectar nuevos equipos y expandir tu monitoreo industrial, actualiza tu membresía y desbloquea más slots.";
+            const btnText = isPromo ? "Ver licencias disponibles ➔" : "Desbloquear más slots ➔ Cambiar a Plan Consultor";
+            const cleanMsg = message.replace("LÍMITE_PROMO_EXCEDIDO: ", "").replace("LÍMITE_MÁQUINAS_EXCEDIDO: ", "");
 
             const modalOverlay = document.createElement('div');
             modalOverlay.className = 'aurea-modal-overlay';
@@ -2691,22 +2723,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="aurea-modal-container" style="border: 2px solid var(--color-primary-gold); box-shadow: 0 0 25px rgba(226, 193, 149, 0.4);">
                     <div class="aurea-modal-header">
                         <span class="aurea-modal-icon">🔐</span>
-                        <h3>Límite de Slots Excedido</h3>
+                        <h3>${title}</h3>
                     </div>
                     <div class="aurea-modal-body">
                         <p style="font-weight: bold; color: #fff; font-size: 1.1rem; margin-bottom: 0.75rem;">
-                            Límite de Slots de Máquinas Excedido
+                            ${title}
                         </p>
                         <p class="aurea-modal-subtext" style="font-size: 0.9rem; line-height: 1.5; color: var(--color-text-light); margin-bottom: 1rem;">
-                            Has analizado tus máquinas asignadas para este plan. Para conectar nuevos equipos y expandir tu monitoreo industrial, actualiza tu membresía y desbloquea más slots.
+                            ${subtext}
                         </p>
                         <p style="font-size: 0.82rem; color: var(--color-primary-gold); font-family: monospace; background: rgba(226, 193, 149, 0.05); padding: 0.6rem; border-radius: 4px; border: 1px dashed rgba(226, 193, 149, 0.25); margin: 0;">
-                            ${message.replace("LÍMITE_MÁQUINAS_EXCEDIDO: ", "")}
+                            ${cleanMsg}
                         </p>
                     </div>
                     <div class="aurea-modal-footer">
                         <button class="aurea-modal-btn" id="btn-modal-upgrade-consultor" style="background: linear-gradient(135deg, var(--color-primary-gold), #b3925c); color: #000; width: 100%;">
-                            Desbloquear más slots ➔ Cambiar a Plan Consultor
+                            ${btnText}
                         </button>
                     </div>
                 </div>
@@ -2745,7 +2777,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const checkMachineLimitError = (err) => {
-            if (err && err.message && err.message.includes("LÍMITE_MÁQUINAS_EXCEDIDO")) {
+            if (err && err.message && (
+                err.message.includes("LÍMITE_MÁQUINAS_EXCEDIDO") || 
+                err.message.includes("LÍMITE_PROMO_EXCEDIDO") || 
+                err.message.includes("LÍMITE_PIONEROS_EXCEDIDO")
+            )) {
                 showStep(1);
                 showMachineLimitModal(err.message);
                 return true;
@@ -2930,22 +2966,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const reportFormatSelect = document.getElementById('sfa-report-format-select');
             let selectedFormat = reportFormatSelect ? reportFormatSelect.value : 'senior';
             
-            let reportPlan = 'Plan Consultor / Senior';
-            let reportPrice = '20000';
+            let reportPlan = 'Licencia SFA Senior';
+            let reportPrice = '1499';
             
             if (selectedFormat === 'junior') {
-                reportPlan = 'Plan Junior / Técnico Predictivo';
-                reportPrice = '1500';
+                reportPlan = 'Licencia SFA Junior';
+                reportPrice = '399';
             } else if (selectedFormat === 'gerente') {
-                reportPlan = 'Plan Gerente / Planta Completa';
-                reportPrice = '45000';
+                reportPlan = 'Licencia Aurea Gerente';
+                reportPrice = '0';
             }
 
             // Always unlock printing
             window.currentAnalysisIsStandard = false;
             if (btnPrint) {
                 btnPrint.classList.remove('restricted');
-                btnPrint.title = 'Imprimir Reporte Técnico / PDF';
+                btnPrint.title = 'Imprimir Reporte Técnico';
                 btnPrint.style.opacity = '1';
                 btnPrint.style.cursor = 'pointer';
             }
