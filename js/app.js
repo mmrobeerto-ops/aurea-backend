@@ -440,12 +440,19 @@ class SFAEngine {
             conditionClass = 'text-orange';
         }
 
-        const formatVal = (v) => typeof v === 'number' ? v.toFixed(varKey === 'vibration' ? 3 : (varKey === 'rpm' ? 0 : 1)) : v;
-        const valStr = `${formatVal(val)} ${unit}`;
-        const limitStr = `${formatVal(limit)} ${unit}`;
-        const dangerLimitStr = `${formatVal(dangerLimit)} ${unit}`;
+        const isUniversal = results && results.universal_columns;
+        const formatVal = (v, isLimit = false) => {
+            if (typeof v !== 'number') return v;
+            if (isUniversal) {
+                return isLimit ? v.toFixed(4) : String(Number(v.toFixed(4)));
+            }
+            return v.toFixed(varKey === 'vibration' ? 3 : (varKey === 'rpm' ? 0 : 1));
+        };
+        const valStr = `${formatVal(val, false)} ${unit}`.trim();
+        const limitStr = `${formatVal(limit, true)} ${unit}`.trim();
+        const dangerLimitStr = `${formatVal(dangerLimit, true)} ${unit}`.trim();
         const diff = val - limit;
-        const diffStr = diff > 0 ? `+${formatVal(diff)} ${unit}` : '';
+        const diffStr = diff > 0 ? `+${formatVal(diff, false)} ${unit}`.trim() : '';
         
         const lambda = this.lambda ? this.lambda.toFixed(3) : '1.618';
         const fBase = results.targetFreq ? results.targetFreq.toFixed(2) : '17.75';
@@ -675,18 +682,20 @@ class SFAEngine {
                 else if (matchedKey.includes('volt')) matchedKey = 'voltage';
                 else matchedKey = col.name;
                 
-                let displayUnit = '';
-                const nameLower = col.name.toLowerCase();
-                if (nameLower.includes('temp')) displayUnit = this.tempUnit || '°C';
-                else if (nameLower.includes('pres')) displayUnit = this.pressureUnit || 'bar';
-                else if (nameLower.includes('vib')) displayUnit = 'mm/s';
-                else if (nameLower.includes('curr') || nameLower.includes('corr')) displayUnit = 'A';
-                else if (nameLower.includes('volt')) displayUnit = 'V';
-                else if (nameLower.includes('rpm') || nameLower.includes('speed')) displayUnit = 'RPM';
-                else if (nameLower.includes('torq')) displayUnit = 'Nm';
-                else if (nameLower.includes('wear') || nameLower.includes('desgaste')) displayUnit = 'min';
-                else if (nameLower.includes('flow') || nameLower.includes('caudal')) displayUnit = 'LPM';
-                else if (nameLower.includes('level') || nameLower.includes('nivel')) displayUnit = '%';
+                let displayUnit = col.unit || '';
+                if (!displayUnit) {
+                    const nameLower = col.name.toLowerCase();
+                    if (nameLower.includes('temp')) displayUnit = this.tempUnit || '°C';
+                    else if (nameLower.includes('pres')) displayUnit = this.pressureUnit || 'bar';
+                    else if (nameLower.includes('vib')) displayUnit = 'mm/s';
+                    else if (nameLower.includes('curr') || nameLower.includes('corr')) displayUnit = 'A';
+                    else if (nameLower.includes('volt')) displayUnit = 'V';
+                    else if (nameLower.includes('rpm') || nameLower.includes('speed')) displayUnit = 'RPM';
+                    else if (nameLower.includes('torq')) displayUnit = 'Nm';
+                    else if (nameLower.includes('wear') || nameLower.includes('desgaste')) displayUnit = 'min';
+                    else if (nameLower.includes('flow') || nameLower.includes('caudal')) displayUnit = 'LPM';
+                    else if (nameLower.includes('level') || nameLower.includes('nivel')) displayUnit = '%';
+                }
                 
                 varsConfig.push({
                     key: matchedKey,
@@ -3567,38 +3576,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (results.universal_columns) {
                     results.universal_columns.forEach(col => {
-                        let displayUnit = '';
-                        let formatPrecision = 1;
-                        const nameLower = col.name.toLowerCase();
-                        if (nameLower.includes('temp')) {
-                            displayUnit = results.tempUnit || '°C';
-                        } else if (nameLower.includes('pres')) {
-                            displayUnit = results.pressureUnit || 'bar';
-                        } else if (nameLower.includes('vib')) {
-                            displayUnit = 'mm/s';
-                            formatPrecision = 3;
-                        } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
-                            displayUnit = 'A';
-                        } else if (nameLower.includes('volt')) {
-                            displayUnit = 'V';
-                        } else if (nameLower.includes('rpm') || nameLower.includes('speed')) {
-                            displayUnit = 'RPM';
-                            formatPrecision = 0;
-                        } else if (nameLower.includes('torq')) {
-                            displayUnit = 'Nm';
-                        } else if (nameLower.includes('wear') || nameLower.includes('desgaste')) {
-                            displayUnit = 'min';
-                        } else if (nameLower.includes('flow') || nameLower.includes('caudal')) {
-                            displayUnit = 'LPM';
-                        } else if (nameLower.includes('level') || nameLower.includes('nivel')) {
-                            displayUnit = '%';
+                        let displayUnit = col.unit || '';
+                        if (!displayUnit) {
+                            const nameLower = col.name.toLowerCase();
+                            if (nameLower.includes('temp')) {
+                                displayUnit = results.tempUnit || '°C';
+                            } else if (nameLower.includes('pres')) {
+                                displayUnit = results.pressureUnit || 'bar';
+                            } else if (nameLower.includes('vib')) {
+                                displayUnit = 'mm/s';
+                            } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
+                                displayUnit = 'A';
+                            } else if (nameLower.includes('volt')) {
+                                displayUnit = 'V';
+                            } else if (nameLower.includes('rpm') || nameLower.includes('speed')) {
+                                displayUnit = 'RPM';
+                            } else if (nameLower.includes('torq')) {
+                                displayUnit = 'Nm';
+                            } else if (nameLower.includes('wear') || nameLower.includes('desgaste')) {
+                                displayUnit = 'min';
+                            } else if (nameLower.includes('flow') || nameLower.includes('caudal')) {
+                                displayUnit = 'LPM';
+                            } else if (nameLower.includes('level') || nameLower.includes('nivel')) {
+                                displayUnit = '%';
+                            }
                         }
                         
                         const isCritical = col.status.includes('FUERA DE CONTROL');
                         const statusText = isCritical ? '🔴 FUERA DE CONTROL ESTADÍSTICO' : '🟢 PROCESO ESTABLE (BANDA NOMINAL)';
                         const conditionClass = isCritical ? 'text-red' : 'text-blue';
-                        const valStr = `${col.max.toFixed(formatPrecision)} ${displayUnit}`;
-                        const limitStr = `${col.limit_sfa.toFixed(formatPrecision)} ${displayUnit}`;
+                        
+                        const valStr = col.max !== undefined ? `${Number(col.max.toFixed(4))} ${displayUnit}`.trim() : '--';
+                        const limitStr = col.limit_sfa !== undefined ? `${col.limit_sfa.toFixed(4)} ${displayUnit}`.trim() : '--';
                         
                         let desc = '';
                         const lambda = window.SFA.lambda ? window.SFA.lambda.toFixed(3) : '1.618';

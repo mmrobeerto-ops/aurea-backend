@@ -945,7 +945,23 @@ def _procesar_un_activo_sfa(
             
         numeric_col_indices.append(idx)
         
-    # 2. Bucle de cálculo dinámico de dos pasos (para filtrar outliers)
+    # 2. Bucle de cálculo dinámico de dos pasos usando Pandas para procesamiento vectorial completo
+    import pandas as pd
+    import numpy as np
+    import re
+    
+    # Asegurar que todas las filas tengan exactamente el mismo largo que las cabeceras
+    cleaned_rows = []
+    h_len = len(headers)
+    for r in rows:
+        if len(r) < h_len:
+            cleaned_rows.append(r + [""] * (h_len - len(r)))
+        else:
+            cleaned_rows.append(r[:h_len])
+            
+    # Crear un DataFrame con las filas sanitizadas y cabeceras para operaciones vectoriales
+    df_col = pd.DataFrame(cleaned_rows, columns=headers)
+    
     universal_columns = []
     universal_alerts = []
     universal_green_count = 0
@@ -953,67 +969,48 @@ def _procesar_un_activo_sfa(
     for idx in numeric_col_indices:
         col_name = headers[idx]
         
-        # Extraer valores numéricos de la columna
-        raw_values = []
-        for row in rows:
-            if idx < len(row) and row[idx].strip() != "":
-                try:
-                    raw_values.append(float(row[idx].strip()))
-                except ValueError:
-                    pass
-                    
-        if not raw_values:
+        # Convertir la columna correspondiente a valores numéricos de forma vectorial
+        series = pd.to_numeric(df_col[col_name].str.strip(), errors='coerce').dropna()
+        
+        if series.empty:
             continue
             
-        # --- PASO 1: Calcular media y std provisionales ---
-        n_raw = len(raw_values)
-        mean_raw = sum(raw_values) / n_raw
-        variance_raw = sum((x - mean_raw) ** 2 for x in raw_values) / n_raw
-        std_raw = math.sqrt(variance_raw)
+        # --- PASO 1: Calcular media y std provisionales (ddof=0 para std poblacional) ---
+        mean_raw = series.mean()
+        std_raw = series.std(ddof=0)
         
         # --- PASO 2: Filtrar outliers a +-3std ---
         if std_raw > 0.0:
-            filtered_values = [
-                x for x in raw_values 
-                if (mean_raw - 3.0 * std_raw) <= x <= (mean_raw + 3.0 * std_raw)
-            ]
+            filtered_series = series[(series >= (mean_raw - 3.0 * std_raw)) & (series <= (mean_raw + 3.0 * std_raw))]
         else:
-            filtered_values = raw_values
+            filtered_series = series
             
-        if not filtered_values:
-            filtered_values = raw_values
+        if filtered_series.empty:
+            filtered_series = series
             
         # --- PASO 3: Calcular parámetros estadísticos base limpios ---
-        n_clean = len(filtered_values)
-        mean_clean = sum(filtered_values) / n_clean
-        variance_clean = sum((x - mean_clean) ** 2 for x in filtered_values) / n_clean
-        std_clean = math.sqrt(variance_clean)
+        mean_clean = filtered_series.mean()
+        std_clean = filtered_series.std(ddof=0)
         
         # --- PASO 4: Definición del Límite Dinámico (Umbral SFA) con Salvaguarda ---
         if std_clean < 0.0001:
-            # Salvaguarda de Desviación Cero: forzar límite dinámico
             limite_sfa = mean_clean * 1.05 if abs(mean_clean) > 0.0001 else 0.05
         else:
             limite_sfa = mean_clean + (2.0 * std_clean)
             
         # --- PASO 5: Captura del Pico Absorbedor (Max) y Criterio de Disparo ---
-        max_val = max(raw_values)
+        max_val = series.max()
         
-        # Determinar precisión de redondeo según tipo de variable
-        col_lower = col_name.lower()
-        if 'vib' in col_lower:
-            prec = 3
-        elif 'pres' in col_lower:
-            prec = 2
-        elif 'rpm' in col_lower or 'speed' in col_lower:
-            prec = 0
-        else:
-            prec = 1
-            
-        max_val_rounded = round(max_val, prec)
-        limit_rounded = round(limite_sfa, prec)
+        # Redondear a exactamente 4 posiciones decimales como estándar universal
+        prec = 4
+        max_val_rounded = round(float(max_val), prec)
+        limit_rounded = round(float(limite_sfa), prec)
         
-        if max_val_rounded > limit_rounded:
+        # Extraer unidad dinámica del nombre de la columna (e.g. "[K]" o "(rpm)")
+        unit_match = re.search(r'[\[\(](.*?)[\]\)]', col_name)
+        col_unit = unit_match.group(1).strip() if unit_match else ""
+        
+        if round(max_val_rounded, prec) > round(limit_rounded, prec):
             status_variable = "🔴 FUERA DE CONTROL ESTADÍSTICO"
             universal_alerts.append(
                 f"🚨 FUERA DE CONTROL ESTADÍSTICO: Desviación excedida en {col_name} (Máx: {max_val_rounded} | Límite SFA: {limit_rounded})"
@@ -1024,11 +1021,12 @@ def _procesar_un_activo_sfa(
             
         universal_columns.append({
             "name": col_name,
-            "mean": round(mean_clean, 4),
-            "std": round(std_clean, 4),
+            "mean": round(float(mean_clean), 4),
+            "std": round(float(std_clean), 4),
             "limit_sfa": limit_rounded,
             "max": max_val_rounded,
-            "status": status_variable
+            "status": status_variable,
+            "unit": col_unit
         })
         
     total_universal_cols = len(universal_columns)
