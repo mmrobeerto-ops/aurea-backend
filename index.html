@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
+            // Ignorar errores genéricos de scripts de terceros (cross-origin Script error) o bloqueos de Adblockers
+            if (message === 'Script error.' || lineno === 0 || !source) {
+                console.warn('Ignorando error de script externo (CORS / Adblocker):', message);
+                return true; // Evita que se propague y se muestre en consola como unhandled
+            }
             const errorMsg = `[ERROR GLOBAL JS] ${message} en ${source}:${lineno}:${colno}`;
             console.error(errorMsg, error);
             const showBanner = () => {
@@ -30,6 +35,12 @@
             return false;
         };
         window.onunhandledrejection = function(event) {
+            const reasonStr = String(event.reason || '');
+            // Ignorar promesas rechazadas por adblockers o scripts externos (como PayPal)
+            if (reasonStr.includes('paypal') || reasonStr.includes('Script error') || reasonStr.includes('Failed to fetch') || reasonStr.includes('NetworkError')) {
+                console.warn('Ignorando rechazo de promesa externa (PayPal/Network):', event.reason);
+                return;
+            }
             const errorMsg = `[PROMISE REJECTION] ${event.reason}`;
             console.error(errorMsg);
             const showBanner = () => {
@@ -1414,6 +1425,6 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
     </footer>
 
     <!-- Scripts -->
-    <script src="js/app.js?v=3.0.7"></script>
+    <script src="js/app.js?v=3.0.8"></script>
 </body>
 </html>
