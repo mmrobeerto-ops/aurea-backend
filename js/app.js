@@ -416,7 +416,7 @@ class SFAEngine {
     /**
      * Generates a professional rationale explaining the status of a specific variable
      */
-    getVariableRationale(varKey, val, limit, dangerLimit, unit, planName, results) {
+    getVariableRationale(varKey, val, limit, dangerLimit, unit, planName, results, originalName = null) {
         if (results && results.variables_applicability && results.variables_applicability[varKey] === 'not_applicable') {
             return {
                 status: 'No Aplica',
@@ -459,7 +459,29 @@ class SFAEngine {
 
         let desc = '';
 
-        if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
+        if (isUniversal) {
+            const displayName = originalName || varKey;
+            if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
+                if (isOptimal) {
+                    desc = `El parámetro operativo de ${displayName} se mantiene estable en ${valStr}. Cumple con los criterios de diseño y garantiza la continuidad operativa sin pérdidas por paro.`;
+                } else {
+                    desc = `El parámetro de ${displayName} registra un valor de ${valStr} que supera su umbral de tolerancia estadística SFA (${limitStr}). Riesgo moderado-alto de afectación al rendimiento global de la planta.`;
+                }
+            } else if (planName.includes("Consultor") || planName.includes("Senior")) {
+                if (isOptimal) {
+                    desc = `El análisis espectral SFA en f_base (${fBase} Hz) y factor λ (${lambda}) confirma comportamiento estable para ${displayName}. El valor de ${valStr} se mantiene por debajo de la barrera de tolerancia estadística +2σ (${limitStr}).`;
+                } else {
+                    desc = `Desviación estadística crítica para ${displayName}. El valor registrado de ${valStr} excede la frontera dinámica +2σ de control de procesos (${limitStr}), indicando una micro-oscilación de fatiga en desarrollo.`;
+                }
+            } else {
+                if (isOptimal) {
+                    desc = `Medición de ${displayName} en rango óptimo. Condición estable.`;
+                } else {
+                    desc = `Exceso detectado en ${displayName} (${valStr} superando el límite dinámico de ${limitStr}). Requiere revisión de mantenimiento.`;
+                }
+            }
+        } else {
+            if (planName.includes("Gerente") || planName.includes("Planta Completa")) {
             if (varKey === 'vibration') {
                 if (isOptimal) desc = `Salud mecánica del 100%. Sin riesgos para la continuidad de la producción. Desgaste mínimo que proyecta extender la vida útil del activo en un 15% frente a la media.`;
                 else if (isWarning) desc = `Vibración de ${valStr} excede el límite de ${limitStr}. Acelera el desgaste de rodamientos. Riesgo moderado de paro imprevisto de producción. Se aconseja intervenir en el próximo mantenimiento programado.`;
@@ -561,6 +583,7 @@ class SFAEngine {
                 if (isOptimal) desc = `Voltaje eléctrico en ${valStr} nominal y estable. Suministro correcto.`;
                 else desc = `Voltaje eléctrico de ${valStr} inestable (límite ${limitStr}). Verificar suministro de red o regulador.`;
             }
+        }
         }
 
         if (!desc) {
@@ -724,7 +747,7 @@ class SFAEngine {
 
         varsConfig.forEach(v => {
             if (v.show) {
-                const rationale = this.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, this.results);
+                const rationale = this.getVariableRationale(v.key, v.val, v.limit, v.danger, v.unit, reportPlan, this.results, v.name);
                 const line = `${padRight(v.name, 24)}| ${padRight(rationale.valStr, 12)}| ${padRight(rationale.limitStr, 10)}| ${padRight(rationale.status, 38)}| ${rationale.desc}`;
                 rows.push(line);
             }
@@ -3012,7 +3035,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (varsToleranceEl) {
                 const gCount = results.green_count !== undefined ? results.green_count : 0;
                 const tEval = results.total_evaluated !== undefined ? results.total_evaluated : 0;
-                varsToleranceEl.textContent = `Variables evaluadas en Tolerancia: ${gCount} / ${tEval}`;
+                varsToleranceEl.textContent = `Variables en Tolerancia: ${gCount} / ${tEval}`;
                 varsToleranceEl.style.display = 'block';
             }
 
@@ -3614,44 +3637,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         const fBase = results.targetFreq ? results.targetFreq.toFixed(2) : '17.75';
                         
                         if (reportPlan.includes("Gerente") || reportPlan.includes("Planta Completa")) {
-                            if (nameLower.includes('vib')) {
-                                if (!isCritical) desc = `Salud mecánica del 100%. Sin riesgos para la continuidad de la producción. Desgaste mínimo que proyecta alargar la vida útil del activo.`;
-                                else desc = `Vibración destructiva de ${valStr} superando el límite estadístico de ${limitStr}. Riesgo inminente de rotura física. Requiere intervención del equipo de guardia.`;
-                            } else if (nameLower.includes('temp')) {
-                                if (!isCritical) desc = `Temperatura de ${valStr} óptima. Previene paros por protección térmica y alarga la vida útil de los lubricantes.`;
-                                else desc = `Temperatura elevada de ${valStr} (límite ${limitStr}). Acelera la degradación del lubricante. Se requiere revisión preventiva.`;
-                            } else if (nameLower.includes('pres')) {
-                                if (!isCritical) desc = `Fluctuación de presión estable de ${valStr}. Garantiza la homogeneidad de la fuerza y evita daños en sellos mecánicos.`;
-                                else desc = `Presión inestable con oscilación de ${valStr} superando el límite dinámico de ${limitStr}. Riesgo de fugas e inestabilidad en actuadores.`;
-                            } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
-                                if (!isCritical) desc = `Consumo de corriente óptimo en ${valStr}. Mantiene la eficiencia de potencia eléctrica en parámetros nominales de diseño.`;
-                                else desc = `Corriente de ${valStr} en sobrecarga crítica (límite SFA: ${limitStr}). Riesgo extremo de quemar bobinados o rotor bloqueado.`;
+                            if (!isCritical) {
+                                desc = `El parámetro operativo de ${col.name} se mantiene estable en ${valStr}. Cumple con los criterios de diseño y garantiza la continuidad operativa sin pérdidas por paro.`;
                             } else {
-                                if (!isCritical) {
-                                    desc = `El parámetro operativo de ${col.name} se mantiene estable en ${valStr}. Cumple con los criterios de diseño y garantiza la continuidad operativa sin pérdidas por paro.`;
-                                } else {
-                                    desc = `El parámetro de ${col.name} registra un valor de ${valStr} que supera su umbral de tolerancia estadística SFA (${limitStr}). Riesgo moderado-alto de afectación al rendimiento global de la planta.`;
-                                }
+                                desc = `El parámetro de ${col.name} registra un valor de ${valStr} que supera su umbral de tolerancia estadística SFA (${limitStr}). Riesgo moderado-alto de afectación al rendimiento global de la planta.`;
                             }
                         } else if (reportPlan.includes("Consultor") || reportPlan.includes("Senior")) {
-                            if (nameLower.includes('vib')) {
-                                if (!isCritical) desc = `La vibración RMS de ${valStr} se mantiene estable. El filtro espectral SFA (λ = ${lambda}) atenuó el ruido estructural bajo el límite +2σ (${limitStr}).`;
-                                else desc = `La vibración RMS de ${valStr} excede el umbral estadístico +2σ SFA (${limitStr}). El espectro acusa desalineación angular o desbalanceo mecánico.`;
-                            } else if (nameLower.includes('temp')) {
-                                if (!isCritical) desc = `Temperatura de ${valStr} nominal. Disipación de calor correcta sin derivas térmicas significativas en el devanado.`;
-                                else desc = `Temperatura máxima de ${valStr} excede el límite de diseño +2σ de ${limitStr}. Correlación con incremento de fricción o sobrecarga.`;
-                            } else if (nameLower.includes('pres')) {
-                                if (!isCritical) desc = `Fluctuación de presión controlada de ${valStr}. El filtrado SFA en dominio temporal confirma ausencia de transitorios inestables.`;
-                                else desc = `Fluctuación de presión de ${valStr} supera el umbral dinámico +2σ de ${limitStr}. Transitorios rápidos sugieren desgaste en regulador.`;
-                            } else if (nameLower.includes('curr') || nameLower.includes('corr')) {
-                                if (!isCritical) desc = `Consumo eléctrico de ${valStr}. La firma de corriente SFA no muestra modulaciones de carga, validando la integridad del estator y rotor.`;
-                                else desc = `Corriente de ${valStr} excede el límite nominal SFA de ${limitStr}. La potencia reactiva se eleva debido a fricción mecánica.`;
+                            if (!isCritical) {
+                                desc = `El análisis espectral SFA en f_base (${fBase} Hz) y factor λ (${lambda}) confirma comportamiento estable para ${col.name}. El valor de ${valStr} se mantiene por debajo de la barrera de tolerancia estadística +2σ (${limitStr}).`;
                             } else {
-                                if (!isCritical) {
-                                    desc = `El análisis espectral SFA en f_base (${fBase} Hz) y factor λ (${lambda}) confirma comportamiento estable para ${col.name}. El valor de ${valStr} se mantiene por debajo de la barrera de tolerancia estadística +2σ (${limitStr}).`;
-                                } else {
-                                    desc = `Desviación estadística crítica para ${col.name}. El valor registrado de ${valStr} excede la frontera dinámica +2σ de control de procesos (${limitStr}), indicando una micro-oscilación de fatiga en desarrollo.`;
-                                }
+                                desc = `Desviación estadística crítica para ${col.name}. El valor registrado de ${valStr} excede la frontera dinámica +2σ de control de procesos (${limitStr}), indicando una micro-oscilación de fatiga en desarrollo.`;
                             }
                         } else {
                             if (!isCritical) {
