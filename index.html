@@ -2,6 +2,59 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorMsg = `[ERROR GLOBAL JS] ${message} en ${source}:${lineno}:${colno}`;
+            console.error(errorMsg, error);
+            const showBanner = () => {
+                const errDiv = document.createElement('div');
+                errDiv.style.position = 'fixed';
+                errDiv.style.top = '0';
+                errDiv.style.left = '0';
+                errDiv.style.width = '100%';
+                errDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.95)';
+                errDiv.style.color = '#ffffff';
+                errDiv.style.padding = '20px';
+                errDiv.style.zIndex = '999999';
+                errDiv.style.fontFamily = 'monospace';
+                errDiv.style.fontSize = '14px';
+                errDiv.style.boxSizing = 'border-box';
+                errDiv.innerHTML = `<strong>Error de JS Detectado:</strong><br>${message}<br><br><strong>Ubicación:</strong> ${source}:${lineno}:${colno}<br><br><strong>Stack:</strong><br>${error ? error.stack : 'No disponible'}`;
+                document.body.appendChild(errDiv);
+            };
+            if (document.body) {
+                showBanner();
+            } else {
+                document.addEventListener('DOMContentLoaded', showBanner);
+            }
+            return false;
+        };
+        window.onunhandledrejection = function(event) {
+            const errorMsg = `[PROMISE REJECTION] ${event.reason}`;
+            console.error(errorMsg);
+            const showBanner = () => {
+                const errDiv = document.createElement('div');
+                errDiv.style.position = 'fixed';
+                errDiv.style.top = '0';
+                errDiv.style.left = '0';
+                errDiv.style.width = '100%';
+                errDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.95)';
+                errDiv.style.color = '#ffffff';
+                errDiv.style.padding = '20px';
+                errDiv.style.zIndex = '999999';
+                errDiv.style.fontFamily = 'monospace';
+                errDiv.style.fontSize = '14px';
+                errDiv.style.boxSizing = 'border-box';
+                errDiv.innerHTML = `<strong>Promesa Rechazada Detectada:</strong><br>${event.reason}<br><br><strong>Stack:</strong><br>${event.reason && event.reason.stack ? event.reason.stack : 'No disponible'}`;
+                document.body.appendChild(errDiv);
+            };
+            if (document.body) {
+                showBanner();
+            } else {
+                document.addEventListener('DOMContentLoaded', showBanner);
+            }
+        };
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Áurea Systems | Armonizando el caos con precisión geométrica</title>
     <meta name="description" content="Transformamos datos caóticos en soluciones armónicas de alta eficiencia. Descubre el Motor SFA de sintonización fractal de armónicos e impacto social.">
@@ -1361,6 +1414,6 @@ tiempo, rms_vibe, winding_temp, discharge_pres, flow_lpm</code></pre>
     </footer>
 
     <!-- Scripts -->
-    <script src="js/app.js?v=3.0.4"></script>
+    <script src="js/app.js?v=3.0.5"></script>
 </body>
 </html>
