@@ -829,26 +829,30 @@ Sistema de Notificaciones Aurea Systems
 async def create_registro(record: RegistrationRecord, background_tasks: BackgroundTasks):
     import datetime
     
-    # Validar clave de invitación para el Club de Pioneros 33
-    # Validar clave de invitación para el Reto SPC Automotriz
-    if record.plan in ["Club de Pioneros 33", "Reto SPC Automotriz"]:
-        expected_key = os.getenv("PIONEROS_ACCESS_KEY", "AUREA33")
-        clean_provided = (record.access_key or "").replace(" ", "").upper()
-        clean_expected = expected_key.replace(" ", "").upper()
-        if clean_provided != clean_expected:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Clave de invitación incorrecta para el Reto SPC Automotriz."
-            )
+    # Validar clave de invitación para el Reto SPC Automotriz y aurea1 (Ilimitado Gerente)
+    plan_to_use = record.plan
+    provided_key = (record.access_key or "").replace(" ", "").upper()
+    
+    if plan_to_use in ["Club de Pioneros 33", "Reto SPC Automotriz"]:
+        if provided_key == "AUREA1":
+            plan_to_use = "Licencia Aurea Gerente"
+        else:
+            expected_key = os.getenv("PIONEROS_ACCESS_KEY", "AUREA33")
+            clean_expected = expected_key.replace(" ", "").upper()
+            if provided_key != clean_expected:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Clave de invitación incorrecta para el Reto SPC Automotriz."
+                )
             
-    license_key = generate_license_key(record.plan)
+    license_key = generate_license_key(plan_to_use)
     timestamp = datetime.datetime.now().isoformat()
     
     new_record = {
         "name": record.name,
         "email": record.email,
         "company": record.company,
-        "plan": record.plan,
+        "plan": plan_to_use,
         "license_key": license_key,
         "timestamp": timestamp
     }

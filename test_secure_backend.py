@@ -323,5 +323,51 @@ class TestMachineSlotLimiting(unittest.TestCase):
         self.assertEqual(res_analysis_2.status_code, 403)
         self.assertIn("LÍMITE_PROMO_EXCEDIDO", res_analysis_2.json()["detail"])
 
+    def test_aurea1_unlimited_license(self):
+        """
+        Prueba que el código AUREA1 otorgue una licencia Gerente ilimitada que permita múltiples análisis.
+        """
+        payload = {
+            "name": "Ingeniero Vip",
+            "email": "vip@empresa.com",
+            "company": "Planta Ensambles Automotriz",
+            "plan": "Reto SPC Automotriz",
+            "access_key": "AUREA1"
+        }
+        res = self.client.post("/api/registros", json=payload)
+        self.assertEqual(res.status_code, 200)
+        license_key = res.json()["license_key"]
+        
+        # Debe contener -GER- para nivel Gerente, no -RET-
+        self.assertTrue("-GER-" in license_key)
+        self.assertFalse("-RET-" in license_key)
+
+        # Primer análisis - debe tener éxito
+        csv_content = "timestamp,vibration,temperature,pressure,current,sensor_id\n0,0.1,40,5,10,sensor-1\n1,0.2,42,5.1,10.5,sensor-1"
+        res_analysis_1 = self.client.post(
+            "/api/procesar-sfa",
+            headers={"X-SFA-Key": license_key},
+            json={
+                "csv_text": csv_content,
+                "lambda_val": 1.618,
+                "offset_val": 0.0,
+                "profile_key": "auto"
+            }
+        )
+        self.assertEqual(res_analysis_1.status_code, 200)
+
+        # Segundo análisis - debe seguir teniendo éxito (es ilimitada)
+        res_analysis_2 = self.client.post(
+            "/api/procesar-sfa",
+            headers={"X-SFA-Key": license_key},
+            json={
+                "csv_text": csv_content,
+                "lambda_val": 1.618,
+                "offset_val": 0.0,
+                "profile_key": "auto"
+            }
+        )
+        self.assertEqual(res_analysis_2.status_code, 200)
+
 if __name__ == "__main__":
     unittest.main()
