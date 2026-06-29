@@ -912,7 +912,7 @@ def _procesar_un_activo_sfa(
         'time', 'tiempo', 'timestamp', 'date', 'fecha', 'status', 'estatus', 
         'state', 'estado', 'asset_id', 'id_activo', 'activo', 'asset_type', 
         'tipo_activo', 'type', 'tipo', 'sensor_id', 'id_sensor', 'id',
-        'piso', 'linea', 'zona', 'floor', 'line', 'zone', 'codigo', 'serial', 'num'
+        'piso', 'linea', 'zona', 'floor', 'line', 'zone', 'codigo', 'serial', 'num', 'udi'
     ]
     
     numeric_col_indices = []
