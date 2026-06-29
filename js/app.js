@@ -3698,10 +3698,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td><span class="spc-status-badge ${rationale.conditionClass}">${rationale.status}</span></td>
                                 <td class="sfa-rationale-desc-cell">${rationale.desc}</td>
                             `;
-                            rationaleContent.appendChild(itemDiv);
+                            tbody.appendChild(tr);
                         }
                     });
                 }
+                rationaleContent.appendChild(table);
             }
 
             // Update print titles dynamically based on plan type
