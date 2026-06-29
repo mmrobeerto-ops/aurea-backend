@@ -3576,9 +3576,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (results.universal_columns) {
                     results.universal_columns.forEach(col => {
+                        const nameLower = col.name.toLowerCase();
                         let displayUnit = col.unit || '';
                         if (!displayUnit) {
-                            const nameLower = col.name.toLowerCase();
                             if (nameLower.includes('temp')) {
                                 displayUnit = results.tempUnit || '°C';
                             } else if (nameLower.includes('pres')) {
