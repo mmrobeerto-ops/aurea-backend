@@ -876,6 +876,13 @@ def find_column_index(headers: List[str], keywords: List[str], exacts: List[str]
             h_lower = h.lower()
             if kw_lower == 'amp' and ('timestamp' in h_lower or 'time' in h_lower):
                 continue
+            # Evitar coincidencias parciales espurias para la palabra clave 'id' (como 'Product ID' o 'Humidity')
+            if kw_lower == 'id':
+                is_valid = (h_lower == 'id' or 
+                            h_lower.startswith('id_') or 
+                            h_lower.endswith('_id'))
+                if not is_valid:
+                    continue
             if (h_lower == kw_lower or 
                 h_lower.startswith(kw_lower + '_') or 
                 h_lower.endswith('_' + kw_lower) or 
@@ -2382,6 +2389,21 @@ def procesar_bloque_armonico(csv_text: str, lambda_val: float, offset_val: float
 
     if not grouped_rows:
         raise ValueError("No se pudieron extraer datos numéricos del CSV.")
+
+    # Si la agrupación genera demasiados activos únicos (casi uno por fila),
+    # significa que se mapeó una columna de ID único por fila (como UDI, Product ID, etc.).
+    # Colapsamos todos los registros en un solo activo por defecto.
+    if len(grouped_rows) > (len(lines) - 1) * 0.5:
+        default_rows = []
+        for aid, info in grouped_rows.items():
+            default_rows.extend(info["rows"])
+        grouped_rows = {
+            "Default_Asset": {
+                "asset_id": "Default_Asset",
+                "asset_type": "Generic",
+                "rows": default_rows
+            }
+        }
 
     assets_analysis = []
     for aid, info in grouped_rows.items():
