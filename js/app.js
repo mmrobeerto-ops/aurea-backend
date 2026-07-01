@@ -2284,11 +2284,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. Validar tamaño estricto de archivo (límite de 5 MB)
-            if (file.size > 5 * 1024 * 1024) {
+            // 2. Validar tamaño estricto de archivo (límite de 25 MB)
+            if (file.size > 25 * 1024 * 1024) {
                 showSecurityAlert(
                     "Límite de Peso Excedido",
-                    `El archivo seleccionado tiene un tamaño de ${(file.size / (1024 * 1024)).toFixed(2)} MB, el cual supera el límite estricto de <strong>5.0 MB</strong> configurado en el backend de Áurea Systems para prevenir inyección de código masivo y denegación de servicio.`
+                    `El archivo seleccionado tiene un tamaño de ${(file.size / (1024 * 1024)).toFixed(2)} MB, el cual supera el límite estricto de <strong>25.0 MB</strong> configurado en el backend de Áurea Systems para prevenir inyección de código masivo y denegación de servicio.`
                 );
                 return;
             }

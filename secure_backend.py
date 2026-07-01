@@ -163,7 +163,7 @@ async def add_security_headers(request: Request, call_next):
         response.headers["X-Security-Warning"] = "La conexion no esta encriptada. Active HTTPS / SSL en produccion."
     return response
 
-MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
+MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
 ALLOWED_MIME_TYPES = [
     "text/csv",
     "text/plain",
