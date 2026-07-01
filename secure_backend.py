@@ -978,54 +978,8 @@ def _procesar_un_activo_sfa(
 
     # === MOTOR MATEMÁTICO UNIVERSAL SFA (MÉTODO AGTI) ===
     # 1. Purga del Dataset y Exclusión de Identificadores/Metadatos
-    ignored_keywords = [
-        'time', 'tiempo', 'timestamp', 'date', 'fecha', 'status', 'estatus', 
-        'state', 'estado', 'asset_id', 'id_activo', 'activo', 'asset_type', 
-        'tipo_activo', 'type', 'tipo', 'sensor_id', 'id_sensor', 'id',
-        'piso', 'linea', 'zona', 'floor', 'line', 'zone', 'codigo', 'serial', 'num', 'udi'
-    ]
-    
-    numeric_col_indices = []
-    for idx, h in enumerate(headers):
-        h_lower = h.lower()
-        # Ignorar columnas si el nombre coincide con palabras clave de metadatos o IDs
-        if any(k in h_lower for k in ignored_keywords):
-            continue
-            
-        # Verificar si la columna contiene predominantemente valores numéricos
-        valid_numeric_count = 0
-        total_non_empty = 0
-        unique_vals = set()
-        for row in rows:
-            if idx < len(row) and row[idx].strip() != "":
-                val_str = row[idx].strip()
-                total_non_empty += 1
-                try:
-                    val_float = float(val_str)
-                    valid_numeric_count += 1
-                    # Registrar valores enteros para verificar baja cardinalidad de IDs
-                    if val_float.is_integer():
-                        unique_vals.add(int(val_float))
-                    else:
-                        unique_vals.add(val_float)
-                except ValueError:
-                    pass
-        
-        # Si menos del 50% de las filas no vacías son numéricas, ignorar la columna
-        if total_non_empty == 0 or (valid_numeric_count / total_non_empty) < 0.5:
-            continue
-            
-        # Si es una columna de enteros puros con baja cardinalidad (< 10 valores únicos), la consideramos ID y la excluimos
-        is_integer_only = all(isinstance(x, int) for x in unique_vals)
-        if is_integer_only and len(unique_vals) < 10:
-            continue
-            
-        numeric_col_indices.append(idx)
-        
-    # 2. Bucle de cálculo dinámico de dos pasos usando Pandas para procesamiento vectorial completo
     import pandas as pd
     import numpy as np
-    import re
     
     # Asegurar que todas las filas tengan exactamente el mismo largo que las cabeceras
     cleaned_rows = []
@@ -1036,18 +990,22 @@ def _procesar_un_activo_sfa(
         else:
             cleaned_rows.append(r[:h_len])
             
-    # Crear un DataFrame con las filas sanitizadas y cabeceras para operaciones vectoriales
+    # Crear un DataFrame con las filas sanitizadas y cabeceras
     df_col = pd.DataFrame(cleaned_rows, columns=headers)
+    
+    # Convertir todas las columnas a tipo numérico de forma vectorial de manera segura
+    for col in df_col.columns:
+        df_col[col] = pd.to_numeric(df_col[col].astype(str).str.strip(), errors='coerce')
+        
+    # Aislar solo las columnas numéricas usando select_dtypes
+    numeric_cols = df_col.select_dtypes(include=['number']).columns.tolist()
     
     universal_columns = []
     universal_alerts = []
     universal_green_count = 0
     
-    for idx in numeric_col_indices:
-        col_name = headers[idx]
-        
-        # Convertir la columna correspondiente a valores numéricos de forma vectorial
-        series = pd.to_numeric(df_col[col_name].str.strip(), errors='coerce').dropna()
+    for col_name in numeric_cols:
+        series = df_col[col_name].dropna()
         
         if series.empty:
             continue

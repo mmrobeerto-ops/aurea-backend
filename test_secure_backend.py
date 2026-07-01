@@ -369,5 +369,52 @@ class TestMachineSlotLimiting(unittest.TestCase):
         )
         self.assertEqual(res_analysis_2.status_code, 200)
 
+    def test_csv_with_string_timestamps(self):
+        """
+        Prueba que un CSV con timestamps en formato string (no numéricos) y otras columnas de texto
+        no cause error 500 y procese correctamente las columnas numéricas.
+        """
+        # Registrar un usuario para obtener una clave válida
+        payload = {
+            "name": "Ingeniero Kirloskar",
+            "email": "kirloskar@empresa.com",
+            "company": "Kirloskar Pumps",
+            "plan": "Reto SPC Automotriz",
+            "access_key": "AUREA1"
+        }
+        res = self.client.post("/api/registros", json=payload)
+        self.assertEqual(res.status_code, 200)
+        license_key = res.json()["license_key"]
+
+        # CSV con columna timestamp no-ISO/string y columna de texto 'status_label'
+        csv_content = (
+            "timestamp,vibration,temperature,status_label,sensor_id\n"
+            "2026-06-30 23:06:31,0.12,45.2,NOMINAL,sensor-1\n"
+            "2026-06-30 23:06:32,0.15,46.1,WARNING,sensor-1\n"
+            "2026-06-30 23:06:33,0.11,44.8,NOMINAL,sensor-1"
+        )
+
+        res_analysis = self.client.post(
+            "/api/procesar-sfa",
+            headers={"X-SFA-Key": license_key},
+            json={
+                "csv_text": csv_content,
+                "lambda_val": 1.618,
+                "offset_val": 0.0,
+                "profile_key": "auto"
+            }
+        )
+        self.assertEqual(res_analysis.status_code, 200)
+        data = res_analysis.json()
+        self.assertIn("results", data)
+        # Debe haber procesado vibration y temperature (2 variables)
+        self.assertEqual(len(data["results"]["universal_columns"]), 2)
+        # Las columnas mapeadas deben ser vibration y temperature
+        col_names = [col["name"] for col in data["results"]["universal_columns"]]
+        self.assertIn("vibration", col_names)
+        self.assertIn("temperature", col_names)
+        self.assertNotIn("timestamp", col_names)
+        self.assertNotIn("status_label", col_names)
+
 if __name__ == "__main__":
     unittest.main()
