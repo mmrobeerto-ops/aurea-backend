@@ -3293,6 +3293,9 @@ if __name__ == '__main__':
 
             // Check pressure threshold (warn at 1.5 bar)
             if (isApp('pressure')) {
+                const maxP = statObj.maxPres !== undefined ? statObj.maxPres : 0;
+                const minP = statObj.minPres !== undefined ? statObj.minPres : 0;
+                const presDiffVal = maxP - minP;
                 if (presDiffVal > 1.5) {
                     addElClass('stat-pres', 'text-red');
                 } else {
